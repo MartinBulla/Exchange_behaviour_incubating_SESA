@@ -1,0 +1,1315 @@
+{# TO DO 
+
+
+ - update column definition
+-  # at the end created final csv file containing only data used in some analyses (exclude everything that will not show up in the analyses)
+			d<-read.csv(file=paste(wd, "observations_all.csv", sep=''),header=T,sep=",", fill=T, stringsAsFactors=FALSE)
+			d=d[!is.na(d$obs_ID),]
+			d=d[!d$obs_ID%in%e$obs_ID[which(e$total_exclusion=='y')],]
+			write.csv(d, file=paste(wd,'observations.csv', sep=''), row.names=FALSE)	
+			
+			b<-read.csv(file=paste(wd, "time_series.csv", sep=''),header=T,sep=",", fill=T, stringsAsFactors=FALSE)
+			b=b[!is.na(b$obs_ID),]
+			b=b[!b$obs_ID%in%e$obs_ID[which(e$total_exclusion=='y')],]
+						
+ # exclude or control for
+	# capture else keep only capture in 'n' and >3
+ 
+ ##### SEE WHETHER SHORTER OBS MATTER OR NOT
+}
+{# INFO
+ # not used at all
+	# s608 - video time in 2000 and impossible to calibrate with the RFID data
+	# non-exchange observation that are 30 min before/after exchange observation
+
+ # not used for bout length analyses
+	# obs_ID 274 - male just returned after release from captivity
+	# ?? -	obs_ID 187 nest s409 the only exchange observation with left_before_presence as NA. Can we do something about it so that we do not have to explain why one observation out of all is NA? The difference in dt_first_present and dt_left is only 5s. 
+ 
+ }
+{# INFO
+	# each bird was associated with a signle nest and a single year
+	# add to methods: For comparison of behaviour of incubating bird during ~30 min prior to return of its partner with the behaviour during regular incubation, we randomly sampled the regular incubation behaviour for ~30 min. Such observatins were at least 30 min before start and 30 min after the end of an actual exchange (i.e. 30min before the incubating parent left the nest and 30 min after the coming bird set down on the nest). 
+}
+
+{# SETTINGS & DATA
+	{# do you want plots in R (PNG=FALSE) or as PNG (PNG = TRUE)?
+		PNG=FALSE
+	}
+	{# define working directory
+	     wd = "C:/Users/mbulla/Documents/Dropbox/Science/Projects/MS/exchanges_SESA/Database/"
+		wd2 = "C:/Users/mbulla/Documents/Dropbox/Science/Projects/MS/exchanges_SESA/Analyses/"		 
+	     outdir = "C:/Users/mbulla/Documents/Dropbox/Science/Projects/MS/exchanges_SESA/Analyses/plots/" 
+		#wd = "C:/Users/OWNER/Dropbox/exchanges_SESA/Database/"	
+	    #wd = paste0(getwd(), '/DATA/')
+	}
+	{# load packages, constants and data
+		source(paste(wd2, 'Constants_packages_PrepareData.R',sep=""))
+	}
+}
+
+ ######### ADD LATER How long were birds present before partner left?
+					stat.desc(dd$presence[dd$left_bin==1])/60
+          
+		  
+{# METHODS
+	# N observations per nest
+		d$n = 1
+		d_= ddply(d,.(nest, year type), summarise, n = sum(n))
+		ggplot(d_, aes(x = n, col = type)) + geom_density()
+		summary(d_$n[d$type == 'ex'])
+
+}
+{# RESULTS
+	{# Behaviour prior to return of the partner
+	  {# frequency of observations with incubating parent leaving the nest prior to return of the comming bird - (description in the text, if space allows, figure)
+		{# run first
+			bb=b[b$obs_ID%in%dd$obs_ID,]	
+			bb_=ddply(b,.(obs_ID, nest_ID, sex), summarise, call_i=length(behaviour[which(behaviour=='c' & who=='o')]),fly_i=length(behaviour[which(behaviour=='f' & who=='o')]))
+			dd$call_i=bb_$call_i[match(dd$obs_ID, bb_$obs_ID)]
+			dd$fly_i=bb_$fly_i[match(dd$obs_ID, bb_$obs_ID)]
+			dd$fly=as.factor(ifelse(dd$fly_i==0,'n','y'))
+		}
+		{# number of observations
+			summary(factor(dd$left_before_presence)) 
+			length(dd$left_before_presence[dd$left_before_presence=='y'])/nrow(dd)
+			
+		}
+		{# time left before presence
+			densityplot(~dd$presence/60, groups = dd$left_before_presence, auto.key=TRUE)
+			
+			summary(dd$presence[dd$left_before_presence=='y'])
+			length(dd$presence[dd$left_before_presence=='y' & dd$presence> -60]/60) # number of cases where parent left less then 1 min before presence of the partner
+			length(dd$presence[dd$left_before_presence=='y' & dd$presence< -60]/60) # number of cases where parent left more then 1 min before presence of the partner
+			length(dd$presence[dd$left_before_presence=='y' & dd$presence< -60*5]/60) # number of cases where parent left more then 1 min before presence of the partner
+			summary(dd$presence[dd$left_before_presence=='y' & dd$presence< -60]/60)
+			{# not used		
+				   densityplot(~presence/60, groups = dd$left_before_presence, dd[dd$presence>-50 & dd$presence<5,],auto.key=TRUE)
+				   densityplot(~presence/60, dd[dd$presence>-50 & dd$presence<5 & dd$left_before_presence=='n',],auto.key=TRUE)
+				   densityplot(~presence/60, dd[dd$left_before_presence=='n' & dd$presence<=0,],auto.key=TRUE)
+				   densityplot(~presence/60, dd[dd$left_before_presence=='y' & dd$presence>-25,],auto.key=TRUE)
+					dd[dd$presence > 30 & dd$left_before_presence =='y',] 
+					dd[dd$presence <= 0 & dd$left_before_presence =='n',] 
+				  densityplot(~log(abs(presence/60)), dd[dd$left_before_presence=='y',],auto.key=TRUE)
+            }      
+				  # How long before presence did birds leave?
+					stat.desc(dd$presence[dd$left_bin==0])/60
+         }      
+           
+           ####        
+           	{# it is irrelevant - given the distribution - is it sex specific? why did they leave? - do not used - 
+			{# check distributions
+					table(dd$sex,dd$left_before_presence)
+					
+					densityplot(dd$call_i)
+					densityplot(log(dd$call_i+0.01))
+  					densityplot(dd$fly_i)
+  					densityplot(log(dd$fly_i+0.01))
+  					densityplot(dd$current_bout)
+  				
+  					densityplot(~dd$call_i, groups=dd$left_bin, auto.key=TRUE)			
+  					densityplot(~dd$fly_i, groups=dd$left_bin, auto.key=TRUE)			
+  					densityplot(~dd$current_bout, groups=dd$left_bin, auto.key=TRUE)	
+			}		
+			{# model
+				m=glmer(left_bin~sex+(1|nest_ID),dd, family='binomial')
+						plot(allEffects(m))
+						summary(glht(m))
+				
+				dd_ = dd[!is.na(dd$current_bout),]
+				m = glmer(left_bin ~ sex + fly + scale(call_i)+scale(current_bout)+(1|nest_ID), dd_, family='binomial') #### CONTROL FOR REMOVAL exPER???
+  					plot(allEffects(m))
+  					summary(glht(m))
+  					# stats test???
+										
+  					ggplot(dd,aes(y=current_bout, x=left_before_presence))+geom_boxplot()
+  					ggplot(dd,aes(y=call_i, x=left_before_presence))+geom_boxplot()
+  					
+  					ggplot(dd,aes(x=presence, fill=sex))+geom_histogram(position="dodge" ,  alpha=0.4)
+  					dd_<-subset(dd,dd$left_before_presence=="n")
+  					ggplot(dd_,aes(x=presence, fill=sex))+geom_histogram(position="dodge" ,  alpha=0.4)+scale_x_log10(breaks = c(1,5,10,20,60,120,1000))
+  					ggplot(dd_,aes(x=presence, fill=sex))+geom_histogram(position="dodge" ,  alpha=0.4)+scale_x_log10(breaks = c(1,5,10,20,60,120,1000))
+  					ggplot(dd_,aes(x=day_j, y=presence, col=sex))+geom_point()+stat_smooth()+scale_y_log10(breaks = c(1,5,10,20,60,120,1000))
+  					
+  					
+  					table(dd$fly, dd$left_before_presence)
+  						
+  					ggplot(dd,aes(x=current_bout, y=left_bin))+geom_point()+stat_smooth()
+  					ggplot(dd,aes(x=current_bout, y=left_bin))+geom_point()+stat_smooth(method='lm')
+  					ggplot(dd,aes(x=call_i, y=left_bin))+geom_point()+stat_smooth()
+  						
+  																				
+  					
+
+
+			}
+				{# model assumptions
+						
+						dev.new(width=6,height=9)
+						par(mfrow=c(5,3))
+						
+						scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									 
+						scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+						
+						plot(fitted(m), jitter(dd_$left_bin, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+							abline(0,1, lty=3)
+							t.breaks <- cut(fitted(m), seq(0,1, by=0.1))
+							means <- tapply(dd_$left_bin, t.breaks, mean)
+							semean <- function(x) sd(x)/sqrt(length(x))
+							means.se <- tapply(dd_$left_bin, t.breaks, semean)
+							points(seq(0.05, 0.95, by=0.1), means, pch=16, col="orange")
+							segments(seq(0.05, 0.95, by=0.1), means-2*means.se, seq(0.05, 0.95,by=0.1), means+2*means.se,lwd=2, col="orange")
+							
+						plot(fitted(m), jitter(dd_$left_bin, amount=0.05), xlab="Fitted values", ylab="Probability of presence", las=1, cex.lab=1.2, cex=0.8) # what to do with the miss-fit
+							abline(0,1, lty=3)
+							t.breaks <- cut(fitted(m), seq(0,1, by=0.2))
+							means <- tapply(dd_$left_bin, t.breaks, mean)
+							semean <- function(x) sd(x)/sqrt(length(x))
+							means.se <- tapply(dd_$left_bin, t.breaks, semean)
+							points(seq(0.05, 0.95, by=0.2), means, pch=16, col="orange")
+							segments(seq(0.05, 0.95, by=0.2), means-2*means.se, seq(0.05, 0.95,by=0.2), means+2*means.se,lwd=2, col="orange")	
+			 
+						qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red')  # what to do with the miss-fit
+							qqline(resid(m))
+						boxplot(resid(m)~dd$left_before_presence, xlab = 'left before presence');abline(h=0, lty=2, col='red')
+						
+						qqnorm(unlist(ranef(m)$nest[1]), main = "nest",col='red')
+						qqline(unlist(ranef(m)$nest[1]))
+						
+						scatter.smooth(resid(m)~dd_$call_i);abline(h=0, lty=2, col='red')
+						scatter.smooth(resid(m)~dd_$current_bout);abline(h=0, lty=2, col='red')
+						scatter.smooth(resid(m)~dd_$fly);abline(h=0, lty=2, col='red')
+						boxplot(resid(m)~dd_$fly);abline(h=0, lty=2, col='red')	
+						scatter.smooth(resid(m)~dd_$sex);abline(h=0, lty=2, col='red')
+						boxplot(resid(m)~dd_$sex);abline(h=0, lty=2, col='red')			
+						
+						acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+						
+						# spatial autocorrelations - nest location
+							spdata=data.frame(resid=resid(m), x=dd_$lon, y=dd_$lat)
+								spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+								#cex_=c(1,2,3,3.5,4)
+								cex_=c(1,1.5,2,2.5,3)
+								spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+								plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+								
+								plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8),xlim=c(-156.68,-156.6), ylim=c(71.31,71.33))
+								plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8), xlim=c(-156.68,-156.6), ylim=c(71.31,71.33))
+								#mtext("glmer(success_bin~prop_ip+uni_last+(1|sp),data=g,family='binomial')", side = 3, line = -1.2, cex=0.8,outer = TRUE)	
+				
+				
+				}
+				{# model assumptions - only sex
+						
+						dev.new(width=6,height=9)
+						par(mfrow=c(5,3))
+						
+						scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									 
+						scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+						
+						plot(fitted(m), jitter(dd$left_bin, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+							abline(0,1, lty=3)
+							t.breaks <- cut(fitted(m), seq(0,1, by=0.1))
+							means <- tapply(dd$left_bin, t.breaks, mean)
+							semean <- function(x) sd(x)/sqrt(length(x))
+							means.se <- tapply(dd$left_bin, t.breaks, semean)
+							points(seq(0.05, 0.95, by=0.1), means, pch=16, col="orange")
+							segments(seq(0.05, 0.95, by=0.1), means-2*means.se, seq(0.05, 0.95,by=0.1), means+2*means.se,lwd=2, col="orange")
+							
+						plot(fitted(m), jitter(dd$left_bin, amount=0.05), xlab="Fitted values", ylab="Probability of presence", las=1, cex.lab=1.2, cex=0.8) # what to do with the miss-fit
+							abline(0,1, lty=3)
+							t.breaks <- cut(fitted(m), seq(0,1, by=0.2))
+							means <- tapply(dd$left_bin, t.breaks, mean)
+							semean <- function(x) sd(x)/sqrt(length(x))
+							means.se <- tapply(dd$left_bin, t.breaks, semean)
+							points(seq(0.05, 0.95, by=0.2), means, pch=16, col="orange")
+							segments(seq(0.05, 0.95, by=0.2), means-2*means.se, seq(0.05, 0.95,by=0.2), means+2*means.se,lwd=2, col="orange")	
+			 
+						qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red')  # what to do with the miss-fit where presence equals one
+							qqline(resid(m))
+						qqnorm(unlist(ranef(m)$nest[1]), main = "nest",col='red')
+						qqline(unlist(ranef(m)$nest[1]))
+						
+						boxplot(resid(m)~dd$left_before_presence, xlab = 'left before presence');abline(h=0, lty=2, col='red')
+						
+						scatter.smooth(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+						boxplot(resid(m)~dd$sex);abline(h=0, lty=2, col='red')			
+						
+						acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+						
+						# spatial autocorrelations - nest location
+							spdata=data.frame(resid=resid(m), x=dd$lon, y=dd$lat)
+								spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+								#cex_=c(1,2,3,3.5,4)
+								cex_=c(1,1.5,2,2.5,3)
+								spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+								plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+								
+								plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8),xlim=c(-156.68,-156.6), ylim=c(71.31,71.33))
+								plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8), xlim=c(-156.68,-156.6), ylim=c(71.31,71.33))
+								#mtext("glmer(success_bin~prop_ip+uni_last+(1|sp),data=g,family='binomial')", side = 3, line = -1.2, cex=0.8,outer = TRUE)	
+				
+				
+				}
+			
+			{# Supplementary Table 1
+			pred=c('Intercept (female)','Male')
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				# Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model='1',type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model='1', type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o1=rbind(oii,ri)
+				# create xlsx		
+						sname = tempfile(fileext='.xls')
+						wb = loadWorkbook(sname,create = TRUE)	
+						createSheet(wb, name = "output")
+						writeWorksheet(wb, o1, sheet = "output")
+						#createSheet(wb, name = "output_AIC")
+						#writeWorksheet(wb, rbind(o), sheet = "output_AIC")
+						saveWorkbook(wb)
+						shell(sname)
+		
+		}
+		}	
+			{# old plots models
+						
+						dd$n=1
+						x=ddply(dd,. (nest_ID,sex),summarise,left = sum(left_bin), p=sum(left_bin)/ sum(n), n=sum(n))
+						ggplot(x, aes(x=sex, y=left, col = sex)) + geom_boxplot()
+						densityplot(~x$p)
+						
+						ratio <- table(dd$sex,dd$left_before_presence) 
+    					par(mfrow=c(1,1))
+    					bplt<-barplot(ratio,col=c("white","black"),legend=rownames(ratio),space=c(1,3),beside=TRUE, ylab="number of exchanges", xlab="Incubating bird left before partner's presence ")#cex.names=3
+    					text(y=ratio+5, x= bplt, labels=as.character(ratio), xpd=T)
+						
+    					#Do males leave the nest before partner is present more often than females?
+    					# chisq is pseudoreplicated, same individuals again!
+    					length(dd$sex[dd$sex=="m"]) #86 observations of males
+    					length(dd$sex[dd$sex=="f"])#83 observations for females
+    					length(dd$sex[dd$sex=="f"&dd$left_before_presence=="n"]) #67 females stayed
+    					length(dd$sex[dd$sex=="m"&dd$left_before_presence=="n"]) #76 males stayed
+    					length(dd$sex[dd$sex=="f"&dd$left_before_presence=="y"]) #17 females left
+    					length(dd$sex[dd$sex=="m"&dd$left_before_presence=="y"]) #11 males left
+    					left<-matrix(c(11,76,17,67),2,2);left
+    					dimnames(left)<-list(left=c("yes","no"),sex=c("male","female"));left
+    					chisq.test(left) #->independent
+						
+						#violin time of presence, sexes adjusted!Save with width=1500
+                  ggplot(dd[dd$presence>-0&dd$presence<500&!is.na(dd$presence),],
+                         aes(y=presence,x=sex,fill=sex))+
+                    geom_violin(alpha=0.5,color="black",size=1.5)+ #alpha determines how intense the color is, low alpha is durchscheinender
+                    geom_boxplot(width=0.2,fill="white",size=1.5)+ #size determines line thickness
+                    theme_bw()+
+                    theme(legend.position="none",axis.text = element_text(size=30),axis.title=element_text(size=30),panel.grid.major = element_line(size=1.5))+ #axis text is Achsenbeschriftung, also hier male und female,axis.title is Achsenname, also hier sex, size is font size, panel.grid.major is line thickness of grid
+                    ylab("Time present [sec]")+
+                    scale_x_discrete(breaks=c("f","m"),labels=c("male","female"))+
+                    scale_fill_manual(values=c("blue","red"))+
+                    scale_colour_manual(values=c("blue","red"))
+                  
+                  #violin plot of time left before presence, sexes ok, save with width=1500
+                  ggplot(dd[dd$presence>-500&dd$presence<0&!is.na(dd$presence),],
+                         aes(y=-presence/60,x=sex,fill=sex))+
+                    geom_violin(alpha=0.5,color="black",size=1.5)+ #alpha determines how intense the color is, low alpha is durchscheinender
+                    geom_boxplot(width=0.2,fill="white",color="black",size=1.5)+
+                    theme_bw()+
+                    theme(legend.position="none",axis.text = element_text(size=30),axis.title=element_text(size=30),panel.grid.major = element_line(size=1.5))+
+                    ylab("Time left before presence [min]")+
+                    scale_x_discrete(breaks=c("f","m"),labels=c("female","male"))+
+                    scale_fill_manual(values=c("red","blue"))+
+                    scale_colour_manual(values=c("red","blue"))
+                  
+                  #presence by nest_ID, sexes adjusted! more space needed between nests, still produces NAs
+                  ggplot(dd[!is.na(dd$presence)&dd$left_before_presence=="y",],
+                         aes(y=presence, x=nest_ID, fill=sex))+
+                    geom_boxplot(alpha=0.4)+
+                    scale_y_log10(breaks = c(1,5,10,20,60,120,1000))+
+                    theme_bw()+
+                    theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+                    ylab("Time present in seconds")+
+                    scale_colour_manual(values=c("blue","red"),breaks=c("f","m"),labels=c("m","f")) +
+                    scale_fill_manual(values=c("blue","red"),breaks=c("f","m"),labels=c("m","f"))
+                
+				#Do sexes differ in the time they leave before the partner is present? random effects:year,nest,bird_ID, focal bird is incubating: sex ok
+                  m1=lmer(rank(presence)~as.factor(sex)+(cage)+(1|year)+(1|nest_ID)+(1|pair_ID),REML=T,data=dd[dd$left_before_presence=="n"])
+                  plot(m1)
+                  summary(m1)
+                  require(multcomp)
+                  summary(glht(m1))
+                  m1=lmer(rank(presence)~as.factor(sex)+(1|year)+(1|nest_ID)+(1|bird_ID)+(1|cage),REML=F,data=dd[dd$left_before_presence=="n"])
+                  m1.null=lmer(rank(presence)~1+(1|year)+(1|nest_ID)+(1|bird_ID)+(1|cage),REML=F,data=dd[dd$left_before_presence=="n"])
+       
+                  #Do sexes differ in the time they have been present before the exchange? random intercept model, random effects: year, nest, bird ID, focal bird is coming: switch sex!
+                  m0=lmer(rank(presence)~as.factor(sex)+(cage)+(1|year)+(1|nest_ID)+(1|pair_ID),  data=dd[dd$left_before_presence=="y"])
+                  plot(m0)
+                  summary(glht(m0))
+                  
+                  
+                  				
+			}			
+	}
+	  {# behaviour prior to return 
+		
+		{#1a. Do the incubating birds call and fly off more prior to exchange than during regular incubation and does it change over incubation period
+		    {# run first	
+				
+      			bb_$dt_video=d$dt_video[match(bb_$obs_ID,d$obs_ID)]
+      			bb_$hour= as.numeric(difftime(bb_$dt_video, trunc(bb_$dt_video,"day"), units = "hours"))
+      			bb_$rad=as.numeric(bb_$hour)*pi/12
+				bb_$n=1
+				bb_$bird_ID = paste(bb_$nest_ID, bb_$sex)				
+				
+				
+			}	
+			{# distributions
+					ggplot(bb_,aes(x=log(obs_time), y=call_i, fill = type))+geom_point()
+					ggplot(bb_,aes(x=log(obs_time), y=fly_i, fill = type))+geom_point()
+				
+				}
+				
+			
+			{# LATER DELETE no overall difference between calls  
+				{# Supplementary table
+					m= glmer(call_i ~ type + (1|bird_ID) + (1|nest_ID), offset = log(obs_time),family = poisson,  bb_)
+					#fm= glmer(call_i ~ type + (1|nest_ID), family = poisson,  bb_)
+				   			
+      					summary(fm)
+      					summary(glht(fm))
+      					plot(allEffects(fm))
+						dispersion_glmer(fm) # values over 1.4 suggest serious overdisperison
+						
+					# this does not change over the incubation period
+							fm= glmer(call_i ~ type*scale(day_j) + (day_j|nest_ID),offset = log(obs_time), family = poisson,  bb_)
+												
+						{# I think this does not belong here, but WE CAN KEEP THIS IN CASE WE HAVE A PREDICTION HERE 
+							# the finding says that regularly incubating birds tend to call less during mid-day and more during night whereas before exchange this is more regular
+							fm= glmer(call_i ~ type*sin(rad)+type*cos(rad)+ (1|nest_ID), family = poisson,  bb_) 
+							 summary(glht(fm))
+							 plot(allEffects(fm))
+							
+						}	
+				}
+					{# old plots
+				ggplot(bb_,aes(x=type, y=call_i))+geom_boxplot()
+				
+				#ggplot(bb_,aes(x=reorder(nest_ID, call_i, FUN=median), y=call_i, fill=type))+geom_boxplot()
+
+				ggplot(bb_,aes(x=type, y=call_i, col=sex))+geom_boxplot()
+  				ggplot(bb_,aes(x=call_i, col=type))+geom_density()
+				ggplot(bb_,aes(x=call_i, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4)
+				
+				
+				}
+			}
+			{# LATER DELETE less fly-offs before exchange
+				{# Supplementary table
+					# Poisson
+						fm= glmer(fly_i ~ type + (1|bird_ID) + (1|nest_ID),offset = log(obs_time), family = poisson,  bb_)
+      					summary(fm)
+						summary(glht(fm))
+      					plot(allEffects(fm))
+						dispersion_glmer(fm) 
+						
+						# overall fly-offs increase over the incubation period
+						fm= glmer(fly_i ~ type*scale(day_j) + (day_j|nest_ID),offset = log(obs_time), family = poisson,  bb_)
+						fm= glmer(fly_i ~ type+scale(day_j) + (day_j|nest_ID),offset = log(obs_time), family = poisson,  bb_)
+					
+					
+									
+		
+				}
+				{# binary (gives same results as Poisson
+						bb_$fly_bin=ifelse(bb_$fly_i==0,0,1)
+						fm= glmer(fly_bin ~ type + (1|nest_ID), family = binomial,  bb_)
+							summary(fm)
+							summary(glht(fm))
+							plot(allEffects(fm))
+				}			
+				{# old plots
+				ggplot(bb_,aes(x=type, y=fly_i))+geom_boxplot()
+				#ggplot(bb_,aes(x=reorder(nest_ID, fly_i, FUN=median), y=fly_i, fill=type))+geom_boxplot()
+  				ggplot(bb_,aes(x=type, y=fly_i, col=sex))+geom_boxplot()
+				ggplot(bb_,aes(x=fly_i, col=type))+geom_density()
+				ggplot(bb_,aes(x=fly_i, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4)
+				}
+      		}	
+			
+			{# PLOT distribution of calls and fly-offs including predictions FOR PAPER
+			   {# run first 
+				{# model predictions
+				{# calls
+				m= glmer(call_i ~ type + (1|bird_ID) + (1|nest_ID), family = poisson,  bb_)
+						pred=c('Intercept (exchange)','Type (non-exchange)')
+						nsim <- 2000
+						bsim <- sim(m, n.sim=nsim)  
+				
+				# coefficients
+					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				
+				# values to predict for		
+					newD=data.frame(type=c('ex','non'))
+						
+				# exactly the model which was used has to be specified here 
+					X <- model.matrix(~ type,data=newD)	
+								
+				# calculate predicted values and creditability intervals
+					newD$pred <-exp(X%*%v) 
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- exp(X%*%bsim@fixef[i,])
+							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
+							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
+					pp=newD	
+					pt_=pp[pp$type=='ex',]
+					pc_=pp[pp$type=='non',]
+				}		
+			    {# fly-offs
+				 m= glmer(fly_i ~ type + (1|bird_ID) + (1|nest_ID), family = poisson,  bb_)
+						pred=c('Intercept (exchange)','Type (non-exchange)')
+						nsim <- 2000
+						bsim <- sim(m, n.sim=nsim)  
+				
+				# coefficients
+					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				
+				# values to predict for		
+					newD=data.frame(type=c('ex','non'))
+						
+				# exactly the model which was used has to be specified here 
+					X <- model.matrix(~ type,data=newD)	
+								
+				# calculate predicted values and creditability intervals
+					newD$pred <-exp(X%*%v) 
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- exp(X%*%bsim@fixef[i,])
+							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
+							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
+					pp=newD	
+					pe=pp[pp$type=='ex',]
+					pn=pp[pp$type=='non',]
+				}		
+				}			
+				{# raw data
+					u=ddply(bb_,.(nest_ID, type), summarise,m=median(call_i), q1=quantile(call_i,0.25), q2= quantile(call_i,0.75), n = sum(n))
+					u$type_j=jitter(ifelse(u$type=='ex',2,6)) 
+				
+					x=ddply(bb_,.(nest_ID, type), summarise,m=median(fly_i), q1=quantile(fly_i,0.25), q2= quantile(fly_i,0.75), n = sum(n))
+					x$type_j=jitter(ifelse(x$type=='ex',2,6))
+				
+				}
+				}
+				if(PNG == TRUE) {
+					png(paste(outdir,"distribution_call_fly_before.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+					}else{
+					dev.new(width=1.85+0.6,height=1.5*2)
+					}	
+				
+				par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 1.8, 0.2, 2.8),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+						
+						
+					# calls
+						plot(u$m~u$type_j, xlim=c(0,8), ylim=c(0,7),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						
+						mtext("Number of calls",side=2,line=1, cex=0.6, las=3, col='grey30')
+						
+						for(i in 1:length(unique(u$nest_ID))){
+									ui=u[u$nest_ID==unique(u$nest_ID)[i],]
+									if(nrow(ui)==2){lines(ui$type_j, ui$m, col='grey90')}
+									}
+						arrows(x0=u$type_j, y0=u$q1,x1=u$type_j, y1=u$q2, code = 0, col=col_p, angle = 90, length = .025, lwd=0.5, lty=1)
+						
+						symbols(u$type_j, u$m, circles=sqrt(u$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
+						
+						
+						
+						# add predictions + 95%CI
+							lines(c(2,6), c(pt_$pred,pc_$pred), col='red')
+							
+							arrows(x0=2, y0=pt_$lwr,x1=2, y1=pt_$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							arrows(x0=6, y0=pc_$lwr,x1=6, y1=pc_$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+													
+							points(y=pt_$pred,x=2, pch=19, cex=0.9,col="red")
+							points(y=pc_$pred,x=6, pch=19, cex=0.9,col="red")
+							
+						# legend
+							mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='grey30', xpd=TRUE) # for printing into device use padj=-7.5
+							symbols(c(8.5,8.5,8.5),c(6.5,5.5,4.5)-0.5,circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+							text(c(8.5,8.5,8.5)+1,c(6.5,5.5,4.5)-0.5,labels=c(1,10,20), xpd=TRUE, cex=0.5,col='grey30') 
+							
+							text(c(7.1),c(4),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', srt=90, xpd=FALSE) 
+							mtext('Predictions &\n95%CrI',side = 4,line=-0.3,padj=2, cex=0.5,las=1,col='red', xpd=TRUE)
+							
+							#points(8.5, 1.5, pch=19,cex=0.9, col='red',xpd=NA)
+							#arrows(x0=8.5,x1=8.5, y0=1.5-0.3, y1=1.5+0.3,  code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							#arrows(x0=7.75,x1=6.3, y0=2.2, y1=1.8,  code = 2, col=col_p, angle = 30, length = .025, lwd=1, lty=1)
+							#mtext('Prediction &\n95%CrI',side = 4,line=-0.3,padj=2, cex=0.5,las=1,col='grey30', xpd=TRUE) 
+									# use if plotting within RData
+									#mtext('Weighted\nmedian',side = 4,line=3, cex=0.5,padj=-3.25,adj=0.5, las=1,col='grey30',xpd=TRUE)
+									#points(12.5, 85, pch=19, col='black',xpd=NA)
+								
+					# fly-offs
+						plot(x$m~x$type_j, xlim=c(0,8), ylim=c(0,4),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						
+												
+						axis(1, at=c(2,6), label=c('Before exchange', 'Regular'), mgp=c(0,-0.20,0))
+						mtext("Incubation",side=1,line=0.4, cex=0.5, las=1, col='grey30')
+											
+						axis(2, at=seq(0,100,by=20))
+						mtext("Number of fly-offs",side=2,line=1, cex=0.6, las=3, col='grey30')
+						
+						for(i in 1:length(unique(x$nest_ID))){
+									ui=x[x$nest_ID==unique(x$nest_ID)[i],]
+									if(nrow(ui)==2){lines(ui$type_j, ui$m, col='grey90')}
+									}
+						
+						arrows(x0=x$type_j, y0=x$q1,x1=x$type_j, y1=x$q2, code = 0, col=col_p, angle = 90, length = .025, lwd=0.5, lty=1)
+						
+						symbols(x$type_j, x$m, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
+						
+						
+						# add predictions + 95%CI
+							lines(c(2,6), c(pe$pred,pn$pred), col='red')
+							
+							arrows(x0=2, y0=pe$lwr,x1=2, y1=pe$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							arrows(x0=6, y0=pn$lwr,x1=6, y1=pn$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							
+							points(y=pe$pred,x=2, pch=19, cex=0.9,col="red")
+							points(y=pn$pred,x=6, pch=19, cex=0.9,col="red")
+							
+			if(PNG == TRUE) {dev.off()}
+				}			
+			{# PLOT distribution of calls and fly-offs RATE including predictions FOR PAPER
+			   {# run first 
+			    {# model predictions
+				{# calls
+					m= glmer(call_i ~ type + (1|bird_ID) + (1|nest_ID),offset = log(obs_time), family = poisson,  bb_) # rate per minute
+						pred=c('Intercept (exchange)','Type (non-exchange)')
+						nsim <- 2000
+						bsim <- sim(m, n.sim=nsim)  
+				
+				# coefficients
+					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				
+				# values to predict for		
+					newD=data.frame(type=c('ex','non'))
+						
+				# exactly the model which was used has to be specified here 
+					X <- model.matrix(~ type,data=newD)	
+								
+				# calculate predicted values and creditability intervals
+					newD$pred <-exp(X%*%v)*10 
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- exp(X%*%bsim@fixef[i,])
+							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)*10
+							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)*10
+					pp=newD	
+					pt_=pp[pp$type=='ex',]
+					pc_=pp[pp$type=='non',]
+				}		
+			    {# fly-offs
+				 m= glmer(fly_i ~ type + (1|bird_ID) + (1|nest_ID), offset = log(obs_time), family = poisson,  bb_)
+						pred=c('Intercept (exchange)','Type (non-exchange)')
+						nsim <- 2000
+						bsim <- sim(m, n.sim=nsim)  
+				
+				# coefficients
+					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				
+				# values to predict for		
+					newD=data.frame(type=c('ex','non'))
+						
+				# exactly the model which was used has to be specified here 
+					X <- model.matrix(~ type,data=newD)	
+								
+				# calculate predicted values and creditability intervals
+					newD$pred <-exp(X%*%v)*10 
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- exp(X%*%bsim@fixef[i,])
+							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)*10
+							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)*10
+					pp=newD	
+					pe=pp[pp$type=='ex',]
+					pn=pp[pp$type=='non',]
+				}		
+				}
+				{# raw data
+					u=ddply(bb_,.(nest_ID, type), summarise,m=median(10*call_i/obs_time), q1=quantile(10*call_i/obs_time,0.25), q2= quantile(10*call_i/obs_time,0.75), n = sum(n))
+					u$type_j=jitter(ifelse(u$type=='ex',2,6)) 
+				
+					x=ddply(bb_,.(nest_ID, type), summarise,m=median(10*fly_i/obs_time), q1=quantile(10*fly_i/obs_time,0.25), q2= quantile(10*fly_i/obs_time,0.75), n = sum(n))
+					x$type_j=jitter(ifelse(x$type=='ex',2,6))
+				}
+				}
+				if(PNG == TRUE) {
+					png(paste(outdir,"distribution_call_fly_10min_rates_before.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+					}else{
+					dev.new(width=1.85+0.6,height=1.5*2)
+					}	
+				
+				par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 1.8, 0.2, 2.8),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+						
+						
+					# calls
+						plot(u$m~u$type_j, xlim=c(0,8), ylim=c(0,3.2),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						
+						mtext("Calling rate / 10min",side=2,line=1, cex=0.6, las=3, col='grey30')
+						
+						for(i in 1:length(unique(u$nest_ID))){
+									ui=u[u$nest_ID==unique(u$nest_ID)[i],]
+									if(nrow(ui)==2){lines(ui$type_j, ui$m, col='grey90')}
+									}
+						arrows(x0=u$type_j, y0=u$q1,x1=u$type_j, y1=u$q2, code = 0, col=col_p, angle = 90, length = .025, lwd=0.5, lty=1)
+						
+						symbols(u$type_j, u$m, circles=sqrt(u$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
+						
+						
+						
+						# add predictions + 95%CI
+							lines(c(2,6), c(pt_$pred,pc_$pred), col='red')
+							
+							arrows(x0=2, y0=pt_$lwr,x1=2, y1=pt_$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							arrows(x0=6, y0=pc_$lwr,x1=6, y1=pc_$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							
+							points(y=pt_$pred,x=2, pch=19, cex=0.9,col="red")
+							points(y=pc_$pred,x=6, pch=19, cex=0.9,col="red")
+						
+						# legend
+							mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='grey30', xpd=TRUE) # for printing into device use padj=-7.5
+							symbols(c(8.5,8.5,8.5),c(3.3,2.8,2.3)-0.5,circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+							text(c(8.5,8.5,8.5)+1,c(3.3,2.8,2.3)-0.5,labels=c(1,10,20), xpd=TRUE, cex=0.5,col='grey30') 
+							
+							text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', srt=90, xpd=FALSE) 
+							
+							#arrows(x0=8.5,x1=8.5, y0=1-0.1, y1=1+0.1,  code = 0, col=col_p, angle = 90, length = .025, lwd=1.5, lty=1)
+							#symbols(c(8.5),c(1),circles=sqrt(c(1)/pi),inches=0.03,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) 
+							#text(c(8.5)+1,c(1),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', adj = 0, pos=4, xpd=FALSE) 
+							
+							#points(8.5, 1.5, pch=19,cex=0.9, col='red',xpd=NA)
+							#arrows(x0=8.5,x1=8.5, y0=1.5-0.3, y1=1.5+0.3,  code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							#arrows(x0=7.75,x1=6.3, y0=2.2, y1=1.8,  code = 2, col=col_p, angle = 30, length = .025, lwd=1, lty=1)
+							mtext('Predictions &\n95%CrI',side = 4,line=-0.3,padj=2, cex=0.5,las=1,col='red', xpd=TRUE) 
+									# use if plotting within RData
+									#mtext('Weighted\nmedian',side = 4,line=3, cex=0.5,padj=-3.25,adj=0.5, las=1,col='grey30',xpd=TRUE)
+									#points(12.5, 85, pch=19, col='black',xpd=NA)
+								
+					# fly-offs
+						plot(x$m~x$type_j, xlim=c(0,8), ylim=c(0,1.4),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						
+												
+						axis(1, at=c(2,6), label=c('Before exchange', 'Regular'), mgp=c(0,-0.20,0))
+						mtext("Incubation",side=1,line=0.4, cex=0.5, las=1, col='grey30')
+											
+						#axis(2, at=seq(0,100,by=20))
+						mtext("Fly-off rate / 10min",side=2,line=1, cex=0.6, las=3, col='grey30')
+						
+						for(i in 1:length(unique(x$nest_ID))){
+									ui=x[x$nest_ID==unique(x$nest_ID)[i],]
+									if(nrow(ui)==2){lines(ui$type_j, ui$m, col='grey90')}
+									}
+						
+						arrows(x0=x$type_j, y0=x$q1,x1=x$type_j, y1=x$q2, code = 0, col=col_p, angle = 90, length = .025, lwd=0.5, lty=1)
+						
+						symbols(x$type_j, x$m, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
+						
+						
+						# add predictions + 95%CI
+							lines(c(2,6), c(pe$pred,pn$pred), col='red')
+							arrows(x0=2, y0=pe$lwr,x1=2, y1=pe$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							arrows(x0=6, y0=pn$lwr,x1=6, y1=pn$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							
+							points(y=pe$pred,x=2, pch=19, cex=0.9,col="red")
+							points(y=pn$pred,x=6, pch=19, cex=0.9,col="red")
+							
+			if(PNG == TRUE) {dev.off()}
+				}			
+			
+			{# Supplementery Table
+			  {# prepare table data
+				{# calling - type
+				m= glmer(call_i ~ type + (1|bird_ID) + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
+					pred=c('Intercept (ex)','Type(non)')
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				# Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model='1',dependent = 'calling rate / 10min', type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model='1',dependent = 'calling rate / 10min', type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o1=rbind(oii,ri)
+				}
+				{# calling type * incubation period	
+					m= glmer(call_i ~ type*scale(day_j) + (day_j|nest_ID),offset = log(obs_time/10), family = poisson,  bb_)
+						pred=c('Intercept (ex)','Type(non)', 'Day of incubation', 'Day x type')
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				# Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model='2',dependent = 'calling rate / 10min', type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model='2',dependent = 'calling rate / 10min', type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o2=rbind(oii,ri)
+				}	
+				{# fly-off - type
+					m= glmer(fly_i ~ type + (1|bird_ID) + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
+					pred=c('Intercept (ex)','Type(non)')
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				# Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model='3',dependent = 'fly-off rate / 10min', type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model='2',dependent = 'fly-off rate / 10min', type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o3=rbind(oii,ri)
+				}
+				{# fly-off type * incubation period	
+					m= glmer(fly_i ~ type*scale(day_j) + (day_j|nest_ID),offset = log(obs_time/10), family = poisson,  bb_)
+						pred=c('Intercept (ex)','Type(non)', 'Day of incubation', 'Day x type')
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				# Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model='4',dependent = 'fly-off rate / 10min', type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model='4',dependent = 'fly-off rate / 10min', type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o4=rbind(oii,ri)
+				}	
+			  }
+			  {# create xlsx table		
+						o=rbind(o1,o2,o3,o4)
+						sname = tempfile(fileext='.xls')
+						wb = loadWorkbook(sname,create = TRUE)	
+						createSheet(wb, name = "output")
+						writeWorksheet(wb, o, sheet = "output")
+						#createSheet(wb, name = "output_AIC")
+						#writeWorksheet(wb, rbind(o), sheet = "output_AIC")
+						saveWorkbook(wb)
+						shell(sname)
+				}
+			}
+				{# model assumptions
+					dispersion_glmer(m)
+				
+				}
+			{# NOT USED separate plot FOR PAPER
+				#png(paste(outdir,"distribution_call_i_before.png", sep=""), width=1.85+0.6,height=1.85*2,units="in",res=600)
+				dev.new(width=1.85+0.6,height=1.85)
+						
+				
+				par(,mar=c(0.0,0,0,1.2),oma = c(2.1, 1.8, 0.2, 2.8),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+						
+						plot(v$m~v$type_j, xlim=c(0,8), ylim=c(0,4),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						
+												
+						axis(1, at=c(2,6), label=c('Before exchange', 'Regular'), mgp=c(0,-0.20,0))
+						mtext("Incubation",side=1,line=1, cex=0.5, las=1, col='grey30')
+											
+						#axis(2, at=seq(0,100,by=20))
+						mtext("Number of fly-offs",side=2,line=1, cex=0.6, las=3, col='grey30')
+						
+						for(i in 1:length(unique(v$nest_ID))){
+									ui=v[v$nest_ID==unique(v$nest_ID)[i],]
+									if(nrow(ui)==2){lines(ui$type_j, ui$m, col='grey90')}
+									}
+						
+						symbols(v$type_j, v$m, circles=sqrt(v$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
+						
+						
+						# add medians
+						
+						points(2, weightedMedian(v$m[v$type=='ex'], v$n[v$type=='ex']), pch=19, col='red')
+						points(6, weightedMedian(v$m[v$type=='non'], v$n[v$type=='non']), pch=19, col='red')
+												
+						#lines(c(1.5,2.5), c(median(u1$s), median(u1$s)), lwd=2, col='black')
+						#lines(c(5.5,6.5), c(median(u2$s), median(u2$s)), lwd=2, col='black')
+						{# legend
+									mtext(expression(italic('N')*' nests:'),side = 4,line=-0.3, padj=-9,cex=0.5,las=1,col='grey30', xpd=TRUE) # for printing into device use padj=-7.5
+									symbols(c(8.5,8.5,8.5),c(6.5,5.5,4.5),circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+									text(c(8.5,8.5,8.5)+1,c(6.5,5.5,4.5),labels=c(1,10,20), xpd=TRUE, cex=0.5,col='grey30') 
+																		
+									mtext('Weighted\nmedian',side = 4,line=-0.3,padj=1, cex=0.5,las=1,col='grey30', xpd=TRUE) 
+															
+									points(8.5, 2, pch=19, col='red',xpd=NA)
+									# use if plotting within RData
+									#mtext('Weighted\nmedian',side = 4,line=3, cex=0.5,padj=-3.25,adj=0.5, las=1,col='grey30',xpd=TRUE)
+									#points(12.5, 85, pch=19, col='black',xpd=NA)
+						}
+								
+						dev.off()
+					
+				{# plot FOR PAPER
+						#png(paste(outdir,"distribution_call_i_before.png", sep=""), width=1.85+0.6,height=1.85,units="in",res=600)
+						dev.new(width=1.85+0.6,height=1.85)
+						
+						par(mar=c(0.0,0,0,1.2),oma = c(2.1, 1.8, 0.2, 2.8),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+						
+						plot(u$m~u$type_j, xlim=c(0,8), ylim=c(0,7),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						
+												
+						axis(1, at=c(2,6), label=c('Before exchange', 'Regular'), mgp=c(0,-0.20,0))
+						mtext("Incubation",side=1,line=1, cex=0.5, las=1, col='grey30')
+											
+						#axis(2, at=seq(0,100,by=20))
+						mtext("Number of calls",side=2,line=1, cex=0.6, las=3, col='grey30')
+						
+						for(i in 1:length(unique(u$nest_ID))){
+									ui=u[u$nest_ID==unique(u$nest_ID)[i],]
+									if(nrow(ui)==2){lines(ui$type_j, ui$m, col='grey90')}
+									}
+						
+						symbols(u$type_j, u$m, circles=sqrt(u$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
+						
+						
+						# add medians
+						
+						points(2, weightedMedian(u$m[u$type=='ex'], u$n[u$type=='ex']), pch=19, col='red')
+						points(6, weightedMedian(u$m[u$type=='non'], u$n[u$type=='non']), pch=19, col='red')
+												
+						#lines(c(1.5,2.5), c(median(u1$s), median(u1$s)), lwd=2, col='black')
+						#lines(c(5.5,6.5), c(median(u2$s), median(u2$s)), lwd=2, col='black')
+						{# legend
+									mtext(expression(italic('N')*' nests:'),side = 4,line=-0.3, padj=-9,cex=0.5,las=1,col='grey30', xpd=TRUE) # for printing into device use padj=-7.5
+									symbols(c(8.5,8.5,8.5),c(6.5,5.5,4.5),circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+									text(c(8.5,8.5,8.5)+1,c(6.5,5.5,4.5),labels=c(1,10,20), xpd=TRUE, cex=0.5,col='grey30') 
+																		
+									mtext('Weighted\nmedian',side = 4,line=-0.3,padj=1, cex=0.5,las=1,col='grey30', xpd=TRUE) 
+															
+									points(8.5, 2, pch=19, col='red',xpd=NA)
+									# use if plotting within RData
+									#mtext('Weighted\nmedian',side = 4,line=3, cex=0.5,padj=-3.25,adj=0.5, las=1,col='grey30',xpd=TRUE)
+									#points(12.5, 85, pch=19, col='black',xpd=NA)
+						}
+								
+						dev.off()
+					
+			}
+						
+			}
+						
+		}
+									
+		}		
+        {#1b. Does the probability of calling increase as leaving/exchange is nearing)? and if so is this sex specific
+				{# run first	  
+					# time difference of each observation to the end of observations session  )only for those observatins sessions where calling occured)
+						ba = b[, deltaT := difftime(end_pr, dt_behaviour, units = 'mins')%>% as.integer]
+						bo = b_[, deltaT := difftime(end_pr, dt_behaviour, units = 'mins')%>% as.integer] # contains only cases where incubating bird left after its partner was present
+          			
+          			bo$hour= as.numeric(difftime(bo$dt_behaviour, trunc(bo$dt_behaviour,"day"), units = "hours"))
+          			bo$rad=as.numeric(bo$hour)*pi/12
+					
+          			#h$sin_=sin(h$rad)
+          			#h$cos_=cos(h$rad)
+          			
+                # calling occures closer to exchange 
+          			hist(bo$deltaT[bo$behaviour == 'c' & bo$who == 'o'])
+          			m= lmer(deltaT ~ type + (1|bird_ID)+(1|nest_ID) , bo[bo$behaviour == 'c' & bo$who == 'o',])
+          			#fm= lmer(deltaT ~ type+sin(rad)+type+cos(rad)+(1|nest_ID) , bo[bo$behaviour == 'c' & bo$who == 'o',])
+          			#fm= lmer(deltaT ~ type*sin(rad)+type*cos(rad)+(1|nest_ID) , bo[bo$behaviour == 'c' & bo$who == 'o',])
+          			#fm= lmer(deltaT ~ type*scale(day_j)+ (1|nest_ID) , bo[bo$behaviour == 'c' & bo$who == 'o',])
+          			summary(m)
+          			glht(m) %>% summary
+          			plot(allEffects(m))
+          			ggplot(bo[bo$behaviour == 'c' & bo$who == 'o',], aes(x=type, y=deltaT, col=type))+geom_boxplot()
+          			
+					### CREAT PLOT and Table
+						# distribution and 
+						# same plot as in Figure 1
+					
+					# distribution over time
+						ggplot(bo[bo$behaviour == 'c' & bo$who == 'o',], aes(x=deltaT, col=type))+geom_density()
+						# includes also those that left before presence of the coming bird - USE IN THE MANUSCRIPT
+						ggplot(b[b$behaviour == 'c' & b$who == 'o',], aes(x=deltaT, col=type))+geom_density() +geom_vline(xintercept = 0) 
+						ggplot(b[b$behaviour == 'c' & b$who == 'o',], aes(x=deltaT, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4) +geom_vline(xintercept = 0)
+						
+						ggplot(b[b$behaviour == 'c' & b$who == 'o',], aes(x=deltaT, col=type))+geom_histogram(aes(y=..density..),position="dodge" ,  alpha=0.4) +geom_density() +geom_vline(xintercept = 0) 
+						
+          		# fly_off happen less often as the exchange approaches
+          			hist(bo$deltaT[bo$behaviour == 'f' & bo$who == 'o'])
+          			fm= lmer(deltaT ~ type + (1|nest_ID) , bo[bo$behaviour == 'f' & bo$who == 'o',])
+          			#fm= lmer(deltaT ~ type*scale(day_j)++ (1|nest_ID) , bo[bo$behaviour == 'f' & bo$who == 'o',])
+          			summary(fm)
+          			glht(fm) %>% summary
+          			plot(allEffects(fm))
+          			
+          			ggplot(bo[bo$behaviour == 'f' & bo$who == 'o',], aes(x=type, y=deltaT, col=type))+geom_boxplot()
+          			
+					# distribution over time
+          			ggplot(bo[which(bo$behaviour == 'f' & bo$who == 'o'),], aes(x=deltaT, col=type))+geom_density()
+          			#ggplot(b[which(b$behaviour == 'f' & b$who == 'o'),], aes(x=deltaT, col=type))+geom_density()
+          			ggplot(b[b$behaviour == 'f' & b$who == 'o',], aes(x=deltaT, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4) +geom_vline(xintercept = 0)
+          			#ggplot(bo[bo$behaviour == 'f' & bo$who == 'o',], aes(x=deltaT, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4) +geom_vline(xintercept = 0)
+					ggplot(b[b$behaviour == 'f' & b$who == 'o',], aes(x=deltaT, col=type))+geom_histogram(aes(y=..density..),position="dodge" ,  alpha=0.4) +geom_density() +geom_vline(xintercept = 0) 
+			}
+		
+  		{#### TO DO: check whether the probability of calling with time is not specific to whether the bird left before partner was present)
+						
+  		}			
+  		
+	}
+	
+	{# exchange procedure - DECIDE WHETHER TO INVOLVE DATETIME LEFT
+		
+      	 {# run first
+      			
+      		dd=d[d$type=='ex',]
+      			
+    			dd$presence=as.numeric(dd$dt_on-dd$dt_1st_presence)  # how long before the bird sits down on nest is he present)
+    			dd$arrival=as.numeric(dd$dt_on-dd$dt_arrive)  # how long before the bird sits down on nest is he close by / anters the picutre (i.e. start the exchange))
+      			
+    			### dd$presence2=as.numeric(dd$dt_left-dd$dt_1st_presence)
+    			dd$gap=as.numeric(dd$dt_on-dd$dt_left)  # 
+      		densityplot(~log(dd$gap))
+      		densityplot(~dd$gap[dd$gap<60])
+    			length(dd$gap[dd$gap>60])/nrow(dd)
+      			
+      	 }
+	  
+	  
+		{#1 durations
+		  
+		  # -first presence
+		  # -arrival
+		  # -leaving
+		  # -exchange gap
+		  
+		  ####DT
+      		  require(pastecs)
+      		  stat.desc(dd$gap[dd$gap])
+		  ####
+		  
+		  #1b.are they related to sex or incubation period? 
+		  
+		  ####DT
+      		  # Do sexes differ in gap length?
+      		  
+      		  library(lme4)
+      		  library(lmerTest)
+      		  m2=lmer(rank(gap)~as.factor(sex)+as.factor(cage)+(1|year)+(1|bird_ID)+(1|nest_ID),data=dd) # default REML=T for model interpretation
+      		  plot(m2)
+      		  summary(m2)
+      		  summary(glht(m2))
+      		  
+      		  m2=lmer(rank(gap)~as.factor(sex)+(1|cage)+(1|year)+(1|nest_ID)+(1|bird_ID),REML=F,data=dd) #have to set REML=F for comparing the two models
+      		  m3=lmer(rank(gap)~1+(1|cage)+(1|year)+(1|nest_ID)+(1|bird_ID), REML=F, data=dd)
+      		  AIC(m2,m3) #better use AIC instead of anova, AIC is more conservative. A difference in AIC greater than 2 (2.5 or 3 or even higher, if want to be very conservative) is significant. 
+      		  anova(m2,m3)
+		  
+			
+		}
+	  
+	  
+		
+		{#2 calling - only from present until left - either use time_series.csv to derive or scored intensities from observations.csv
+		  
+		  #a.	what is the distribution of calling intensity in the three periods (both changeover, changeover, after changeover)
+		  
+		  ####DT
+		  
+        		  ##    Calling bouts
+        		  
+        		  ###   Description        
+        		  
+        		  # Calling bout 1
+        		  stat.desc(dd$call_o_alone[!is.na(dd$call_o_alone)])
+        		  length(dd$call_o_alone[!is.na(dd$call_o_alone)&dd$call_o_alone=="0"]) 
+        		  length(dd$call_o_alone[is.na(dd$call_o_alone)]) 
+        		  
+        		  
+        		  ###   Plots
+        		  
+        		  # Calling bout 1, number of calls
+        		  barplot(table(dd$call_o_alone),main=("Calling bout 1"),xlab=("Number of calls"),ylab=("Number of observations"))
+        		  
+        		  # Calling bout 1, calling intensity
+        		  barplot(table(dd$call_int_0),main=("Calling bout 1"),xlab=("Calling intensity"),ylab=("Number of observations"),ylim=c(0,100))
+        		  
+        		  #present-arrive
+        		  par(mfrow=c(1,2))
+        		  barplot(table(dd$call_c_pres_arrive),main=("a) coming bird"),xlab=("Calling intensity"),ylab=("Number of observations"),ylim=c(0,100),cex.lab=1.5,cex.names=1.5,cex.axis=1.5)
+        		  barplot(table(dd$call_o_pres_arrive),main=("b) incubationg bird"),xlab=("Calling intensity"),ylim=c(0,100),cex.lab=1.5,cex.names=1.5,cex.axis=1.5)
+        		  
+        		  
+        		  # Calling bout 2, intensity for coming, incubating and both
+        		  par(mfrow=c(1,3))
+        		  barplot(table(dd$call_int_1),main=("a) Calling bout 2"),xlab=("Calling intensity"),ylab=("Number of observations"),ylim=c(0,100),cex.lab=1.5,cex.names=1.5,cex.axis=1.5)
+        		  barplot(table(dd$call_c_int),main=("b) Coming bird"),xlab=("Calling intensity"),ylim=c(0,100),cex.lab=1.5,cex.names=1.5,cex.axis=1.5)
+        		  barplot(table(dd$call_o_int),main=("c) Incubating bird"),xlab=("Calling intensity"),ylim=c(0,100),cex.lab=1.5,cex.names=1.5,cex.axis=1.5)
+        		  
+        		  # Calling bout 3
+        		  par(mfrow=c(1,1))
+        		  barplot(table(dd$call_int_c2),main=("Calling bout 3"),xlab=("Calling intensity"),ylab=("Frequency"),ylim=c(0,100))
+        		  
+        		  # Calling bout 4
+        		  barplot(table(dd$call_int_c3),main=("Calling bout 4"),xlab=("Calling intensity"),ylab=("Frequency"))
+        		  
+        		  # All calling bouts (Figure)
+        		  par(mfrow=c(1,4))
+        		  barplot(table(dd$call_int_0),main=("a) Calling bout 1"),xlab=("Calling intensity"),ylab=("Number of observations"),ylim=c(0,120),cex.lab=1.7,cex.names=1.7,cex.axis=1.7,cex.main=1.7)
+        		  barplot(table(dd$call_int_1),main=("b) Calling bout 2"),xlab=("Calling intensity"),ylab=("Number of observations"),ylim=c(0,120),cex.lab=1.7,cex.names=1.7,cex.axis=1.7,cex.main=1.7)
+        		  barplot(table(dd$call_int_c2),main=("c) Calling bout 3"),xlab=("Calling intensity"),ylab=("Number of observations"),ylim=c(0,120),cex.lab=1.7,cex.names=1.7,cex.axis=1.7,cex.main=1.7)
+        		  barplot(table(dd$call_int_c3),main=("d) Calling bout 4"),xlab=("Calling intensity"),ylab=("Number of observations"),ylim=c(0,120),cex.lab=1.7,cex.names=1.7,cex.axis=1.7,cex.main=1.7)
+        		  
+        		  # Correlation of number of calls within a pair
+        		  #restructure data to have means of the measurements for every individual
+        		  mean.calls<-tapply(dd$call_o_alone,dd$bird_ID,mean);mean.calls
+        		  dd_melt<-aggregate(dd,by=list(nest_ID=dd$nest_ID,sex=dd$sex),FUN=mean,na.rm=T)
+        		  ggplot(data=dd_melt,aes(x=sex,y=call_o_alone,group=nest_ID))+geom_point()+geom_line() # Maybe not a good plot to visualize data in this case
+        		  
+        		  # Correlation, f on y-axis, m on x-axis
+        		  par(mfrow=c(1,1))
+        		  data$bird_ID=tolower(data$bird_ID)
+        		  data$nest_ID=tolower(data$nest_ID)
+        		  z=ddply(data,.(year,nest_ID,sex,bird_ID), summarise, call_med=median(call_o_alone, na.rm=TRUE))
+        		  zz=z[!z$nest_ID%in%z$nest_ID[is.na(z$call_med)],]
+        		  plot(zz$call_med[zz$sex=='f' ]~zz$call_med[zz$sex=='m' ],
+        		       ylim=c(0,15), xlim=c(0,15),xlab="\u2642 number of calls", ylab="\u2640 number of calls",
+        		       pch=21,col=rgb(20,20,20,100,maxColorValue = 255),bg=rgb(100,100,100,100,maxColorValue = 255),cex=1)
+        		  abline(a=0,b=1,lty=2)
+        		  
+        		  ###  Statistics - not sure which test to use here, maybe markov chain model? These models don't fit yet!
+        		  
+        		  # Is calling intensity of a given calling bout predicted by calling intensity of a previous bout?  
+        		  #Coming bird: Calling bout 4 predicted by 3 or 2?
+        		  b4=lmer(call_int_c3~call_int_c2+call_c_int+(1|year)+(1|nest_ID)+(1|bird_ID),data=dd)
+        		  plot(b4)
+        		  b4=lmer(call_int_c3~call_int_c2+call_c_int+(1|year)+(1|nest_ID)+(1|bird_ID),REML=F,data=dd)
+        		  b4.null.c2=lmer(call_int_c3~call_int_c2+(1|year)+(1|nest_ID)+(1|bird_ID),REML=F,data=dd)
+        		  #anova(b4.null.c2,b4) #not working, not same size of dataset
+        		  AIC(b4.null.c2,b4) # delta>2 -> significant difference! Warning: models are not all fitted to the same number of observations
+        		  b4.null.c=lmer(call_int_c3~call_c_int+(1|year)+(1|nest_ID)+(1|bird_ID),REML=F,data=dd)
+        		  #anova(b4.null.c,b4) # calling bout 4 depends on calling of coming bird during calling bout 2 (Chisq=4.25,p=0.0323)
+        		  AIC(b4.null.c,b4) # delta>2 -> significant difference!
+        		  b4.int=lmer(call_int_c3~call_int_c2*call_c_int+(1|year)+(1|nest_ID)+(1|bird_ID),  data=dd)
+        		  plot(b4.int)
+        		  summary(b4.int)
+        		  b4.int=lmer(call_int_c3~call_int_c2*call_c_int+(1|year)+(1|nest_ID)+(1|bird_ID),data=dd)
+        		  summary(b4.int)
+        		  
+        		  #Incubating bird: Calling bout 2 predicted by 1?
+        		  b2=lmer(call_o_int~call_int_0+(1|year)+(1|nest_ID)+(1|bird_ID),  data=dd)
+        		  plot(b2)
+        		  summary(b2)
+        		  b2=lmer(call_o_int~call_int_0+(1|year)+(1|nest_ID)+(1|bird_ID),REML=F,  data=dd)
+        		  b2.null=lmer(call_o_int~1+(1|year)+(1|nest_ID)+(1|bird_ID),REML=F,  data=dd)
+        		  #anova(b2.null,b2) #does not work, not same size of dataset
+        		  AIC(b2.null,b2)# delta>2 -> significant difference! Warning: models are not all fitted to the same number of observations
+        		  mb2<-aov(call_o_alone~call_o_int*bird_ID*nest_ID,data=dd)
+        		  plot(mb2)
+        		  summary(mb2)
+		  
+		  ####
+		   #b.	what is the exchange procedure (graph with call intensity on Y and calling bout on x-axis; lines show various strategies, and N next to the lines number of exchanges with such strategy
+		  
+		  #c.	are the calling intensities related to sex, incubation period, length of current and next incubation bout
+		  
+      ####DT
+      
+                {# what predicts calling intensity during exchange
+                {# when on-nest bird allone (i.e. before presence)
+                {#run first 
+                  dd=d[d$type=='ex' ,]
+                  dd$left_bin=ifelse(dd$left_before_presence=='y',1,0)
+                  b_ = b[dt_behaviour<=end_pr]
+                  bb=b_[b$obs_ID%in%dd$obs_ID,]	
+                  bb_=ddply(b,.(obs_ID, nest_ID, sex), summarise, call_i=length(behaviour[which(behaviour=='c' & who=='o')]),fly_i=length(behaviour[which(behaviour=='f' & who=='o')]))
+                  dd$call_i=bb_$call_i[match(dd$obs_ID, bb_$obs_ID)]
+                  dd$fly_i=bb_$fly_i[match(dd$obs_ID, bb_$obs_ID)]
+                  dd$fly=as.factor(ifelse(dd$fly_i==0,'n','y'))
+                }
+                {#MIHAI HELP
+                  plot(next_bout~current_bout,dd)
+                  cor.test(dd$next_bout,dd$current_bout)
+                  m = glmer(call_i~sex+scale(current_bout)+scale(day_j)+(current_bout|nest_ID), dd, family='poisson') #### CONTROL 
+                  plot(allEffects(m))
+                  summary(glht(m))
+                }
+                }
+                {# when boht there but exchange has not started
+                {#run first 
+                  dd=d[d$type=='ex' ,]
+                  b_ = b[dt_behaviour>end_pr]
+                  bb=b_[b$obs_ID%in%dd$obs_ID,]	
+                  
+                  bb_=ddply(b,.(obs_ID, nest_ID, sex), summarise, call_i=length(behaviour[which(behaviour=='c' & who=='o')]),fly_i=length(behaviour[which(behaviour=='f' & who=='o')])) # on bird
+                  dd$call_i=bb_$call_i[match(dd$obs_ID, bb_$obs_ID)]
+                  dd$fly_i=bb_$fly_i[match(dd$obs_ID, bb_$obs_ID)]
+                  dd$fly=as.factor(ifelse(dd$fly_i==0,'n','y'))
+                  
+                  bb_=ddply(b,.(obs_ID, nest_ID, day_j, sex, who), summarise, call_i=length(behaviour[which(behaviour=='c')]),fly_i=length(behaviour[which(behaviour=='f' & who=='o')])) # both
+                  bb_$current_bout=dd$current_bout[match(bb_$obs_ID,dd$obs_ID)]
+                  bb_$next_bout=dd$next_bout[match(bb_$obs_ID,dd$obs_ID)]
+                  bb_$sex=as.factor(bb_$sex)
+                  bb_$who=as.factor(bb_$who)
+                }
+                {# only on bird MIHAI HELP
+                  plot(next_bout~current_bout,dd)
+                  cor.test(dd$next_bout,dd$current_bout)
+                  m = glmer(call_i~sex+scale(current_bout)+scale(next_bout)*who+scale(day_j)+(current_bout|nest_ID), dd, family='poisson') #### CONTROL 
+                  plot(allEffects(m))
+                  summary(glht(m))
+                  
+                }
+                {# both birds
+                  m = glmer(call_i~sex+scale(current_bout)+scale(next_bout)*who+scale(day_j)+(current_bout|nest_ID), bb_, family='poisson') #### CONTROL 
+                  m = glmer(call_i~who+(1|nest_ID), bb_, family='poisson') #### CONTROL 
+                  plot(allEffects(m))
+                  summary(glht(m))
+                }
+                }
+		####
+		
+                }
+		  
+		  
+		  
+		{#3 push off
+		  
+		  #a.	What is the distribution of push-offs?
+		  
+    			densityplot(~d$pushoff_int)
+    			dd$push=ifelse(is.na(dd$pushoff_int), NA, ifelse(dd$pushoff_int==3, 1,0))
+    			m=glmer(push~scale(current_bout)*sex + (1|nest_ID), family='binomial',dd)
+    			m=glmer(push~sex + (1|nest_ID), family='binomial',dd)
+    			plot(allEffects(m))
+    			summary(glht(m))
+    			
+    	#b.	Are they correlated with 
+    			
+    			#i.	calling intensity (if yes, push offs likely reflect calling intensity)
+    			#ii.	length of current and next incubation bout
+    			#iii.	calling intensity in present period
+    			#iv.	incubation period or sex
+    			
+    			
+		}
+		  
+		  
+		{#4 Relationship between durations and callings
+		  
+		  #a.	Duration of arrival minus leaving ~ push off or calling intensity
+		  
+				dd$both=as.numeric(dd$dt_left-dd$dt_arrive) 
+		  
+		  #b.	How are leaving ~ arrival ~ first  presence related (see distributions as there might be no variation)
+		  
+		  
+		  
+		}
+		{#5 How leaving the nest?
+		  
+  			summary(factor(dd$type_l))
+  			summary(factor(dd$type_l[dd$cage=='n']))
+  			dn=dd[dd$cage=='n',]
+  			ggplot(dn,aes(y = current_bout, x=type_l))+geom_boxplot()
+			
+		}
+	
+	}
+
+}	
+	
+
+{# DONE
+	{# prepare nests - start/end
+	load("C:\\Users\\mbulla\\Documents\\Dropbox\\Science\\Projects\\MS\\exchanges_SESA\\stats\\exchanges_with-bird_ID-nest_state-inc_start_2016-04-21.Rdata")
+	bb=unique(b[,c('year', 'nest', 'inc_start','hatch_start','end_state','end_datetime')])
+	write.csv(bb, file=paste(wd,'nests.csv', sep=''), row.names=FALSE)	
+	}
+	{# prepare bird_IDs
+		# establish database connections
+		  require('RMySQL')
+		  con=dbConnect(MySQL(),user='root',host='127.0.0.1', password='',dbname='')
+		  dbq=dbGetQuery
+		
+		# load nests
+			nn= dbq(con,"SELECT*FROM avesatbarrow.nests  where species = 'SESA' and year_ in ('2011','2012','2013')")
+			nn=nn[tolower(paste(nn$nest,nn$year_))%in%tolower(paste(n$nest,n$year)),]
+			
+			nrow(nn)
+			nrow(n) #n[!(tolower(paste(n$nest,n$year))%in%tolower(paste(nn$nest,nn$year_))),]
+			
+			n1=nn
+			n2=nn
+			n1$bird_ID=n1$IDfemale
+			n1$sex="f"
+			n2$bird_ID=n2$IDmale
+			n2$sex="m"
+			x=rbind(n1,n2)
+				s= dbq(con,"SELECT*FROM avesatbarrow.sex")
+				x$sex_g=s$sex[match(x$bird_ID, s$ID)]
+				x$sex_g=ifelse(x$sex_g==1,"m","f")
+								
+				x[x$sex_g!=x$sex,]
+			x$year=x$year_	
+			
+			x=x[,c('year', 'nest', 'sex','bird_ID')]
+			x=x[order(x$year,x$nest,x$sex),]
+			x$nest=tolower(x$nest)
+			x=x[-which(x$nest=='s608'),]
+			write.csv(x, file=paste(wd,'birds.csv', sep=''), row.names=FALSE)	
+		
+	}
+	{# check whether bird was recorded on multiple nests/years
+			bb<-read.csv(file=paste(wd, "birds.csv", sep=''),header=T,sep=",", fill=T, stringsAsFactors=FALSE)
+			
+			d$bird_ID=bb$bird_ID[match(paste(d$nest, d$year, d$sex), paste(bb$nest,bb$year, bb$sex))]
+			dd=distinct(d[,c('year',
+			table(d$bird_ID[d$year==2013], d$nest[d$year==2013])
+}	
+	{# check current/next_bout_bias	
+		d[d$obs_ID%in%e$obs_ID[which(e$current_bout_biased=='y')],c('obs_ID','nest','current_bout')]
+		d[d$obs_ID%in%e$obs_ID[which(e$next_bout_biased=='y')],c('obs_ID','nest','next_bout')]
+	}
+}
+	
