@@ -53,6 +53,10 @@
 	   # observations
 			d<-read.csv(file=paste(wd, "observations.csv", sep=''),header=T,sep=",", fill=T, stringsAsFactors=FALSE)
 			d=d[!is.na(d$obs_ID),]
+			# observations excluded from all analyses
+				d=d[!d$obs_ID%in%e$obs_ID[which(e$total_exclusion=='y')],]
+				d=d[!d$obs_ID%in%e$obs_ID[which(e$close_to_exchange=="y")],]
+			
 			d$nest = tolower(d$nest)
 			d$reality_dt <- as.POSIXct(d$reality_dt,format='%Y-%b-%d %H:%M:%S')
 			d$video_dt <- as.POSIXct(d$video_dt,format='%Y-%b-%d %H:%M:%S')
@@ -78,6 +82,10 @@
 	   # time_series
 				b<-read.csv(file=paste(wd, "time_series.csv", sep=''),header=T,sep=",", fill=T, stringsAsFactors=FALSE)
       			b=b[!is.na(b$obs_ID),]
+				# observations excluded from all analyses
+					b=b[!b$obs_ID%in%e$obs_ID[which(e$total_exclusion=='y')],]
+					b=b[!b$obs_ID%in%e$obs_ID[which(e$close_to_exchange=="y")],]
+					b=b[!b$obs_ID %in% c(7, 182),] # 7 - excluded because of before presence disturbance, 182 - excluded because of poor sound quality					
       			b$nest = tolower(b$nest)
       			b$t_delta=d$t_delta[match(b$obs_ID, d$obs_ID)]
       			b$dt_behaviour <- as.POSIXct(b$dt_behaviour,format='%Y-%b-%d %H:%M:%S')+b$t_delta
@@ -88,11 +96,13 @@
 				#densityplot(~b$obs_time)
 				#b[b$obs_time>30,]
 				
-      			b$end_pr = d$dt_1st_presence[match(b$obs_ID,d$obs_ID)]
-      			b$end_pr=as.POSIXct(ifelse(is.na(b$end_pr), as.character(b$end_dt), as.character(b$end_pr)))
+      			b$end_pr = as.character(d$dt_1st_presence[match(b$obs_ID,d$obs_ID)])
+				#b$end_pr[is.na(b$end_pr) & b$type == 'ex'] = as.character(d$dt_arrive[match(b$obs_ID[is.na(b$end_pr) & b$type == 'ex'],d$obs_ID)]) #dt_arrive for obs_ID 1 and 7 as dt_presence unknown; as of now still one NA
+				#b$obs_ID[is.na(b$end_pr) & b$type == 'ex'] 
+      			
+				b$end_pr=as.POSIXct(ifelse(is.na(b$end_pr), ifelse(b$type == 'ex',b$end_pr, as.character(b$end_dt)), b$end_pr))
       			# end of exchange observation before bird is present
       			
-      			b$inc_start=n$inc_start[match(toupper(paste(b$nest, b$year)), toupper(paste(n$nest,n$year)))]
       			b$end_=n$end_[match(toupper(paste(b$nest, b$year)), toupper(paste(n$nest,n$year)))]
       			b$nest_ID=paste(b$nest,b$year)
 				b$bird_ID = paste(b$year, b$nest_ID)
@@ -100,16 +110,11 @@
       			
       			b$inc_start=n$inc_start[match(paste(b$nest, b$year), paste(n$nest,n$year))]
       			b$day_j = as.numeric(format(b$dt_behaviour ,"%j")) - as.numeric(format(b$inc_start,"%j"))+1
+				b$day_j[is.na(b$day_j)] = as.numeric(format(b$start_time_video[is.na(b$day_j)] ,"%j")) - as.numeric(format(b$inc_start[is.na(b$day_j)],"%j"))+1
 				b$lat = n$lat[match(tolower(paste(b$year, b$nest)),tolower(paste(n$year, n$nest)))] 
 				b$lon = n$lon[match(tolower(paste(b$year, b$nest)),tolower(paste(n$year, n$nest)))] 
       
-	   # observations excluded from all analyses
-			d=d[!d$obs_ID%in%e$obs_ID[which(e$total_exclusion=='y')],]
-			d=d[!d$obs_ID%in%e$obs_ID[which(e$close_to_exchange=="y")],]
-			
-			b=b[!b$obs_ID%in%e$obs_ID[which(e$total_exclusion=='y')],]
-			b=b[!b$obs_ID%in%e$obs_ID[which(e$close_to_exchange=="y")],]	
-		
+	  
 		# no nests excluded because of inc start or end date ( two nests have observations toward hatching, but we keep those for now)
 				#d$check=as.POSIXct(ifelse(is.na(d$dt_on), as.character(d$dt_video),as.character(d$dt_on))) 
 				#d=d[-which(d$check>d$inc_start & d$check<d$end_),] # two nests have observations toward hatching, but we keep those for now
@@ -118,11 +123,22 @@
        d = data.table(d)
 	   
 	   # only observations before a coming bird was present
-		b_ = b[dt_behaviour<=end_pr] 	
-	    # number of calls and fly-offs per observation
+		b1 = b[dt_behaviour<=end_pr]
+		b2 = b[is.na(b$dt_behaviour),]
+		b_ = rbind(b1,b2) # obs_ID 1, 7, 50, 182 not in (50 shall be included, and 1 perhaps too)
+			# check
+				#length(unique(b_$obs_ID[order(b_$obs_ID)]))
+				#x = unique(d$obs_ID)
+				#x[!x%in%unique(b_$obs_ID[order(b_$obs_ID)])]
+		# number of calls and fly-offs per observation
 			bb_=ddply(b_[!is.na(b_$sex),],.(obs_ID, nest_ID, sex, type, day_j, obs_time), summarise, call_i=length(behaviour[which(behaviour=='c' & who=='o')]),fly_i=length(behaviour[which(behaviour=='f' & who=='o')]))
-	   
-	   
+			
+			# 111 not in YET as it is unclear what is going on
+			bb_=ddply(b_[!is.na(b_$who),],.(obs_ID, nest_ID, type, day_j, obs_time), summarise, call_i=length(behaviour[which(behaviour=='c' & who == 'o' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]),fly_i=length(behaviour[which(behaviour=='f' & who == 'o' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]))
+			bb_$sex = d$sex[match(bb_$obs_ID, d$obs_ID)]
+			#bb_[bb_$obs_ID %in% bb_$obs_ID[duplicated(bb_$obs_ID)],]
+			#length(unique(bb_$obs_ID))
+			
 	   # only exchange observations
 	   dd=d[d$type=='ex',]
 	   dd$left_bin=ifelse(dd$left_before_presence=='y',1,0)	
