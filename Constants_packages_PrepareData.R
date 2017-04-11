@@ -130,11 +130,10 @@
 				#length(unique(b_$obs_ID[order(b_$obs_ID)]))
 				#x = unique(d$obs_ID)
 				#x[!x%in%unique(b_$obs_ID[order(b_$obs_ID)])]
+		
 		# number of calls and fly-offs per observation
-			bb_=ddply(b_[!is.na(b_$sex),],.(obs_ID, nest_ID, sex, type, day_j, obs_time), summarise, call_i=length(behaviour[which(behaviour=='c' & who=='o')]),fly_i=length(behaviour[which(behaviour=='f' & who=='o')]))
-			
 			# 111 not in YET as it is unclear what is going on
-			bb_=ddply(b_[!is.na(b_$who),],.(obs_ID, nest_ID, type, day_j, obs_time), summarise, call_i=length(behaviour[which(behaviour=='c' & who == 'o' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]),fly_i=length(behaviour[which(behaviour=='f' & who == 'o' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]))
+			bb_=ddply(b_[!is.na(b_$who),],.(obs_ID, nest_ID, type, day_j, obs_time, lat, lon), summarise, call_i=length(behaviour[which(behaviour=='c' & who == 'o' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]),fly_i=length(behaviour[which(behaviour=='f' & who == 'o' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]))
 			bb_$sex = d$sex[match(bb_$obs_ID, d$obs_ID)]
 			#bb_[bb_$obs_ID %in% bb_$obs_ID[duplicated(bb_$obs_ID)],]
 			#length(unique(bb_$obs_ID))

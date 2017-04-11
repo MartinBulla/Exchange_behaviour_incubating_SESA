@@ -37,9 +37,9 @@
 		PNG=FALSE
 	}
 	{# define working directory
-	     wd = "C:/Users/mbulla/Documents/Dropbox/Science/Projects/MS/exchanges_SESA/Database/"
-		wd2 = "C:/Users/mbulla/Documents/Dropbox/Science/Projects/MS/exchanges_SESA/Analyses/"		 
-	     outdir = "C:/Users/mbulla/Documents/Dropbox/Science/Projects/MS/exchanges_SESA/Analyses/plots/" 
+	     wd = "C:/Users/mbulla/Documents/Dropbox/Science/Projects/MS/Exchanges_SESA/Database/"
+		 wd2 = "C:/Users/mbulla/Documents/Dropbox/Science/Projects/MS/Exchanges_SESA/Analyses/"		 
+	     outdir = "C:/Users/mbulla/Documents/Dropbox/Science/Projects/MS/Exchanges_SESA/Analyses/plots/" 
 		#wd = "C:/Users/OWNER/Dropbox/exchanges_SESA/Database/"	
 	    #wd = paste0(getwd(), '/DATA/')
 	}
@@ -366,97 +366,44 @@
 	}
 	  {# behaviour prior to return 
 		
-		{#1a. Do the incubating birds call and fly off more prior to exchange than during regular incubation and does it change over incubation period
+		{# Do the incubating birds call and fly off more prior to exchange than during regular incubation and does it change over incubation period
 		    {# run first	
 				
       			bb_$dt_video=d$dt_video[match(bb_$obs_ID,d$obs_ID)]
       			bb_$hour= as.numeric(difftime(bb_$dt_video, trunc(bb_$dt_video,"day"), units = "hours"))
       			bb_$rad=as.numeric(bb_$hour)*pi/12
 				bb_$n=1
-				bb_$bird_ID = paste(bb_$nest_ID, bb_$sex)				
-				
+				bb_$bird_ID = paste(bb_$nest_ID, bb_$sex)
+				bb_$fly_bin=ifelse(bb_$fly_i==0,0,1)				
+				length(unique(bb_$nest_ID))
+				length(unique(bb_$bird_ID))
 				
 			}	
 			{# distributions
+					summary(factor(bb_$call_i))
+					ggplot(bb_,aes(x=call_i, fill = type))+geom_density(alpha=0.5)
+					ggplot(bb_,aes(x=call_i, fill = type))+geom_histogram(alpha=0.5, position = 'dodge')
+					
+					summary(factor(bb_$fly_i))
+					summary(factor(bb_$fly_i[bb_$type=='ex']))
+					ggplot(bb_,aes(x=fly_i, fill = type))+geom_density(alpha=0.5)
+					ggplot(bb_,aes(x=fly_i, fill = type))+geom_histogram(alpha=0.5, position = 'dodge')
+					
+					ggplot(bb_,aes(x=log(obs_time), col = type))+geom_density(alpha=0.5)
+					ggplot(bb_,aes(x=obs_time, col = type))+geom_density(alpha=0.5)
+					
 					ggplot(bb_,aes(x=log(obs_time), y=call_i, fill = type))+geom_point()
 					ggplot(bb_,aes(x=log(obs_time), y=fly_i, fill = type))+geom_point()
 				
 				}
-				
-			
-			{# LATER DELETE no overall difference between calls  
-				{# Supplementary table
-					m= glmer(call_i ~ type + (1|bird_ID) + (1|nest_ID), offset = log(obs_time),family = poisson,  bb_)
-					#fm= glmer(call_i ~ type + (1|nest_ID), family = poisson,  bb_)
-				   			
-      					summary(fm)
-      					summary(glht(fm))
-      					plot(allEffects(fm))
-						dispersion_glmer(fm) # values over 1.4 suggest serious overdisperison
-						
-					# this does not change over the incubation period
-							fm= glmer(call_i ~ type*scale(day_j) + (day_j|nest_ID),offset = log(obs_time), family = poisson,  bb_)
-												
-						{# I think this does not belong here, but WE CAN KEEP THIS IN CASE WE HAVE A PREDICTION HERE 
-							# the finding says that regularly incubating birds tend to call less during mid-day and more during night whereas before exchange this is more regular
-							fm= glmer(call_i ~ type*sin(rad)+type*cos(rad)+ (1|nest_ID), family = poisson,  bb_) 
-							 summary(glht(fm))
-							 plot(allEffects(fm))
-							
-						}	
-				}
-					{# old plots
-				ggplot(bb_,aes(x=type, y=call_i))+geom_boxplot()
-				
-				#ggplot(bb_,aes(x=reorder(nest_ID, call_i, FUN=median), y=call_i, fill=type))+geom_boxplot()
 
-				ggplot(bb_,aes(x=type, y=call_i, col=sex))+geom_boxplot()
-  				ggplot(bb_,aes(x=call_i, col=type))+geom_density()
-				ggplot(bb_,aes(x=call_i, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4)
-				
-				
-				}
-			}
-			{# LATER DELETE less fly-offs before exchange
-				{# Supplementary table
-					# Poisson
-						fm= glmer(fly_i ~ type + (1|bird_ID) + (1|nest_ID),offset = log(obs_time), family = poisson,  bb_)
-      					summary(fm)
-						summary(glht(fm))
-      					plot(allEffects(fm))
-						dispersion_glmer(fm) 
-						
-						# overall fly-offs increase over the incubation period
-						fm= glmer(fly_i ~ type*scale(day_j) + (day_j|nest_ID),offset = log(obs_time), family = poisson,  bb_)
-						fm= glmer(fly_i ~ type+scale(day_j) + (day_j|nest_ID),offset = log(obs_time), family = poisson,  bb_)
-					
-					
-									
-		
-				}
-				{# binary (gives same results as Poisson
-						bb_$fly_bin=ifelse(bb_$fly_i==0,0,1)
-						fm= glmer(fly_bin ~ type + (1|nest_ID), family = binomial,  bb_)
-							summary(fm)
-							summary(glht(fm))
-							plot(allEffects(fm))
-				}			
-				{# old plots
-				ggplot(bb_,aes(x=type, y=fly_i))+geom_boxplot()
-				#ggplot(bb_,aes(x=reorder(nest_ID, fly_i, FUN=median), y=fly_i, fill=type))+geom_boxplot()
-  				ggplot(bb_,aes(x=type, y=fly_i, col=sex))+geom_boxplot()
-				ggplot(bb_,aes(x=fly_i, col=type))+geom_density()
-				ggplot(bb_,aes(x=fly_i, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4)
-				}
-      		}	
-			
-			{# PLOT distribution of calls and fly-offs including predictions FOR PAPER
+			{# PLOT distribution of calls and fly-offs RATE including predictions FOR PAPER
 			   {# run first 
-				{# model predictions
+			    {# model predictions
 				{# calls
-				m= glmer(call_i ~ type + (1|bird_ID) + (1|nest_ID), family = poisson,  bb_)
+					m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)# rate per 10 minute
 						pred=c('Intercept (exchange)','Type (non-exchange)')
-						nsim <- 2000
+						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
 				
 				# coefficients
@@ -479,7 +426,153 @@
 					pc_=pp[pp$type=='non',]
 				}		
 			    {# fly-offs
-				 m= glmer(fly_i ~ type + (1|bird_ID) + (1|nest_ID), family = poisson,  bb_)
+				    bb_$ob_sl = scale(log(bb_$obs_time))
+					m= glmer(fly_bin ~ ob_sl+type + (1|nest_ID), family = binomial,  bb_)
+						pred=c('Intercept (exchange)','Type (non-exchange)')
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				
+				# coefficients
+					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				
+				# values to predict for		
+					newD=data.frame(ob_sl = mean(bb_$ob_sl),
+									type=c('ex','non'))
+						
+				# exactly the model which was used has to be specified here 
+					X <- model.matrix(~ ob_sl+type,data=newD)	
+								
+				# calculate predicted values and creditability intervals
+					newD$pred <-plogis(X%*%v) 
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- plogis(X%*%bsim@fixef[i,])
+							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
+							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
+					pp=newD	
+					pe=pp[pp$type=='ex',]
+					pn=pp[pp$type=='non',]
+				}		
+				}
+				{# raw data
+					u=ddply(bb_,.(nest_ID, type), summarise,m=median(10*call_i/obs_time), q1=quantile(10*call_i/obs_time,0.25), q2= quantile(10*call_i/obs_time,0.75), n = sum(n))
+					u$type_j=jitter(ifelse(u$type=='ex',2,6)) 
+				
+					x=ddply(bb_,.(nest_ID, type), summarise,m=median(fly_bin), q1=quantile(fly_bin,0.25), q2= quantile(fly_bin,0.75), n = sum(n))
+					x$type_j=jitter(ifelse(x$type=='ex',2,6))
+				}
+				}
+				if(PNG == TRUE) {
+					png(paste(outdir,"distribution_call_fly_10min_rates_before.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+					}else{
+					dev.new(width=1.85+0.6,height=1.5*2)
+					}	
+				
+				par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 1.8, 0.2, 2.8),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+						
+						
+					# calls
+						plot(u$m~u$type_j, xlim=c(0,8), ylim=c(0,3.2),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						
+						mtext("Calling rate / 10min",side=2,line=1, cex=0.6, las=3, col='grey30')
+						
+						for(i in 1:length(unique(u$nest_ID))){
+									ui=u[u$nest_ID==unique(u$nest_ID)[i],]
+									if(nrow(ui)==2){lines(ui$type_j, ui$m, col='grey90')}
+									}
+						arrows(x0=u$type_j, y0=u$q1,x1=u$type_j, y1=u$q2, code = 0, col=col_p, angle = 90, length = .025, lwd=0.5, lty=1)
+						
+						symbols(u$type_j, u$m, circles=sqrt(u$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
+						
+						
+						
+						# add predictions + 95%CI
+							lines(c(2,6), c(pt_$pred,pc_$pred), col='red')
+							
+							arrows(x0=2, y0=pt_$lwr,x1=2, y1=pt_$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							arrows(x0=6, y0=pc_$lwr,x1=6, y1=pc_$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							
+							points(y=pt_$pred,x=2, pch=19, cex=0.9,col="red")
+							points(y=pc_$pred,x=6, pch=19, cex=0.9,col="red")
+						
+						# legend
+							mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='grey30', xpd=TRUE) # for printing into device use padj=-7.5
+							symbols(c(8.5,8.5,8.5),c(3.3,2.8,2.3)-0.5,circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+							text(c(8.5,8.5,8.5)+1,c(3.3,2.8,2.3)-0.5,labels=c(1,10,20), xpd=TRUE, cex=0.5,col='grey30') 
+							
+							text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', srt=90, xpd=FALSE) 
+							
+							#arrows(x0=8.5,x1=8.5, y0=1-0.1, y1=1+0.1,  code = 0, col=col_p, angle = 90, length = .025, lwd=1.5, lty=1)
+							#symbols(c(8.5),c(1),circles=sqrt(c(1)/pi),inches=0.03,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) 
+							#text(c(8.5)+1,c(1),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', adj = 0, pos=4, xpd=FALSE) 
+							
+							#points(8.5, 1.5, pch=19,cex=0.9, col='red',xpd=NA)
+							#arrows(x0=8.5,x1=8.5, y0=1.5-0.3, y1=1.5+0.3,  code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							#arrows(x0=7.75,x1=6.3, y0=2.2, y1=1.8,  code = 2, col=col_p, angle = 30, length = .025, lwd=1, lty=1)
+							mtext('Predictions &\n95%CrI',side = 4,line=-0.3,padj=2, cex=0.5,las=1,col='red', xpd=TRUE) 
+									# use if plotting within RData
+									#mtext('Weighted\nmedian',side = 4,line=3, cex=0.5,padj=-3.25,adj=0.5, las=1,col='grey30',xpd=TRUE)
+									#points(12.5, 85, pch=19, col='black',xpd=NA)
+								
+					# fly-offs
+						plot(x$m~x$type_j, xlim=c(0,8), ylim=c(0,1),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						
+												
+						axis(1, at=c(2,6), label=c('Before exchange', 'Regular'), mgp=c(0,-0.20,0))
+						mtext("Incubation",side=1,line=0.4, cex=0.5, las=1, col='grey30')
+											
+						#axis(2, at=seq(0,100,by=20))
+						mtext("Fly-off probability",side=2,line=1, cex=0.6, las=3, col='grey30')
+						
+						for(i in 1:length(unique(x$nest_ID))){
+									ui=x[x$nest_ID==unique(x$nest_ID)[i],]
+									if(nrow(ui)==2){lines(ui$type_j, ui$m, col='grey90')}
+									}
+						
+						arrows(x0=x$type_j, y0=x$q1,x1=x$type_j, y1=x$q2, code = 0, col=col_p, angle = 90, length = .025, lwd=0.5, lty=1)
+						
+						symbols(x$type_j, x$m, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
+						
+						
+						# add predictions + 95%CI
+							lines(c(2,6), c(pe$pred,pn$pred), col='red')
+							arrows(x0=2, y0=pe$lwr,x1=2, y1=pe$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							arrows(x0=6, y0=pn$lwr,x1=6, y1=pn$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							
+							points(y=pe$pred,x=2, pch=19, cex=0.9,col="red")
+							points(y=pn$pred,x=6, pch=19, cex=0.9,col="red")
+							
+			if(PNG == TRUE) {dev.off()}
+				}			
+			{# not used PLOT distribution of calls and fly-offs including predictions FOR PAPER
+			   {# run first 
+				{# model predictions
+				{# calls
+					m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
+						pred=c('Intercept (exchange)','Type (non-exchange)')
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				
+				# coefficients
+					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				
+				# values to predict for		
+					newD=data.frame(type=c('ex','non'))
+						
+				# exactly the model which was used has to be specified here 
+					X <- model.matrix(~ type,data=newD)	
+								
+				# calculate predicted values and creditability intervals
+					newD$pred <-exp(X%*%v) 
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- exp(X%*%bsim@fixef[i,])
+							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
+							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
+					pp=newD	
+					pt_=pp[pp$type=='ex',]
+					pc_=pp[pp$type=='non',]
+				}		
+			    {# fly-offs
+					m= glmer(fly_bin ~ scale(log(obs_time))+type + (1|nest_ID), family = binomial,  bb_)
 						pred=c('Intercept (exchange)','Type (non-exchange)')
 						nsim <- 2000
 						bsim <- sim(m, n.sim=nsim)  
@@ -593,155 +686,11 @@
 							
 			if(PNG == TRUE) {dev.off()}
 				}			
-			{# PLOT distribution of calls and fly-offs RATE including predictions FOR PAPER
-			   {# run first 
-			    {# model predictions
-				{# calls
-					m= glmer(call_i ~ type + (1|bird_ID) + (1|nest_ID),offset = log(obs_time), family = poisson,  bb_) # rate per minute
-						pred=c('Intercept (exchange)','Type (non-exchange)')
-						nsim <- 2000
-						bsim <- sim(m, n.sim=nsim)  
-				
-				# coefficients
-					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
-				
-				# values to predict for		
-					newD=data.frame(type=c('ex','non'))
 						
-				# exactly the model which was used has to be specified here 
-					X <- model.matrix(~ type,data=newD)	
-								
-				# calculate predicted values and creditability intervals
-					newD$pred <-exp(X%*%v)*10 
-							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
-							for(i in 1:nsim) predmatrix[,i] <- exp(X%*%bsim@fixef[i,])
-							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)*10
-							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)*10
-					pp=newD	
-					pt_=pp[pp$type=='ex',]
-					pc_=pp[pp$type=='non',]
-				}		
-			    {# fly-offs
-				 m= glmer(fly_i ~ type + (1|bird_ID) + (1|nest_ID), offset = log(obs_time), family = poisson,  bb_)
-						pred=c('Intercept (exchange)','Type (non-exchange)')
-						nsim <- 2000
-						bsim <- sim(m, n.sim=nsim)  
-				
-				# coefficients
-					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
-				
-				# values to predict for		
-					newD=data.frame(type=c('ex','non'))
-						
-				# exactly the model which was used has to be specified here 
-					X <- model.matrix(~ type,data=newD)	
-								
-				# calculate predicted values and creditability intervals
-					newD$pred <-exp(X%*%v)*10 
-							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
-							for(i in 1:nsim) predmatrix[,i] <- exp(X%*%bsim@fixef[i,])
-							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)*10
-							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)*10
-					pp=newD	
-					pe=pp[pp$type=='ex',]
-					pn=pp[pp$type=='non',]
-				}		
-				}
-				{# raw data
-					u=ddply(bb_,.(nest_ID, type), summarise,m=median(10*call_i/obs_time), q1=quantile(10*call_i/obs_time,0.25), q2= quantile(10*call_i/obs_time,0.75), n = sum(n))
-					u$type_j=jitter(ifelse(u$type=='ex',2,6)) 
-				
-					x=ddply(bb_,.(nest_ID, type), summarise,m=median(10*fly_i/obs_time), q1=quantile(10*fly_i/obs_time,0.25), q2= quantile(10*fly_i/obs_time,0.75), n = sum(n))
-					x$type_j=jitter(ifelse(x$type=='ex',2,6))
-				}
-				}
-				if(PNG == TRUE) {
-					png(paste(outdir,"distribution_call_fly_10min_rates_before.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
-					}else{
-					dev.new(width=1.85+0.6,height=1.5*2)
-					}	
-				
-				par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 1.8, 0.2, 2.8),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
-						
-						
-					# calls
-						plot(u$m~u$type_j, xlim=c(0,8), ylim=c(0,3.2),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
-						
-						mtext("Calling rate / 10min",side=2,line=1, cex=0.6, las=3, col='grey30')
-						
-						for(i in 1:length(unique(u$nest_ID))){
-									ui=u[u$nest_ID==unique(u$nest_ID)[i],]
-									if(nrow(ui)==2){lines(ui$type_j, ui$m, col='grey90')}
-									}
-						arrows(x0=u$type_j, y0=u$q1,x1=u$type_j, y1=u$q2, code = 0, col=col_p, angle = 90, length = .025, lwd=0.5, lty=1)
-						
-						symbols(u$type_j, u$m, circles=sqrt(u$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
-						
-						
-						
-						# add predictions + 95%CI
-							lines(c(2,6), c(pt_$pred,pc_$pred), col='red')
-							
-							arrows(x0=2, y0=pt_$lwr,x1=2, y1=pt_$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
-							arrows(x0=6, y0=pc_$lwr,x1=6, y1=pc_$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
-							
-							points(y=pt_$pred,x=2, pch=19, cex=0.9,col="red")
-							points(y=pc_$pred,x=6, pch=19, cex=0.9,col="red")
-						
-						# legend
-							mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='grey30', xpd=TRUE) # for printing into device use padj=-7.5
-							symbols(c(8.5,8.5,8.5),c(3.3,2.8,2.3)-0.5,circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
-							text(c(8.5,8.5,8.5)+1,c(3.3,2.8,2.3)-0.5,labels=c(1,10,20), xpd=TRUE, cex=0.5,col='grey30') 
-							
-							text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', srt=90, xpd=FALSE) 
-							
-							#arrows(x0=8.5,x1=8.5, y0=1-0.1, y1=1+0.1,  code = 0, col=col_p, angle = 90, length = .025, lwd=1.5, lty=1)
-							#symbols(c(8.5),c(1),circles=sqrt(c(1)/pi),inches=0.03,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) 
-							#text(c(8.5)+1,c(1),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', adj = 0, pos=4, xpd=FALSE) 
-							
-							#points(8.5, 1.5, pch=19,cex=0.9, col='red',xpd=NA)
-							#arrows(x0=8.5,x1=8.5, y0=1.5-0.3, y1=1.5+0.3,  code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
-							#arrows(x0=7.75,x1=6.3, y0=2.2, y1=1.8,  code = 2, col=col_p, angle = 30, length = .025, lwd=1, lty=1)
-							mtext('Predictions &\n95%CrI',side = 4,line=-0.3,padj=2, cex=0.5,las=1,col='red', xpd=TRUE) 
-									# use if plotting within RData
-									#mtext('Weighted\nmedian',side = 4,line=3, cex=0.5,padj=-3.25,adj=0.5, las=1,col='grey30',xpd=TRUE)
-									#points(12.5, 85, pch=19, col='black',xpd=NA)
-								
-					# fly-offs
-						plot(x$m~x$type_j, xlim=c(0,8), ylim=c(0,1.4),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
-						
-												
-						axis(1, at=c(2,6), label=c('Before exchange', 'Regular'), mgp=c(0,-0.20,0))
-						mtext("Incubation",side=1,line=0.4, cex=0.5, las=1, col='grey30')
-											
-						#axis(2, at=seq(0,100,by=20))
-						mtext("Fly-off rate / 10min",side=2,line=1, cex=0.6, las=3, col='grey30')
-						
-						for(i in 1:length(unique(x$nest_ID))){
-									ui=x[x$nest_ID==unique(x$nest_ID)[i],]
-									if(nrow(ui)==2){lines(ui$type_j, ui$m, col='grey90')}
-									}
-						
-						arrows(x0=x$type_j, y0=x$q1,x1=x$type_j, y1=x$q2, code = 0, col=col_p, angle = 90, length = .025, lwd=0.5, lty=1)
-						
-						symbols(x$type_j, x$m, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
-						
-						
-						# add predictions + 95%CI
-							lines(c(2,6), c(pe$pred,pn$pred), col='red')
-							arrows(x0=2, y0=pe$lwr,x1=2, y1=pe$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
-							arrows(x0=6, y0=pn$lwr,x1=6, y1=pn$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
-							
-							points(y=pe$pred,x=2, pch=19, cex=0.9,col="red")
-							points(y=pn$pred,x=6, pch=19, cex=0.9,col="red")
-							
-			if(PNG == TRUE) {dev.off()}
-				}			
-			
-			{# Supplementery Table
+			{# Supplementery Table - if you keep only one random slope - do not report it - just state it in the Table notes
 			  {# prepare table data
 				{# calling - type
-				m= glmer(call_i ~ type + (1|bird_ID) + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
+				m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
 					pred=c('Intercept (ex)','Type(non)')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
@@ -761,9 +710,10 @@
 						ri=data.frame(model='1',dependent = 'calling rate / 10min', type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
 					o1=rbind(oii,ri)
 				}
-				{# calling type * incubation period	
-					m= glmer(call_i ~ type*scale(day_j) + (day_j|nest_ID),offset = log(obs_time/10), family = poisson,  bb_)
-						pred=c('Intercept (ex)','Type(non)', 'Day of incubation', 'Day x type')
+				{# calling type * incubation period, type * sex
+					m= glmer(call_i ~ type*sex +  type*scale(day_j) + (1|nest_ID),offset = log(obs_time/10), family = poisson,  bb_) #model with random slope for day did not converge, but model controlled for date put without offset generated similar results
+					#m= glmer(call_i ~ type*sex +  type*scale(day_j) + (day_j|nest_ID), family = poisson,  bb_)	
+						pred=c('Intercept (ex & f)','Type(non)','Sex (m)', 'Day of incubation', 'Sex x type', 'Day x type')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
 				# Fixed effects
@@ -783,8 +733,8 @@
 					o2=rbind(oii,ri)
 				}	
 				{# fly-off - type
-					m= glmer(fly_i ~ type + (1|bird_ID) + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
-					pred=c('Intercept (ex)','Type(non)')
+					m= glmer(fly_bin ~ scale(log(obs_time))+type + (1|nest_ID), family = binomial,  bb_)
+						pred=c('Intercept (ex)','obs_timep','Type(non)')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
 				# Fixed effects
@@ -804,8 +754,8 @@
 					o3=rbind(oii,ri)
 				}
 				{# fly-off type * incubation period	
-					m= glmer(fly_i ~ type*scale(day_j) + (day_j|nest_ID),offset = log(obs_time/10), family = poisson,  bb_)
-						pred=c('Intercept (ex)','Type(non)', 'Day of incubation', 'Day x type')
+					m= glmer(fly_bin ~ scale(log(obs_time)) + type*sex +  type*scale(day_j) +  (1|nest_ID),family = binomial,  bb_)
+						pred=c('Intercept (ex & f)','obs_time','Type(non)','Sex (m)', 'Day of incubation', 'Sex x type', 'Day x type')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
 				# Fixed effects
@@ -838,10 +788,197 @@
 				}
 			}
 				{# model assumptions
-					dispersion_glmer(m)
-				
+					{# calling - type
+						m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
+									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 								  
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
+									  #qqline(unlist(ranef(m)$nest_ID[2]))
+									  
+									  #scatter.smooth(resid(m)~x2$date[x2$sum>720]);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+									  
+									   mtext("glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									   mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
+																	  
+									  acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+					{# calling type * incubation period, type * sex
+						m= glmer(call_i ~ type*sex +  type*scale(day_j) + (scale(day_j)|nest_ID),offset = log(obs_time/10), family = poisson,  bb_) 
+						#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 								  
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
+									  #qqline(unlist(ranef(m)$nest_ID[2]))
+									  
+									  scatter.smooth(resid(m)~bb_$day_j);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+									  
+									  scatter.smooth(resid(m)~bb_$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~bb_$sex);abline(h=0, lty=2, col='red')
+									  
+									   mtext("glmer(call_i ~ type*sex +  type*scale(day_j) + (1|nest_ID),offset = log(obs_time/10), family = poisson) ", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									   mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
+																	  
+									  acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+					{# fly-off - type
+						m= glmer(fly_bin ~ scale(log(obs_time))+type + (1|nest_ID), family = binomial,  bb_)
+						  #dev.new(width=6,height=9)
+						  png(paste(outdir,"model_ass/Supplementary_Table_2c.png", sep=""), width=6,height=9,units="in",res=600)
+						  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 								  
+							scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+							scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  
+							plot(fitted(m), jitter(bb_$fly_bin, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+							abline(0,1, lty=3)
+							t.breaks <- cut(fitted(m), quantile(fitted(m)))
+							means <- tapply(bb_$fly_bin, t.breaks, mean)
+							semean <- function(x) sd(x)/sqrt(length(x))
+							means.se <- tapply(bb_$fly_bin, t.breaks, semean)
+							points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
+							segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
+							
+							qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+							qqline(resid(m))
+									  
+							qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
+							qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
+									  #qqline(unlist(ranef(m)$nest_ID[2]))
+									  
+							scatter.smooth(resid(m)~log(bb_$obs_time));abline(h=0, lty=2, col='red')
+							scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+							boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+									  
+							mtext("glmer(fly_bin ~ scale(log(obs_time))+type + (1|nest_ID), family = binomial", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+							#mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
+																	  
+							acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+					{# fly-off type * incubation period	
+						m= glmer(fly_bin ~ scale(log(obs_time)) + type*sex +  type*scale(day_j) +  (1|nest_ID),family = binomial,  bb_)
+						
+						#dev.new(width=6,height=9)
+						  png(paste(outdir,"model_ass/Supplementary_Table_2d.png", sep=""), width=6,height=9,units="in",res=600)
+						  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 								  
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  
+									  plot(fitted(m), jitter(bb_$fly_bin, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+							abline(0,1, lty=3)
+							t.breaks <- cut(fitted(m), quantile(fitted(m)))
+							means <- tapply(bb_$fly_bin, t.breaks, mean)
+							semean <- function(x) sd(x)/sqrt(length(x))
+							means.se <- tapply(bb_$fly_bin, t.breaks, semean)
+							points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
+							segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
+							
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
+									  #qqline(unlist(ranef(m)$nest_ID[2]))
+									  
+									  scatter.smooth(resid(m)~log(bb_$obs_time));abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~bb_$day_j);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+									  
+									  scatter.smooth(resid(m)~bb_$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~bb_$sex);abline(h=0, lty=2, col='red')
+									  
+									   mtext("glmer(fly_bin ~ scale(log(obs_time)) + type*sex +  type*scale(day_j) +  (1|nest_ID),family = binomial) ", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									   #mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
+																	  
+									  acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
 				}
-			{# NOT USED separate plot FOR PAPER
+				
+				{# NOT USED separate plot FOR PAPER
 				#png(paste(outdir,"distribution_call_i_before.png", sep=""), width=1.85+0.6,height=1.85*2,units="in",res=600)
 				dev.new(width=1.85+0.6,height=1.85)
 						
@@ -935,11 +1072,75 @@
 			}
 						
 			}
+						{# LATER DELETE no overall difference between calls  
+				{# Supplementary table
+					m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time),family = poisson,  bb_)
+					m= glmer(call_i ~ type*sex + (1|nest_ID), offset = log(obs_time),family = poisson,  bb_)
+					#fm= glmer(call_i ~ type + (1|nest_ID), family = poisson,  bb_)
+				   			
+      					summary(m)
+      					summary(glht(m))
+      					plot(allEffects(m))
+						dispersion_glmer(m) # values over 1.4 suggest serious overdisperison
+						
+					# this does not change over the incubation period
+							m= glmer(call_i ~ type*sex +  type*scale(day_j) + (day_j|nest_ID),offset = log(obs_time), family = poisson,  bb_)
+												
+						{# I think this does not belong here, but WE CAN KEEP THIS IN CASE WE HAVE A PREDICTION HERE 
+							# the finding says that regularly incubating birds tend to call less during mid-day and more during night whereas before exchange this is more regular
+							fm= glmer(call_i ~ type*sin(rad)+type*cos(rad)+ (1|nest_ID), family = poisson,  bb_) 
+							 summary(glht(fm))
+							 plot(allEffects(fm))
+							
+						}	
+				}
+					{# old plots
+				ggplot(bb_,aes(x=type, y=call_i))+geom_boxplot()
+				
+				#ggplot(bb_,aes(x=reorder(nest_ID, call_i, FUN=median), y=call_i, fill=type))+geom_boxplot()
+
+				ggplot(bb_,aes(x=type, y=call_i, col=sex))+geom_boxplot()
+  				ggplot(bb_,aes(x=call_i, col=type))+geom_density()
+				ggplot(bb_,aes(x=call_i, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4)
+				
+				
+				}
+			}
+			{# LATER DELETE less fly-offs before exchange
+				{# Supplementary table
+					# Poisson
+						fm= glmer(fly_i ~ type + (1|bird_ID) + (1|nest_ID),offset = log(obs_time), family = poisson,  bb_)
+      					summary(fm)
+						summary(glht(fm))
+      					plot(allEffects(fm))
+						dispersion_glmer(fm) 
+						
+						# overall fly-offs increase over the incubation period
+						fm= glmer(fly_i ~ type*scale(day_j) + (day_j|nest_ID),offset = log(obs_time), family = poisson,  bb_)
+						fm= glmer(fly_i ~ type+scale(day_j) + (day_j|nest_ID),offset = log(obs_time), family = poisson,  bb_)
+					
+					
+									
+		
+				}
+				{# binary (gives same results as Poisson
+						bb_$fly_bin=ifelse(bb_$fly_i==0,0,1)
+						fm= glmer(fly_bin ~ type + (1|nest_ID), family = binomial,  bb_)
+							summary(fm)
+							summary(glht(fm))
+							plot(allEffects(fm))
+				}			
+				{# old plots
+				ggplot(bb_,aes(x=type, y=fly_i))+geom_boxplot()
+				#ggplot(bb_,aes(x=reorder(nest_ID, fly_i, FUN=median), y=fly_i, fill=type))+geom_boxplot()
+  				ggplot(bb_,aes(x=type, y=fly_i, col=sex))+geom_boxplot()
+				ggplot(bb_,aes(x=fly_i, col=type))+geom_density()
+				ggplot(bb_,aes(x=fly_i, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4)
+				}
+      		}	
 						
 		}
-									
-		}		
-        {#1b. Does the probability of calling increase as leaving/exchange is nearing)? and if so is this sex specific
+		{# In cases where calling/flying occured - was it closer to the exchange start? and if so is this sex specific
 				{# run first	  
 					# time difference of each observation to the end of observations session  )only for those observatins sessions where calling occured)
 						ba = b[, deltaT := difftime(end_pr, dt_behaviour, units = 'mins')%>% as.integer]
@@ -947,35 +1148,185 @@
           			
           			bo$hour= as.numeric(difftime(bo$dt_behaviour, trunc(bo$dt_behaviour,"day"), units = "hours"))
           			bo$rad=as.numeric(bo$hour)*pi/12
-					
+					bo$sex = as.factor(bo$sex)
           			#h$sin_=sin(h$rad)
           			#h$cos_=cos(h$rad)
+          		}	
+                {# calling in before exchange bouts
+					{# run first
+						bo_ = bo[bo$behaviour == 'c' & bo$who == 'o' & bo$type == 'ex',]
+					}	
+					{# distributions
+						ggplot(bo_, aes(y = deltaT, x = obs_time))+geom_point()
+						ggplot(bo_, aes(x = deltaT))+geom_density()
+						ggplot(bo_, aes(x = deltaT/obs_time))+geom_density()
+						
+						ggplot(bo_, aes(y = deltaT/obs_time, x = who))+geom_boxplot()
+						ggplot(bo_, aes(y = deltaT/obs_time, x = nest_ID))+geom_boxplot()
+						}
+					{# model output for text
+						m = lmer(deltaT/obs_time ~ 1+(1|nest_ID) , bo_)
+						pred=c('Intercept')
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+					# Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model='1',dependent = 'proportion of observation period calling occured', type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model='1',dependent = 'proportion of observation period calling occured', type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o=rbind(oii,ri)
+					sname = tempfile(fileext='.xls')
+						wb = loadWorkbook(sname,create = TRUE)	
+						createSheet(wb, name = "output")
+						writeWorksheet(wb, o, sheet = "output")
+						#createSheet(wb, name = "output_AIC")
+						#writeWorksheet(wb, rbind(o), sheet = "output_AIC")
+						saveWorkbook(wb)
+						shell(sname)
+				}	
+					{# TO DO sex model output for Supplementary Table
+						m = lmer(deltaT/obs_time ~ sex+(1|nest_ID) , bo_)
+					}
+					{# Figure 2a
+						{# run first 
+			    {# model estimates
+					m = lmer(deltaT/obs_time ~ 1+(1|nest_ID) , bo_)
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				
+				# coefficients
+					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci = apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+				
+				}		
+			 	{# raw data
+					bo_$n = 1
+					u=ddply(bo_,.(nest_ID,obs_ID, type), summarise,m=median(deltaT/obs_time), q1=quantile(deltaT/obs_time,0.25), q2= quantile(deltaT/obs_time,0.75), n = sum(n))
+					u$type_j=2
+					u$type_j=jitter(u$type_j)
+					}
+				}
+					if(PNG == TRUE) {
+					png(paste(outdir,"Figure_2.png", sep=""), width=1.85+0.6,height=1.5,units="in",res=600) 
+					}else{
+					dev.new(width=1.85+0.6,height=1.5)
+					}	
+				
+				par(mar=c(0.25,0,0,2.8),oma = c(1, 1.8+0.5, 1, 1),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+						
+						
+					# calls
+						plot(u$m~u$type_j, xlim=c(2-0.044,2+0.044), ylim=c(0,1),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						
+						lines(y=c(0,0),x=c(2-0.048,2+0.044), lty = 1,col="grey70")
+						text(y=c(0),x=c(2+0.038), labels = 'Start of exchange', col="grey30",xpd=TRUE, cex=0.5,pos=4)
+						
+						mtext("Call occurance within observation\n[proportion of observed time]",side=2,line=1, cex=0.6, las=3, col='grey30')
+						#axis(1, at=c(2,6), label=c('Before exchange', 'Regular'), mgp=c(0,-0.20,0))
+											
+						#axis(1, at=c(2,6), label=c('Before exchange', 'Regular'), mgp=c(0,-0.20,0))
+						#mtext("Observation [median",side=1,line=0.4, cex=0.5, las=1, col='grey30')
+						
+						arrows(x0=u$type_j, y0=u$q1,x1=u$type_j, y1=u$q2, code = 0, col=col_p, angle = 90, length = .025, lwd=0.5, lty=1)
+						
+						symbols(u$type_j, u$m, circles=sqrt(u$n/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE) #
+						
+						lines(y=c(0.5,0.5),x=c(2-0.044,2+0.044), lty = 3)
+)						
+						# add predictions + 95%CI
+							arrows(x0=2, y0=ci[1],x1=2, y1=ci[2], code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
+							points(y=v,x=2, pch=19, cex=0.9,col="red")
+													
+						# legend
+							mtext(expression(italic('N')*' call cases:'),side = 4,line=0, padj=-7,cex=0.5,las=1,col='grey30', xpd=TRUE) # for printing into device use padj=-7.5
+							symbols(c(2+0.044,2+0.044,2+0.0445)+0.01,c(0.94,0.8,0.66)-0.05,circles=sqrt(c(1,5,10)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+							text(c(2+0.044,2+0.044,2+0.0445)+0.02,c(0.94,0.8,0.66)-0.05,labels=c(1,5,10), xpd=TRUE, cex=0.5,col='grey30') 
+							
+							mtext('Median & IQR',side = 4,line=0,padj=1.5, cex=0.5,las=1,col='grey30', xpd=TRUE) 
+							mtext('Estimate &\n95%CrI',side = 4,line=0,padj=2, cex=0.5,las=1,col='red', xpd=TRUE) 
+							#text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', srt=90) 
+							
+							
+			if(PNG == TRUE) {dev.off()}
+					
+					}
+				{# not used 
           			
-                # calling occures closer to exchange 
-          			hist(bo$deltaT[bo$behaviour == 'c' & bo$who == 'o'])
-          			m= lmer(deltaT ~ type + (1|bird_ID)+(1|nest_ID) , bo[bo$behaviour == 'c' & bo$who == 'o',])
-          			#fm= lmer(deltaT ~ type+sin(rad)+type+cos(rad)+(1|nest_ID) , bo[bo$behaviour == 'c' & bo$who == 'o',])
-          			#fm= lmer(deltaT ~ type*sin(rad)+type*cos(rad)+(1|nest_ID) , bo[bo$behaviour == 'c' & bo$who == 'o',])
-          			#fm= lmer(deltaT ~ type*scale(day_j)+ (1|nest_ID) , bo[bo$behaviour == 'c' & bo$who == 'o',])
+					bo_ = bo[bo$behaviour == 'c' & bo$who == 'o',]
+					hist(bo_$deltaT)
+          			m= lmer(deltaT ~ type + (1|bird_ID)+(1|nest_ID) , bo_[bo_$behaviour == 'c' & bo_$who == 'o',])
+          			#fm= lmer(deltaT ~ type+sin(rad)+type+cos(rad)+(1|nest_ID) , bo_[bo_$behaviour == 'c' & bo_$who == 'o',])
+          			#fm= lmer(deltaT ~ type*sin(rad)+type*cos(rad)+(1|nest_ID) , bo_[bo_$behaviour == 'c' & bo_$who == 'o',])
+          			#fm= lmer(deltaT ~ type*scale(day_j)+ (1|nest_ID) , bo_[bo_$behaviour == 'c' & bo_$who == 'o',])
           			summary(m)
           			glht(m) %>% summary
           			plot(allEffects(m))
-          			ggplot(bo[bo$behaviour == 'c' & bo$who == 'o',], aes(x=type, y=deltaT, col=type))+geom_boxplot()
-          			
-					### CREAT PLOT and Table
-						# distribution and 
-						# same plot as in Figure 1
-					
+          			ggplot(bo_[bo_$behaviour == 'c' & bo_$who == 'o',], aes(x=type, y=deltaT, col=type))+geom_bo_xplot()
+          		       
 					# distribution over time
-						ggplot(bo[bo$behaviour == 'c' & bo$who == 'o',], aes(x=deltaT, col=type))+geom_density()
+						ggplot(bo_[bo_$behaviour == 'c' & bo_$who == 'o',], aes(x=deltaT, col=type))+geom_density()
 						# includes also those that left before presence of the coming bird - USE IN THE MANUSCRIPT
 						ggplot(b[b$behaviour == 'c' & b$who == 'o',], aes(x=deltaT, col=type))+geom_density() +geom_vline(xintercept = 0) 
 						ggplot(b[b$behaviour == 'c' & b$who == 'o',], aes(x=deltaT, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4) +geom_vline(xintercept = 0)
 						
 						ggplot(b[b$behaviour == 'c' & b$who == 'o',], aes(x=deltaT, col=type))+geom_histogram(aes(y=..density..),position="dodge" ,  alpha=0.4) +geom_density() +geom_vline(xintercept = 0) 
+					 }  			
+				}	
+          		{# fly_off happen less often as the exchange approaches
+          			{# run first
+					bo_ = bo[bo$behaviour == 'f' & bo$who == 'o' & bo$type == 'ex',]
+					}
+					{# distributions
+						ggplot(bo_, aes(y = deltaT, x = obs_time))+geom_point()
+						ggplot(bo_, aes(x = deltaT))+geom_density()
+						ggplot(bo_, aes(x = deltaT/obs_time, col = sex))+geom_density()
 						
-          		# fly_off happen less often as the exchange approaches
-          			hist(bo$deltaT[bo$behaviour == 'f' & bo$who == 'o'])
+						ggplot(bo_, aes(y = deltaT/obs_time, x = who))+geom_boxplot()
+						ggplot(bo_, aes(y = deltaT/obs_time, x = nest_ID))+geom_boxplot()
+					}
+					{# model output for text
+						m = lmer(deltaT/obs_time ~ 1+(1|nest_ID) , bo_)
+						pred=c('Intercept')
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+					# Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model='1',dependent = 'proportion of observation period fly-off occured', type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model='1',dependent = 'proportion of observation period calling occured', type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o=rbind(oii,ri)
+					sname = tempfile(fileext='.xls')
+						wb = loadWorkbook(sname,create = TRUE)	
+						createSheet(wb, name = "output")
+						writeWorksheet(wb, o, sheet = "output")
+						#createSheet(wb, name = "output_AIC")
+						#writeWorksheet(wb, rbind(o), sheet = "output_AIC")
+						saveWorkbook(wb)
+						shell(sname)
+				}	
+					{# TO DO sex model output for Supplementary Table
+						m = lmer(deltaT/obs_time ~ sex+(1|nest_ID) , bo_)
+					}
+					{# not used
+					hist(bo$deltaT[bo$behaviour == 'f' & bo$who == 'o'])
           			fm= lmer(deltaT ~ type + (1|nest_ID) , bo[bo$behaviour == 'f' & bo$who == 'o',])
           			#fm= lmer(deltaT ~ type*scale(day_j)++ (1|nest_ID) , bo[bo$behaviour == 'f' & bo$who == 'o',])
           			summary(fm)
@@ -991,13 +1342,12 @@
           			#ggplot(bo[bo$behaviour == 'f' & bo$who == 'o',], aes(x=deltaT, fill=type))+geom_histogram(position="dodge" ,  alpha=0.4) +geom_vline(xintercept = 0)
 					ggplot(b[b$behaviour == 'f' & b$who == 'o',], aes(x=deltaT, col=type))+geom_histogram(aes(y=..density..),position="dodge" ,  alpha=0.4) +geom_density() +geom_vline(xintercept = 0) 
 			}
-		
-  		{#### TO DO: check whether the probability of calling with time is not specific to whether the bird left before partner was present)
-						
-  		}			
-  		
+				}	
+				{# CREATE figure 2ab
+				}
+		}		
+	  }				
 	}
-	
 	{# exchange procedure - DECIDE WHETHER TO INVOLVE DATETIME LEFT
 		
       	 {# run first
@@ -1258,7 +1608,7 @@
 	}
 
 }	
-	
+}	
 
 {# DONE
 	{# prepare nests - start/end
