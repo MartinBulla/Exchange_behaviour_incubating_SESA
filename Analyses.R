@@ -1899,6 +1899,10 @@
 			 	{# model assumptions
 					{# presence before start
 						 m = lmer(log(pa)~ sex*day_j+(day_j|nest_ID), dd_)
+								# binomial gives same results
+								#dd_$pa_bin=ifelse(dd_$pa == 0.001, 0,1)
+								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd_)
+						
 									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
 									  dev.new(width=6,height=9)
 									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
