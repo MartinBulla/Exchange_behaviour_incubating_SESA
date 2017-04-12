@@ -1702,6 +1702,7 @@
       		### dd$presence2=as.numeric(dd$dt_left-dd$dt_1st_presence)
 			
 			dd$pa=dd$presence-dd$arrival
+			dd$pa[dd$pa <= 0] = 0.001
 			dd$gap=as.numeric(difftime(dd$dt_on,dd$dt_left,'secs'))  # exchange gap - time span between leaving of the incubating bird and sitting down of its partner
 			dd$gap[dd$gap == 0] = 0.001 
 			dd$left_type = as.factor(ifelse(is.na(dd$arrival), NA,
@@ -1716,7 +1717,7 @@
 	  }
 	  {# durations
 		 {# descriptive
-		  {# first presence
+		   {# first presence - DELETE
 			summary(dd$presence)
 			length(dd$presence) # number of exchanges
 			length(unique(dd$nest_ID)) # number of nests
@@ -1727,6 +1728,23 @@
 			ggplot(dd, aes(x = day_j, y = log(presence), fill = sex)) + geom_point() + stat_smooth() 
 			
 			m = lmer(log(presence)~ sex*day_j+(day_j|nest_ID), dd_)
+			plot(allEffects(m))
+			summary(glht(m))
+		  }
+		  
+		  {# first presence to start of exchange
+			summary(dd_$pa)
+			length(dd_$pa) # number of exchanges
+			length(unique(dd_$nest_ID)) # number of nests
+			
+			densityplot(dd$pa/60)
+			densityplot(log(dd$pa/60))
+			dd$obs_ID[dd$pa/60 > 2]
+			ggplot(dd_, aes(x = sex, y = log(pa), fill = sex)) + geom_boxplot() 
+			ggplot(dd, aes(x = day_j, y = log(pa), fill = sex)) + geom_point() + stat_smooth() 
+			ggplot(dd, aes(x = day_j, y = (pa), fill = sex)) + geom_point() + stat_smooth() 
+			table(dd_$pa)
+			m = lmer(log(pa)~ sex*day_j+(day_j|nest_ID), dd_)
 			plot(allEffects(m))
 			summary(glht(m))
 		  }
@@ -1753,6 +1771,8 @@
 				
 			cor(dd$arrival[!is.na(dd$arrival)],dd$presence[!is.na(dd$arrival)],method = 'pearson')
 			cor(dd$arrival[!is.na(dd$arrival)],dd$presence[!is.na(dd$arrival)],method = 'spearman')
+				cor(dd_$arrival,dd_$pa,method = 'spearman')
+				cor(dd_$arrival,dd_$pa,method = 'pearson')
 			ggplot(dd[!is.na(dd$arrival),], aes(x = log(presence), y = log(arrival), fill = sex)) + geom_point() + stat_smooth()
 			ggplot(dd[!is.na(dd$arrival),], aes(x = log(presence), y = log(arrival))) + geom_point() + stat_smooth()
 			ggplot(dd[!is.na(dd$arrival),], aes(x = log(presence), y = log(arrival))) + geom_point() + stat_smooth(method = 'lm')
@@ -1794,8 +1814,8 @@
 		 }
 		 {# Supplementary Table 3			
 			  {# prepare table data
-				{# first presence
-				 m = lmer(log(presence)~ sex*day_j+(day_j|nest_ID), dd)
+				{# presence before start
+				 m = lmer(log(pa)~ sex*day_j+(day_j|nest_ID), dd_)
 					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
 					dep = 'log(presence)'
 					mod = 1
@@ -1877,8 +1897,8 @@
 				}
 		 }
 			 	{# model assumptions
-					{# first presence
-						 m = lmer(log(presence)~ sex*day_j+(day_j|nest_ID), dd)
+					{# presence before start
+						 m = lmer(log(pa)~ sex*day_j+(day_j|nest_ID), dd_)
 									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
 									  dev.new(width=6,height=9)
 									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
@@ -1894,15 +1914,15 @@
 									  qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
 									  qqline(unlist(ranef(m)$nest_ID[2]))
 									  
-									  scatter.smooth(resid(m)~dd$day_j);abline(h=0, lty=2, col='red')
-									  scatter.smooth(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
-									  boxplot(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~dd_$day_j);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~dd_$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~dd_$sex);abline(h=0, lty=2, col='red')
 									  
-									   mtext("lmer(log(presence)~ sex*day_j+(day_j|nest_ID), dd)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   mtext("lmer(log(pad)~ sex*day_j+(day_j|nest_ID), dd)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
 									   
 									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
 									  # spatial autocorrelations - nest location
-										spdata=data.frame(resid=resid(m), x=dd$lon, y=dd$lat)
+										spdata=data.frame(resid=resid(m), x=dd_$lon, y=dd_$lat)
 											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
 											#cex_=c(1,2,3,3.5,4)
 											cex_=c(1,1.5,2,2.5,3)
