@@ -62,7 +62,7 @@
 }
 {# RESULTS
 	{# Behaviour prior to return of the partner
-	  {# frequency of observations with incubating parent leaving the nest prior to return of the comming bird - (description in the text, if space allows, figure)
+	 {# Frequency of observations with incubating parent leaving the nest prior to return of the comming bird - (description in the text, if space allows, figure)
 		{# run first
 			bb=b[b$obs_ID%in%dd$obs_ID,]	
 			bb_=ddply(b,.(obs_ID, nest_ID, sex), summarise, call_i=length(behaviour[which(behaviour=='c' & who=='o')]),fly_i=length(behaviour[which(behaviour=='f' & who=='o')]))
@@ -1138,7 +1138,7 @@
       		}	
 						
 		}
-	{# In cases where calling/flying occured - was it closer to the exchange start? and if so is this sex specific
+	{# For cases where calling/flying occured - was it closer to the exchange start? and if so is this sex specific
 				{# run first	  
 					# time difference of each observation to the end of observations session  )only for those observatins sessions where calling occured)
 						ba = b[, deltaT := difftime(end_pr, dt_behaviour, units = 'mins')%>% as.integer]
@@ -1690,34 +1690,106 @@
 			}
 				}	
 				}
-		}		
+	}		
 	  }				
 	}
-	{# exchange procedure - DECIDE WHETHER TO INVOLVE DATETIME LEFT
+	
+	{# Exchange procedure - DECIDE WHETHER TO INVOLVE DATETIME LEFT
+	  {# run first
+      		dd$presence=as.numeric(difftime(dd$dt_on, dd$dt_1st_presence,'secs'))  # how long before the bird sits down on nest is he present)
+    		dd$arrival=as.numeric(difftime(dd$dt_on,dd$dt_arrive,'secs'))  # how long before the bird sits down on nest is he close by / anters the picutre (i.e. start the exchange))
+      		### dd$presence2=as.numeric(dd$dt_left-dd$dt_1st_presence)
+			
+			dd$pa=dd$presence-dd$arrival
+			dd$gap=as.numeric(difftime(dd$dt_on,dd$dt_left,'secs'))  # exchange gap - time span between leaving of the incubating bird and sitting down of its partner
+			dd$gap[dd$gap == 0] = 0.001 
+			dd$left_type = as.factor(ifelse(is.na(dd$arrival), NA,
+								ifelse(dd$dt_left < dd$dt_1st_presence, '1 before presence', 
+									ifelse(dd$dt_left < dd$dt_arrive, '2 between presence arrival','3 after arrival'))))
+			
+			dd$left_before_presence = as.factor(dd$left_before_presence)	
+			dd$sex = as.factor(dd$sex)					
 		
-      	 {# run first
-      			
-      		dd=d[d$type=='ex',]
-      			
-    			dd$presence=as.numeric(dd$dt_on-dd$dt_1st_presence)  # how long before the bird sits down on nest is he present)
-    			dd$arrival=as.numeric(dd$dt_on-dd$dt_arrive)  # how long before the bird sits down on nest is he close by / anters the picutre (i.e. start the exchange))
-      			
-    			### dd$presence2=as.numeric(dd$dt_left-dd$dt_1st_presence)
-    			dd$gap=as.numeric(dd$dt_on-dd$dt_left)  # 
-      		densityplot(~log(dd$gap))
-      		densityplot(~dd$gap[dd$gap<60])
-    			length(dd$gap[dd$gap>60])/nrow(dd)
-      			
-      	 }
-	  
-	  
-		{#1 durations
+    		
+			dd_ = dd[!is.na(dd$arrival),]
+	  }
+	  {#1 durations
+		  {# first presence
+			summary(dd$presence)
+			length(dd$presence) # number of exchanges
+			length(unique(dd$nest_ID)) # number of nests
+			
+			densityplot(dd$presence/60)
+			dd$obs_ID[dd$presence/60 > 4]
+			ggplot(dd, aes(x = sex, y = log(presence), fill = sex)) + geom_boxplot() 
+			ggplot(dd, aes(x = day_j, y = log(presence), fill = sex)) + geom_point() + stat_smooth() 
+			
+			m = lmer(log(presence)~ sex*day_j+(day_j|nest_ID), dd_)
+			plot(allEffects(m))
+			summary(glht(m))
+		  }
+		  {# arrival
+			summary(dd$arrival)
+			length(dd$arrival[!is.na(dd$arrival)]) # number of exchanges
+			length(unique(dd$nest_ID[!is.na(dd$arrival)])) # number of nests
+						
+			densityplot(dd$arrival/60)
+			densityplot(log(dd$arrival))
+			dd$obs_ID[is.na(dd$arrival)]
+			dd$obs_ID[dd$arrival/60 > 1]
+			dd$obs_ID[dd$arrival>dd$presence]
+			
+			ggplot(dd_, aes(x = left_type, y = log(arrival), fill = sex)) + geom_boxplot() 
+				m = lmer(log(arrive)~ left_type + sex*day_j+(day_j|nest_ID), dd_)
+				plot(allEffects(m))
+				summary(glht(m))
+			ggplot(dd[!is.na(dd$arrival),], aes(x = sex, y = log(arrival), fill = sex)) + geom_boxplot() 
+			ggplot(dd[!is.na(dd$arrival),], aes(x = day_j, y = log(arrival), fill = sex)) + geom_point() + stat_smooth() 
+			
+			summary(factor(dd$left_before_presence))
+				
+				
+			cor(dd$arrival[!is.na(dd$arrival)],dd$presence[!is.na(dd$arrival)],method = 'pearson')
+			cor(dd$arrival[!is.na(dd$arrival)],dd$presence[!is.na(dd$arrival)],method = 'spearman')
+			ggplot(dd[!is.na(dd$arrival),], aes(x = log(presence), y = log(arrival), fill = sex)) + geom_point() + stat_smooth()
+			ggplot(dd[!is.na(dd$arrival),], aes(x = log(presence), y = log(arrival))) + geom_point() + stat_smooth()
+			ggplot(dd[!is.na(dd$arrival),], aes(x = log(presence), y = log(arrival))) + geom_point() + stat_smooth(method = 'lm')
 		  
-		  # -first presence
-		  # -arrival
-		  # -leaving
-		  # -exchange gap
 		  
+			
+			{# dont use
+				# is time span between present and arrival dependent on whether incubating bird was around
+				summary(dd_$pa)
+				densityplot(dd_$pa)
+				ggplot(dd_, aes(x = left_before_presence, y = log(pa+0.01), fill = sex)) + geom_boxplot()
+				ggplot(dd[!is.na(dd$arrival),], aes(x = left_before_presence, y = log(arrival), fill = sex)) + geom_boxplot()
+				m = lmer(log(pa+0.01)~ left_before_presence +(1|nest_ID), dd_)
+				plot(allEffects(m))
+				summary(glht(m))
+			
+			}
+		  }
+		  {# leaving - exchange gap
+			summary(dd$gap)
+			length(dd$gap[dd$gap>60])/nrow(dd)
+			length(dd$gap[!is.na(dd$gap)]) # number of exchanges
+			length(unique(dd$nest_ID[!is.na(dd$arrival)])) # number of nests
+						
+			densityplot(dd$gap/60)
+			densityplot(log(dd$gap))
+			dd$obs_ID[is.na(dd$gap)]
+			dd$obs_ID[dd$gap/60 > 1]
+			dd$obs_ID[dd$presence/60 > 4]
+			
+			ggplot(dd[!is.na(dd$gap),], aes(x = sex, y = log(gap), fill = sex)) + geom_boxplot() 
+			ggplot(dd[!is.na(dd$gap),], aes(x = day_j, y = log(gap), fill = sex)) + geom_point() + stat_smooth() 
+			
+    		m = lmer(log(gap)~ sex*day_j+(day_j|nest_ID), dd_)
+			plot(allEffects(m))
+			summary(glht(m))
+				
+			}
+	  }
 		  ####DT
       		  require(pastecs)
       		  stat.desc(dd$gap[dd$gap])
