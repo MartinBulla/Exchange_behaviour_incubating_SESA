@@ -541,6 +541,7 @@
 				}			
 				if(PNG == TRUE) {dev.off()}
 				}			
+			}
 			{# not used PLOT distribution of calls and fly-offs including predictions FOR PAPER
 			   {# run first 
 				{# model predictions
@@ -685,7 +686,7 @@
 			if(PNG == TRUE) {dev.off()}
 				}			
 						
-			{# Supplementery Table - if you keep only one random slope - do not report it - just state it in the Table notes
+			{# Supplementery Table 1 - if you keep only one random slope - do not report it - just state it in the Table notes
 			  {# prepare table data
 				{# calling - type
 				m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
@@ -1137,7 +1138,7 @@
 				}
       		}	
 						
-		}
+	 }
 	{# For cases where calling/flying occured - was it closer to the exchange start? and if so is this sex specific
 				{# run first	  
 					# time difference of each observation to the end of observations session  )only for those observatins sessions where calling occured)
@@ -1713,7 +1714,8 @@
     		
 			dd_ = dd[!is.na(dd$arrival),]
 	  }
-	  {#1 durations
+	  {# durations
+		 {# descriptive
 		  {# first presence
 			summary(dd$presence)
 			length(dd$presence) # number of exchanges
@@ -1769,7 +1771,7 @@
 			
 			}
 		  }
-		  {# leaving - exchange gap
+		  {# exchange gap
 			summary(dd$gap)
 			length(dd$gap[dd$gap>60])/nrow(dd)
 			length(dd$gap[!is.na(dd$gap)]) # number of exchanges
@@ -1789,8 +1791,216 @@
 			summary(glht(m))
 				
 			}
+		 }
+		 {# Supplementary Table 3			
+			  {# prepare table data
+				{# first presence
+				 m = lmer(log(presence)~ sex*day_j+(day_j|nest_ID), dd)
+					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
+					dep = 'log(presence)'
+					mod = 1
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o1=rbind(oii,ri)
+				}
+				{# arrival
+				 m = lmer(log(arrival) ~ left_type + sex*day_j+(day_j|nest_ID), dd_)
+					pred=c('Intercept (f & before)','Left between', 'Left after', 'Sex(m)', 'Day', 'Day:sex')
+					dep = 'log(arrival)'
+					mod = 2
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o2=rbind(oii,ri)
+				}
+				{# gap
+				 m = lmer(log(gap)~ sex*day_j+(day_j|nest_ID), dd)
+					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
+					dep = 'log(gap)'
+					mod = 3
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o3=rbind(oii,ri)
+				}
+			 }
+			  {# create xlsx table		
+						o=rbind(o1,o2,o3)
+						sname = tempfile(fileext='.xls')
+						wb = loadWorkbook(sname,create = TRUE)	
+						createSheet(wb, name = "output")
+						writeWorksheet(wb, o, sheet = "output")
+						#createSheet(wb, name = "output_AIC")
+						#writeWorksheet(wb, rbind(o), sheet = "output_AIC")
+						saveWorkbook(wb)
+						shell(sname)
+				}
+		 }
+			 	{# model assumptions
+					{# first presence
+						 m = lmer(log(presence)~ sex*day_j+(day_j|nest_ID), dd)
+									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 								  
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
+									  qqline(unlist(ranef(m)$nest_ID[2]))
+									  
+									  scatter.smooth(resid(m)~dd$day_j);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+									  
+									   mtext("lmer(log(presence)~ sex*day_j+(day_j|nest_ID), dd)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=dd$lon, y=dd$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+					{# arrival
+						m = lmer(log(arrival) ~ left_type + sex*day_j+(day_j|nest_ID), dd_)
+									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 								  
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
+									  qqline(unlist(ranef(m)$nest_ID[2]))
+									  
+									  scatter.smooth(resid(m)~dd_$day_j);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~dd_$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~dd_$sex);abline(h=0, lty=2, col='red')
+									  
+									  scatter.smooth(resid(m)~dd_$left_type);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~dd_$left_type);abline(h=0, lty=2, col='red')
+									   mtext("lmer(log(arrival) ~ left_type + sex*day_j+(day_j|nest_ID), dd_)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=dd_$lon, y=dd_$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+					{# first presence
+						 m = lmer(log(gap)~ sex*day_j+(day_j|nest_ID), dd)
+									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 								  
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
+									  qqline(unlist(ranef(m)$nest_ID[2]))
+									  
+									  scatter.smooth(resid(m)~dd$day_j);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+									  
+									   mtext("lmer(log(gap)~ sex*day_j+(day_j|nest_ID), dd)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=dd$lon, y=dd$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+				}
+				
+		 
+		 
+		 }
 	  }
-		  ####DT
+		 
+		 ####DT
       		  require(pastecs)
       		  stat.desc(dd$gap[dd$gap])
 		  ####
