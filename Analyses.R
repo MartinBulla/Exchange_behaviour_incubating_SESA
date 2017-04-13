@@ -371,7 +371,6 @@
       			bb_$hour= as.numeric(difftime(bb_$dt_video, trunc(bb_$dt_video,"day"), units = "hours"))
       			bb_$rad=as.numeric(bb_$hour)*pi/12
 				bb_$n=1
-				bb_$bird_ID = paste(bb_$nest_ID, bb_$sex)
 				bb_$fly_bin=ifelse(bb_$fly_i==0,0,1)				
 				length(unique(bb_$nest_ID))
 				length(unique(bb_$bird_ID))
@@ -1712,6 +1711,7 @@
 		
     		
 			dd_ = dd[!is.na(dd$arrival),]
+			ex_ = dd[dd$left_before_presence=="n",]
 	  }
 	  {# durations
 		 {# descriptive
@@ -2158,35 +2158,85 @@
 					}
 
 		}
-		 
-		 
-		 }
+	  {# calling - how laud is the exchange?
+		{# during and immediately after exchange
+		{# run first
+			d1 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_1'))
+				colnames(d1)[7] = 'call_int'
+				d1$type = 'both present'
+				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+				#d1[is.na(d1$call_int), ]
+			d2 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c2'))
+				colnames(d2)[7] = 'call_int'
+				d2$type = 'exchange gap'	
+				#d2$obs_ID[is.na(d2$call_int) & d2$sound_ok == 'y']
+				#d2[is.na(d2$call_int), ]
+			
+			d3 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c3'))
+				colnames(d3)[7] = 'call_int'
+				d3$type = 'after on nest'			
+				#d3$obs_ID[is.na(d3$call_int) & d3$sound_ok == 'y']
+				#d3[is.na(d2$call_int), ]
+			di = rbind(d1,d2,d3)
+			di = di[!is.na(di$call_int),]
+		}	
+			ggplot(di, aes(x = call_int, fill = type)) + geom_bar(position=position_dodge())
+			#di[di$call_int==6,]
+			
+		{# distribution
+			
+			densityplot(~ex_$call_int_1)
+			
+			ggplot(ex_,aes(y=call_int_1, x=day_j, fill=sex, col=sex))+geom_point()+stat_smooth()
+			ggplot(ex_,aes(y=call_int_1, x=day_j, fill=sex, col=sex))+geom_point()+stat_smooth(method="lm")
+			ggplot(ex_[ex_$day_j<19,],aes(y=call_int_1, x=day_j, fill=sex, col=sex))+geom_point()+stat_smooth(method="lm")
+			ggplot(ex_[ex_$day_j<19,],aes(y=call_int_1, x=day_j, fill=sex, col=sex))+geom_point()+stat_smooth()
+
+			ggplot(ex_[ex_$day_j<19,],aes(y=call_int_1, x=day_j))+geom_point()+stat_smooth(method="lm")
+			ggplot(ex_[ex_$day_j<22,],aes(y=call_int_1, x=day_j))+geom_point()+stat_smooth(method="lm")
+			ggplot(ex_[ex_$day_j<22,],aes(y=call_int_1, x=day_j))+geom_point()+stat_smooth()
+			ggplot(ex_,aes(y=call_int_1, x=day_j))+geom_point()+stat_smooth()
+
+			ggplot(ex_,aes(y=call_int_1, x=day_j, col=nest))+geom_point()+stat_smooth(method="lm", se=FALSE)
+		}
+		}	
+		{# during fly-off
+		}
+	  }
+	  }
+	  {# push offs
+			ex_$push = ifelse(ex_$pushoff_int==3,1,0)
+		#a.	What is the distribution of push-offs?
+		  
+    			densityplot(~ex_$pushoff_int)
+    			densityplot(~ex_$push)
+    			
+    			
+    			m=glmer(push~sex + (1|nest_ID), family='binomial',dd)
+    			plot(allEffects(m))
+    			summary(glht(m))
+    			
+    	#b.	Are they correlated with 
+    		cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="pearson") # max 0.3586142
+			cor(x[,.('inc_start','day_inc_per')],use="pairwise.complete.obs", method="spearman") # max 0.3589236
+    			#i.	calling intensity (if yes, push offs likely reflect calling intensity)
+				
+    			#ii.	length of current and next incubation bout + incubation period or sex
+				m=glmer(push~scale(current_bout)*sex + (1|nest_ID), family='binomial',ex_)
+				m=glmer(push~scale(day_j)*sex+scale(current_bout)*sex +scale(next_bout)*sex + (1|nest_ID), family='binomial',ex_)
+				plot(allEffects(m))
+				summary(glht(m))
+    			#iii.	calling intensity in present period
+				
+    		
+    			
 	  }
 		 
-		 ####DT
-      		  require(pastecs)
-      		  stat.desc(dd$gap[dd$gap])
-		  ####
-		  
-		  #1b.are they related to sex or incubation period? 
-		  
-		  ####DT
-      		  # Do sexes differ in gap length?
-      		  
-      		  library(lme4)
-      		  library(lmerTest)
-      		  m2=lmer(rank(gap)~as.factor(sex)+as.factor(cage)+(1|year)+(1|bird_ID)+(1|nest_ID),data=dd) # default REML=T for model interpretation
-      		  plot(m2)
-      		  summary(m2)
-      		  summary(glht(m2))
-      		  
-      		  m2=lmer(rank(gap)~as.factor(sex)+(1|cage)+(1|year)+(1|nest_ID)+(1|bird_ID),REML=F,data=dd) #have to set REML=F for comparing the two models
-      		  m3=lmer(rank(gap)~1+(1|cage)+(1|year)+(1|nest_ID)+(1|bird_ID), REML=F, data=dd)
-      		  AIC(m2,m3) #better use AIC instead of anova, AIC is more conservative. A difference in AIC greater than 2 (2.5 or 3 or even higher, if want to be very conservative) is significant. 
-      		  anova(m2,m3)
-		  
-			
-		}
+	}
+}
+		 
+		
+		 
 	  
 	  
 		
@@ -2248,10 +2298,12 @@
         		  
         		  # Correlation, f on y-axis, m on x-axis
         		  par(mfrow=c(1,1))
-        		  data$bird_ID=tolower(data$bird_ID)
-        		  data$nest_ID=tolower(data$nest_ID)
-        		  z=ddply(data,.(year,nest_ID,sex,bird_ID), summarise, call_med=median(call_o_alone, na.rm=TRUE))
+        		  dd$bird_ID=tolower(dd$bird_ID)
+        		  dd$nest_ID=tolower(dd$nest_ID)
+        		  z=ddply(dd,.(year,nest_ID,sex,bird_ID), summarise, call_med=median(call_o_alone, na.rm=TRUE))
         		  zz=z[!z$nest_ID%in%z$nest_ID[is.na(z$call_med)],]
+        		  zz=zz[zz$nest_ID%in%zz$nest_ID[zz$sex=='m'] ,]
+        		  zz=zz[zz$nest_ID%in%zz$nest_ID[zz$sex=='f'] ,]
         		  plot(zz$call_med[zz$sex=='f' ]~zz$call_med[zz$sex=='m' ],
         		       ylim=c(0,15), xlim=c(0,15),xlab="\u2642 number of calls", ylab="\u2640 number of calls",
         		       pch=21,col=rgb(20,20,20,100,maxColorValue = 255),bg=rgb(100,100,100,100,maxColorValue = 255),cex=1)
@@ -2287,7 +2339,7 @@
         		  mb2<-aov(call_o_alone~call_o_int*bird_ID*nest_ID,data=dd)
         		  plot(mb2)
         		  summary(mb2)
-		  
+		  }
 		  ####
 		   #b.	what is the exchange procedure (graph with call intensity on Y and calling bout on x-axis; lines show various strategies, and N next to the lines number of exchanges with such strategy
 		  
@@ -2351,26 +2403,11 @@
 		
                 }
 		  
-		  
+		  }
 		  
 		{#3 push off
 		  
-		  #a.	What is the distribution of push-offs?
 		  
-    			densityplot(~d$pushoff_int)
-    			dd$push=ifelse(is.na(dd$pushoff_int), NA, ifelse(dd$pushoff_int==3, 1,0))
-    			m=glmer(push~scale(current_bout)*sex + (1|nest_ID), family='binomial',dd)
-    			m=glmer(push~sex + (1|nest_ID), family='binomial',dd)
-    			plot(allEffects(m))
-    			summary(glht(m))
-    			
-    	#b.	Are they correlated with 
-    			
-    			#i.	calling intensity (if yes, push offs likely reflect calling intensity)
-    			#ii.	length of current and next incubation bout
-    			#iii.	calling intensity in present period
-    			#iv.	incubation period or sex
-    			
     			
 		}
 		  
