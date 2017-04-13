@@ -1693,8 +1693,6 @@
 				}
 	}		
 	  }				
-	}
-	
 	{# Exchange procedure - DECIDE WHETHER TO INVOLVE DATETIME LEFT
 	  {# run first
       		dd$presence=as.numeric(difftime(dd$dt_on, dd$dt_1st_presence,'secs'))  # how long before the bird sits down on nest is he present)
@@ -1706,8 +1704,8 @@
 			dd$gap=as.numeric(difftime(dd$dt_on,dd$dt_left,'secs'))  # exchange gap - time span between leaving of the incubating bird and sitting down of its partner
 			dd$gap[dd$gap == 0] = 0.001 
 			dd$left_type = as.factor(ifelse(is.na(dd$arrival), NA,
-								ifelse(dd$dt_left < dd$dt_1st_presence, '1 before presence', 
-									ifelse(dd$dt_left < dd$dt_arrive, '2 between presence arrival','3 after arrival'))))
+								ifelse(dd$dt_left < dd$dt_1st_presence, '1 before presenct', 
+									ifelse(dd$dt_left < dd$dt_arrive, '2 while around','3 during exchange'))))
 			
 			dd$left_before_presence = as.factor(dd$left_before_presence)	
 			dd$sex = as.factor(dd$sex)					
@@ -1732,13 +1730,14 @@
 			summary(glht(m))
 		  }
 		  
-		  {# first presence to start of exchange
+		  {# presence before exchange
 			summary(dd_$pa)
 			length(dd_$pa) # number of exchanges
 			length(unique(dd_$nest_ID)) # number of nests
 			
 			densityplot(dd$pa/60)
 			densityplot(log(dd$pa/60))
+			densityplot(asin(dd$pa/60))
 			dd$obs_ID[dd$pa/60 > 2]
 			ggplot(dd_, aes(x = sex, y = log(pa), fill = sex)) + geom_boxplot() 
 			ggplot(dd, aes(x = day_j, y = log(pa), fill = sex)) + geom_point() + stat_smooth() 
@@ -1814,10 +1813,13 @@
 		 }
 		 {# Supplementary Table 3			
 			  {# prepare table data
-				{# presence before start
-				 m = lmer(log(pa)~ sex*day_j+(day_j|nest_ID), dd_)
+				{# presence before exchange
+				 m = lmer(pa ~ sex*scale(day_j)+(day_j|nest_ID), dd_)
+							# binomial gives same results
+								#dd_$pa_bin=ifelse(dd_$pa == 0.001, 0,1)
+								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd_)
 					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
-					dep = 'log(presence)'
+					dep = 'presence'
 					mod = 1
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
@@ -1838,7 +1840,7 @@
 					o1=rbind(oii,ri)
 				}
 				{# arrival
-				 m = lmer(log(arrival) ~ left_type + sex*day_j+(day_j|nest_ID), dd_)
+				   m = lmer(log(arrival) ~ left_type + sex*scale(day_j)+(scale(day_j)|nest_ID), dd_)
 					pred=c('Intercept (f & before)','Left between', 'Left after', 'Sex(m)', 'Day', 'Day:sex')
 					dep = 'log(arrival)'
 					mod = 2
@@ -1861,7 +1863,7 @@
 					o2=rbind(oii,ri)
 				}
 				{# gap
-				 m = lmer(log(gap)~ sex*day_j+(day_j|nest_ID), dd)
+				  m = lmer(log(gap)~ sex*scale(day_j)+(day_j|nest_ID), dd)
 					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
 					dep = 'log(gap)'
 					mod = 3
@@ -1897,20 +1899,22 @@
 				}
 		 }
 			 	{# model assumptions
-					{# presence before start
-						 m = lmer(log(pa)~ sex*day_j+(day_j|nest_ID), dd_)
-								# binomial gives same results
-								#dd_$pa_bin=ifelse(dd_$pa == 0.001, 0,1)
-								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd_)
+					{# presence before exchange
+						 m = lmer(pa~ sex*day_j+(day_j|nest_ID), dd_)
+								
 						
 									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
 									  dev.new(width=6,height=9)
 									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-									 								  
+									 
 									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
 									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
 									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
 									  qqline(resid(m))
+									  
+									  x = data.frame(fit =fitted(m),res = resid(m))
+									  scatter.smooth(x$fit[x$fit<400],x$res[x$fit<400],col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
 									  
 									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
 									  qqline(unlist(ranef(m)$nest_ID [1]))
@@ -1941,8 +1945,9 @@
 					}
 					{# arrival
 						m = lmer(log(arrival) ~ left_type + sex*day_j+(day_j|nest_ID), dd_)
-									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+														
 									  dev.new(width=6,height=9)
+									  #png(paste(outdir,"model_ass/Supplementary_Table_3b_.png", sep=""), width=6,height=9,units="in",res=600)
 									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
 									 								  
 									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
@@ -1979,10 +1984,11 @@
 								
 							dev.off()
 					}
-					{# first presence
+					{# gap
 						 m = lmer(log(gap)~ sex*day_j+(day_j|nest_ID), dd)
-									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
-									  dev.new(width=6,height=9)
+									 dev.new(width=6,height=9)
+									#png(paste(outdir,"model_ass/Supplementary_Table_3c.png", sep=""), width=6,height=9,units="in",res=600)
+									  
 									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
 									 								  
 									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
