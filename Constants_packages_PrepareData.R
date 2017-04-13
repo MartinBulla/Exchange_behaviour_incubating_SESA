@@ -73,6 +73,7 @@
 			d$inc_start=n$inc_start[match(paste(d$nest, d$year), paste(n$nest,n$year))]
 			d$end_=n$end_[match(paste(d$nest, d$year), paste(n$nest,n$year))]
 			d$nest_ID=paste(d$nest,d$year)
+			d$bird_ID = paste(d$year, d$nest_ID, d$sex)
 			d$sex=as.factor(d$sex)
 			d$day_j = as.numeric(format(d$dt_on ,"%j")) - as.numeric(format(d$inc_start,"%j"))+1
 			d$presence=as.numeric(d$dt_left-d$dt_1st_presence)
@@ -105,7 +106,7 @@
       			
       			b$end_=n$end_[match(toupper(paste(b$nest, b$year)), toupper(paste(n$nest,n$year)))]
       			b$nest_ID=paste(b$nest,b$year)
-				b$bird_ID = paste(b$year, b$nest_ID)
+				b$bird_ID = paste(b$year, b$nest_ID, b$sex)
       			b$type = as.factor(b$type)
       			
       			b$inc_start=n$inc_start[match(paste(b$nest, b$year), paste(n$nest,n$year))]
