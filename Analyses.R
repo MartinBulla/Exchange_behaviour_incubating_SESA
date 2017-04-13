@@ -395,7 +395,7 @@
 				
 				}
 
-			{# PLOT distribution of calls and fly-offs RATE including predictions FOR PAPER
+			{# Figure 1 distribution of calls and fly-offs RATE including predictions FOR PAPER
 			   {# run first 
 			    {# model predictions
 				{# calls
@@ -1704,7 +1704,7 @@
 			dd$gap=as.numeric(difftime(dd$dt_on,dd$dt_left,'secs'))  # exchange gap - time span between leaving of the incubating bird and sitting down of its partner
 			dd$gap[dd$gap == 0] = 0.001 
 			dd$left_type = as.factor(ifelse(is.na(dd$arrival), NA,
-								ifelse(dd$dt_left < dd$dt_1st_presence, '1 before presenct', 
+								ifelse(dd$dt_left < dd$dt_1st_presence, '1 before presence', 
 									ifelse(dd$dt_left < dd$dt_arrive, '2 while around','3 during exchange'))))
 			
 			dd$left_before_presence = as.factor(dd$left_before_presence)	
@@ -1758,6 +1758,10 @@
 			dd$obs_ID[dd$arrival/60 > 1]
 			dd$obs_ID[dd$arrival>dd$presence]
 			
+			ggplot(dd_, aes(x = left_type, y = log(arrival), col = sex)) + geom_boxplot(outlier.shape = 1) + 
+				geom_dotplot(aes(fill=sex),binaxis="y",stackdir="center",dotsize=0.5)
+				geom_point(position = position_jitter(width = 0.2))
+					
 			ggplot(dd_, aes(x = left_type, y = log(arrival), fill = sex)) + geom_boxplot() 
 				m = lmer(log(arrive)~ left_type + sex*day_j+(day_j|nest_ID), dd_)
 				plot(allEffects(m))
@@ -2024,7 +2028,136 @@
 							dev.off()
 					}
 				}
+		{# Figure 3
+			{# prepare for plotting
+				k=0.1 # distance
+				kk=k*3# distance
+				kkk=k*2
+				dd$left_sex=ifelse(dd$left_type=='1 before presence',ifelse(dd$sex=='f', 1-k,k+1),
+								ifelse(dd$left_type=='2 while around',ifelse(dd$sex=='f', 4-k,k+4),
+									ifelse(dd$sex=='f', 7-k,k+7)))
+				x = dd
+				x$at=ifelse(dd$left_type=='1 before presence',ifelse(dd$sex=='f', 1-kkk,2+kkk),
+								ifelse(dd$left_type=='2 while around',ifelse(dd$sex=='f', 3.7-kkk,4.7+kkk),
+									ifelse(dd$sex=='f', 6.4-kkk,7.4+kkk)))					
+				dd$col_=ifelse(dd$sex=='f','#FCB42C', '#535F7C')	
+				}	
+			{# prepare model predictions
+				m = lmer(log(arrival) ~ left_type + sex*day_j+(scale(day_j)|nest_ID), dd)
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim) 
 				
+				# coefficients
+					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				
+				# values to predict for		
+					newD=data.frame(left_type=c('1 before presence','2 while around','3 during exchange'),
+									sex = 0.5,
+									day_j = mean(dd$day_j)
+									)
+						
+				# exactly the model which was used has to be specified here
+				X <- model.matrix(~ left_type + sex*day_j,data=newD)	
+								
+				# calculate predicted values and creditability intervals
+					newD$pred <-(X%*%v) 
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
+							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
+							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
+					pp=newD	
+					pt_=pp[pp$type=='ex',]
+					pc_=pp[pp$type=='non',]
+						
+			}
+			{# plot
+			if(PNG == TRUE) {
+					png(paste(outdir,"Figure_3.png", sep=""), width=1.85+0.6,height=1.5,units="in",res=600) 
+					}else{
+					dev.new(width=1.85+0.6,height=1.5)
+					}	
+			par(mar=c(0.8,0,0,2.5),oma = c(0.7, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey40", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+			
+						
+				boxplot(log(arrival) ~ left_sex, data = dd, 
+										#ylab =NULL, 
+										xaxt='n',
+										yaxt='n',
+										par(bty='n'),
+										#at=c(1,2,3.5,4.5),
+										at=c(1,2,3.7,4.7, 6.4,7.4), type='n',
+										outcex=0.5, outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1, 
+										lwd = 0.25, 
+										#ylim=c(0,1),
+										outcol="white",boxcol='white',whiskcol='white',staplecol='white',medcol='white'
+										) # col=z_g$cols, border=z_g$cols
+										
+								
+				for (i in 1:nrow(x)){stripchart(log(x$arrival[i])~ factor(x$left_sex[i]), at = x$at[i],
+											bg = x$col_[i],
+											col="gray63",
+											#col = x$col_[i],
+											#bg = adjustcolor(x$col_[i], alpha.f = 0.4),
+											pch =21, cex=0.5,
+											vertical = TRUE, add = TRUE, method = "jitter") 
+											}
+					
+				boxplot(log(arrival) ~ left_sex, data = dd,
+										ylab = NULL,xaxt='n', yaxt='n',
+										#at=c(1,2,3.5,4.5),
+										at=c(1+kk,2-kk,3.7+kk,4.7-kk, 6.4+kk,7.4-kk),
+										type='n',
+										outcex=0.5,outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1, 
+										lwd = 1,
+										border=c('#FCB42C','#535F7C','#FCB42C','#535F7C','#FCB42C','#535F7C'),
+										col = adjustcolor("white", alpha.f = 0), # trick for PNGs, to show what is underneath the boxplot else can be taken out
+										#outcol="darkgrey",boxcol='darkgrey',whiskcol='darkgrey',staplecol='darkgrey',medcol='darkgrey', 
+										#par(bty='l'),
+										add=TRUE
+										)					
+					
+					text(x=1*0.6,y=log(480)*0.97, labels='\u2640', col='#FCB42C', cex=0.6)
+					text(x=1,y=log(480), labels='\u2642', col='#535F7C', cex=0.6)
+					mtext("Prediction\n95%CrI",side=3,line=-1.5, cex=0.5, las=1, col='red')
+					#axis(1, at=c(1.5,4.2, 6.9), labels=FALSE)
+					
+					#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels 
+					text(c(1.5,4.2, 6.9), par("usr")[3]-0.25, labels = c('Before\npresence','While\naround', 'During\nexchange'),  xpd = TRUE, cex=0.5, col="grey30")
+					mtext("Incubating parent left",side=1,line=0.6, cex=0.5, las=1, col='grey30')
+					#text(c(2.85), par("usr")[3]-0.18, labels = c('Period'),  xpd = TRUE, cex=0.6, col="grey30")
+					at_=c(5,15,30,60,120,240,480)
+					
+					#for(i in 1:6){axis(2, at=log(seq(at_[i],at_[i+1],length.out=15)), labels=FALSE,tcl=-0.05, lwd=0.5)}
+					for(i in 1:6){axis(2, at=log(seq(at_[i],at_[i+1],length.out=10)), labels=FALSE,tcl=-0.075, lwd=0.5)}
+					axis(2, at=log(at_), labels=c('5 s','15 s','30 s','1 min','2 min','4 min','8 min'))
+					mtext("Excahnge length",side=2,line=1.3, cex=0.55, las=3, col='grey30')
+					#mtext("Duration",side=2,line=1, cex=0.6, las=3, col='grey30')
+					
+					# predictions	
+						points(y=pp$pred,x=c(1.5,4.2,6.9), pch=20, cex=0.9,col="red")
+					# 95%CI 
+						arrows(x0=c(1.5,4.2,6.9), y0=pp$lwr,x1=c(1.5,4.2,6.9), y1=pp$upr,
+						code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
+								
+				 if(PNG == TRUE) {dev.off()}
+			}
+		}
+					{# not used
+					stripchart(log(arrival)~ factor(left_sex), vertical = TRUE, data = dd, method = "jitter", add = TRUE, 
+										at=c(1-kkk,2+kkk,3.7-kkk,4.7+kkk, 6.4-kkk,7.4+kkk),
+										pch = 21,cex=0.5, 
+										#col=dd$col_#c('#FCB42C','#535F7C','#FCB42C','#535F7C','#FCB42C','#535F7C'),
+										#bg=dd$col_
+										#bg=adjustcolor(dd$col_, alpha.f = 0.4)
+										col="gray80",
+										#bg=adjustcolor("gray63", alpha.f = 0.4)
+										bg=c('#FCB42C','#535F7C','#FCB42C','#535F7C','#FCB42C','#535F7C')
+										)
+					
+					
+					}
+
+		}
 		 
 		 
 		 }
