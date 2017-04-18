@@ -1712,6 +1712,15 @@
     		
 			dd_ = dd[!is.na(dd$arrival),]
 			ex_ = dd[dd$left_before_presence=="n",]
+			#ex_$obs_ID[is.na(ex_$push)]
+			ex_= ex_[!is.na(ex_$pushoff),]
+			ex_$push = ifelse(ex_$pushoff_int==3,1,0)
+			e= ex_[!is.na(ex_$current_bout),]
+			dx = ex_[!is.na(ex_$with_calling),]
+			dx$w_call = ifelse(dx$with_calling == 'y', 1, 0)
+			dx_ = dx[dx$with_calling == 'y',]
+			dx_$reply = ifelse(dx_$o_replies == 'y', 1, 0)
+			
 	  }
 	  {# durations
 		 {# descriptive
@@ -2160,30 +2169,77 @@
 		}
 	  {# calling - how laud is the exchange?
 		{# during and immediately after exchange
-		{# run first
+		  {# run first
 			d1 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_1'))
 				colnames(d1)[7] = 'call_int'
-				d1$type = 'both present'
+				d1$type = '1 both present'
 				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
 				#d1[is.na(d1$call_int), ]
+			d01 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_c_int'))
+				colnames(d01)[7] = 'call_int'
+				d01$type = '1 both present coming'
+				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+				#d1[is.na(d1$call_int), ]	
+			d02 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_o_int'))
+				colnames(d02)[7] = 'call_int'
+				d02$type = '1 both present incubating'
+				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+				#d1[is.na(d1$call_int), ]		
 			d2 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c2'))
 				colnames(d2)[7] = 'call_int'
-				d2$type = 'exchange gap'	
+				d2$type = '2 exchange gap'	
 				#d2$obs_ID[is.na(d2$call_int) & d2$sound_ok == 'y']
 				#d2[is.na(d2$call_int), ]
 			
 			d3 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c3'))
 				colnames(d3)[7] = 'call_int'
-				d3$type = 'after on nest'			
+				d3$type = '3 after on nest'			
 				#d3$obs_ID[is.na(d3$call_int) & d3$sound_ok == 'y']
 				#d3[is.na(d2$call_int), ]
-			di = rbind(d1,d2,d3)
+			di = rbind(d1,d01,d02,d2,d3)
 			di = di[!is.na(di$call_int),]
+			#di$left_before = d$left_before_presence [match(di$obs_ID, d$obs_ID)]
 		}	
-			ggplot(di, aes(x = call_int, fill = type)) + geom_bar(position=position_dodge())
-			#di[di$call_int==6,]
+		  {# distribution
+			  {# calling while arriving
+				
+				nrow(dx)
+				summary(factor(dx$with_calling))
+				length(dx$with_calling[dx$with_calling=='y'])/length(dx$with_calling)
+				table(dx$with_calling,dx$sex)
+				length(dx$with_calling[dx$with_calling=='y' & dx$sex=='f'])/length(dx$with_calling[dx$sex=='f'])
+				length(dx$with_calling[dx$with_calling=='y' & dx$sex=='m'])/length(dx$with_calling[dx$sex=='m'])
+				
+				
+				m = glmer(w_call ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dx, family = 'binomial')
+				m = glmer(w_call ~ sex + (1|bird_ID) + (1|nest_ID), dx, family = 'binomial')
+				plot(allEffects(m))
+				summary(glht(m))
+				}
+			  {# reply 
+				dx_ = dx[dx$with_calling == 'y',]
+				nrow(dx)
+				summary(factor(dx$with_calling))
+				length(dx_$o_replies[dx_$o_replies=='y'])/length(dx_$o_replies)
+				table(dx_$o_replies,dx_$sex)
+				length(dx_$o_replies[dx_$o_replies=='y' & dx_$sex=='f'])/length(dx_$o_replies[dx_$sex=='f'])
+				length(dx_$o_replies[dx_$o_replies=='y' & dx_$sex=='m'])/length(dx_$o_replies[dx_$sex=='m'])
+				
+				dx_$reply = ifelse(dx_$o_replies == 'y', 1, 0)
+				m = glmer(reply ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dx_, family = 'binomial')
+				m = glmer(reply ~ sex + (1|bird_ID) + (1|nest_ID), dx_, family = 'binomial')
+				plot(allEffects(m))
+				summary(glht(m))
+				}
+						
+			  ggplot(di, aes(x = call_int, fill = as.factor(call_int))) + 
+				geom_bar(position=position_dodge()) + 
+				facet_wrap(~type, nrow=5) + 
+				scale_fill_brewer(palette = "Blues")
+				
+				
 			
-		{# distribution
+			ggplot(di, aes(y = call_int, x = as.numeric(as.factor(type)), col=factor(obs_ID))) + geom_line()
 			
 			densityplot(~ex_$call_int_1)
 			
@@ -2199,39 +2255,527 @@
 
 			ggplot(ex_,aes(y=call_int_1, x=day_j, col=nest))+geom_point()+stat_smooth(method="lm", se=FALSE)
 		}
-		}	
-		{# during fly-off
-		}
+		  {# Supplementary Table 4
+			{# prepare table data
+				{# calling while arriving
+					m = glmer(w_call ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dx, family = 'binomial')
+							# binomial gives same results
+								#dd_$pa_bin=ifelse(dd_$pa == 0.001, 0,1)
+								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd_)
+					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
+					dep = 'calling while arriving (bin)'
+					mod = 1
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o1=rbind(oii,ri)
+				}
+				{# reply
+				 
+				 m = glmer(reply ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dx_, family = 'binomial')
+					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
+					dep = 'reply (bin)'
+					mod = 2
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o2=rbind(oii,ri)
+				}
+				{# calling coming ~ calling incubating
+					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int)),]
+					m = lmer(call_c_int ~ sex + scale(call_o_int)*sex + scale(day_j)*sex + (call_o_int|bird_ID) + (1|nest_ID), f)
+					
+					pred=c('Intercept (f)','Sex(m)', 'Call_incub', 'Day', 'Call_incub:sex','Day:sex')
+					dep = 'call_c_int'
+					mod = 3
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o3=rbind(oii,ri)
+				}
+			    {# exchange gap calling
+					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_int_c2)),]
+					m = lmer(call_int_c2 ~ sex + scale(call_c_int)*sex + scale(day_j)*sex + (call_c_int|bird_ID) + (1|nest_ID), f)
+					pred=c('Intercept (f)','Sex(m)', 'Call_com', 'Day', 'Call_com:sex','Day:sex')
+					dep = 'call during gap'
+					mod = 4
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o4=rbind(oii,ri)
+				}
+				{# after exchange
+					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_int_c3)),]
+					m = lmer(call_int_c3 ~ sex + scale(call_c_int)*sex + scale(day_j)*sex + (call_c_int|bird_ID) + (1|nest_ID), f)
+					pred=c('Intercept (f)','Sex(m)', 'Call_com', 'Day', 'Call_com:sex','Day:sex')
+					dep = 'call after exchange'
+					mod = 5
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o5=rbind(oii,ri)
+				}
+			}
+			{# create xlsx table		
+						o=rbind(o1,o2,o3,o4,o5)
+						sname = tempfile(fileext='.xls')
+						wb = loadWorkbook(sname,create = TRUE)	
+						createSheet(wb, name = "output")
+						writeWorksheet(wb, o, sheet = "output")
+						#createSheet(wb, name = "output_AIC")
+						#writeWorksheet(wb, rbind(o), sheet = "output_AIC")
+						saveWorkbook(wb)
+						shell(sname)
+				}
+		  }
+			 	{# model assumptions
+					{# after ~ exchange gap calling
+						m = lmer(call_int_c3 ~ sex + scale(call_int_c2) + scale(day_j) + (call_int_c2|bird_ID) + (1|nest_ID), f)
+							
+									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									 								  
+									  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$bird_ID [1]))
+									  
+									  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
+									  qqline(unlist(ranef(m)$bird_ID[2]))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  
+									  scatter.smooth(resid(m)~f$day_j);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~f$call_int_c2);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~f$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~f$sex);abline(h=0, lty=2, col='red')
+									  
+									   mtext("lmer(call_int_c3 ~ sex + scale(call_int_c2) + scale(day_j) + (call_int_c2|bird_ID) + (1|nest_ID), f)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=f$lon, y=f$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+							  
+		
 	  }
+				{# not used
+			f = ex_[-which(is.na(ex_$call_int_c3) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_1)),]
+			f = ex_[-which(is.na(ex_$call_int_c3) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_c3)),]
+			nrow(f)
+			m = lmer(call_int_c3 ~ sex + scale(call_int_c2)*sex + scale(day_j)*sex + (call_int_c2|bird_ID) + (1|nest_ID), f)
+			m = lmer(call_int_c3 ~ sex + scale(call_int_c2) + scale(day_j) + (call_int_c2|bird_ID) + (1|nest_ID), f)
+			m = lmer(call_int_c2 ~ sex + scale(call_int_1) + scale(day_j) + (call_int_1|bird_ID) + (1|nest_ID), f)
+			m = lmer(call_int_c2 ~ sex + scale(call_int_1)*sex + scale(day_j)*sex + (call_int_1|bird_ID) + (1|nest_ID), f)
+			
+			m = lmer(call_int_c2 ~ sex + scale(call_c_int)*sex + scale(day_j)*sex + (call_c_int|bird_ID) + (1|nest_ID), f)
+			m = lmer(call_int_c3 ~ sex + scale(call_c_int)*sex + scale(day_j)*sex + (call_c_int|bird_ID) + (1|nest_ID), f)
+			m = lmer(call_int_c2 ~ sex + scale(call_o_int)*sex + scale(day_j)*sex + (call_o_int|bird_ID) + (1|nest_ID), f)
+			m = lmer(call_o_int ~ sex + scale(call_c_int)*sex + scale(day_j)*sex + (call_c_int|bird_ID) + (1|nest_ID), f)
+			m = lmer(call_c_int ~ sex + scale(call_o_int)*sex + scale(day_j)*sex + (call_o_int|bird_ID) + (1|nest_ID), f)
+			m = lmer(call_o_int ~ sex + scale(next_bout)*sex + scale(call_c_int)*sex + scale(day_j)*sex + (scale(call_c_int)|bird_ID) + (1|nest_ID), f)
+			m = lmer(call_c_int ~ sex + scale(current_bout)*sex + scale(call_c_int)*sex + scale(day_j)*sex + (scale(call_c_int)|bird_ID) + (1|nest_ID), f)
+			m = lmer(call_c_int ~ scale(next_bout)*sex +  (scale(current_bout)|bird_ID) + (1|nest_ID), f)
+			plot(allEffects(m))
+			summary(glht(m))
+			}
+		  {# Supplementary Table 5
+			{# prepare table data
+				{# calling while arriving
+					m = glmer(w_call ~ sex*scale(current_bout) + (1|bird_ID), dx, family = 'binomial')
+							# binomial gives same results
+								#dd_$pa_bin=ifelse(dd_$pa == 0.001, 0,1)
+								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd_)
+					pred=c('Intercept (f)','Sex(m)', 'Current bout', 'Current bout:sex')
+					dep = 'calling while arriving (bin)'
+					mod = 1
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o1=rbind(oii,ri)
+				}
+				{# reply
+				 
+				 m = glmer(reply ~ sex*scale(current_bout) + (1|bird_ID) + (1|nest_ID), dx_, family = 'binomial')
+					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'current_bout:sex')
+					dep = 'reply (bin)'
+					mod = 2
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o2=rbind(oii,ri)
+				}
+				{# calling coming
+					f = ex_[-which(is.na(ex_$call_c_int)),]
+					m = lmer(call_c_int ~ sex*scale(current_bout) + sex*scale(next_bout) +(scale(current_bout)|bird_ID) + (1|nest_ID), f)
+					
+					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'Current_bout:sex')
+					dep = 'call_c_int'
+					mod = 3
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o3=rbind(oii,ri)
+				}
+			    {# calling incubating
+					f = ex_[-which(is.na(ex_$call_o_int)),]
+					m = lmer(call_o_int ~ sex*scale(current_bout) + sex*scale(next_bout) +(scale(current_bout)|bird_ID) + (1|nest_ID), f)
+					
+					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'Current_bout:sex')
+					dep = 'call_c_int'
+					mod = 4
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o4=rbind(oii,ri)
+				}
+				{# exchange gap calling
+					f = ex_[-which(s.na(ex_$call_int_c2)),]
+					m = lmer(call_int_c2 ~ sex*scale(next_bout) + (1|bird_ID) + (1|nest_ID), f)
+					pred=c('Intercept (f)','Sex(m)', 'next_bout', 'next_bout:sex')
+					dep = 'call during gap'
+					mod = 5
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o5=rbind(oii,ri)
+				}
+				{# after exchange
+					f = ex_[-which(is.na(ex_$call_int_c3)),]
+					m = lmer(call_int_c3 ~ sex*scale(next_bout) + (scale(next_bout)|bird_ID) + (1|nest_ID), f)
+					pred=c('Intercept (f)','Sex(m)', 'next_bout', 'next_bout:sex')
+					dep = 'call after exchange'
+					mod = 6
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)  
+				 # Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,3)
+						oi$lwr_r=round(oi$lwr,3)
+						oi$upr_r=round(oi$upr,3)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
+				# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o6=rbind(oii,ri)
+				}
+			}
+			{# create xlsx table		
+						o=rbind(o1,o2,o3,o4,o5,o6)
+						sname = tempfile(fileext='.xls')
+						wb = loadWorkbook(sname,create = TRUE)	
+						createSheet(wb, name = "output")
+						writeWorksheet(wb, o, sheet = "output")
+						#createSheet(wb, name = "output_AIC")
+						#writeWorksheet(wb, rbind(o), sheet = "output_AIC")
+						saveWorkbook(wb)
+						shell(sname)
+				}
+		  }
+					{# model assumptions
+					{# after ~ exchange gap calling
+						m = lmer(call_int_c3 ~ sex + scale(call_int_c2) + scale(day_j) + (call_int_c2|bird_ID) + (1|nest_ID), f)
+							
+									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									 								  
+									  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$bird_ID [1]))
+									  
+									  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
+									  qqline(unlist(ranef(m)$bird_ID[2]))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  
+									  scatter.smooth(resid(m)~f$day_j);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~f$call_int_c2);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~f$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~f$sex);abline(h=0, lty=2, col='red')
+									  
+									   mtext("lmer(call_int_c3 ~ sex + scale(call_int_c2) + scale(day_j) + (call_int_c2|bird_ID) + (1|nest_ID), f)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=f$lon, y=f$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+							  
+		
 	  }
+				
 	  {# push offs
-			ex_$push = ifelse(ex_$pushoff_int==3,1,0)
+			
 		#a.	What is the distribution of push-offs?
 		  
     			densityplot(~ex_$pushoff_int)
     			densityplot(~ex_$push)
     			
     			
-    			m=glmer(push~sex + (1|nest_ID), family='binomial',dd)
+    			m=glmer(push~sex + current_bout (1|nest_ID), family='binomial',ex_)
     			plot(allEffects(m))
     			summary(glht(m))
     			
     	#b.	Are they correlated with 
-    		cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="pearson") # max 0.3586142
-			cor(x[,.('inc_start','day_inc_per')],use="pairwise.complete.obs", method="spearman") # max 0.3589236
-    			#i.	calling intensity (if yes, push offs likely reflect calling intensity)
+				cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="pearson") 
+				cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="spearman") 
+    			
+				#i.	calling intensity (if yes, push offs likely reflect calling intensity)
 				
     			#ii.	length of current and next incubation bout + incubation period or sex
-				m=glmer(push~scale(current_bout)*sex + (1|nest_ID), family='binomial',ex_)
+				m=glmer(push~scale(current_bout)*sex + (1|nest_ID), family='binomial',e)
 				m=glmer(push~scale(day_j)*sex+scale(current_bout)*sex +scale(next_bout)*sex + (1|nest_ID), family='binomial',ex_)
+				m=glmer(push~scale(day_j)+scale(current_bout)*sex  + (1|nest_ID), family='binomial',ex_)
 				plot(allEffects(m))
 				summary(glht(m))
     			#iii.	calling intensity in present period
 				
-    		
+    				{# model assumptions
+							m=glmer(push~scale(current_bout)*sex + (1|nest_ID), family='binomial',e)
+									
+									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									  plot(fitted(m), jitter(e$push, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+									  abline(0,1, lty=3)
+									  t.breaks <- cut(fitted(m), quantile(fitted(m)))
+									  means <- tapply(e$push, t.breaks, mean)
+									  semean <- function(x) sd(x)/sqrt(length(x))
+									  means.se <- tapply(e$push, t.breaks, semean)
+									  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
+									  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
+									  
+									 
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
+									  #qqline(unlist(ranef(m)$nest_ID[2]))
+									  
+									  scatter.smooth(resid(m)~e$current_bout);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~e$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~e$sex);abline(h=0, lty=2, col='red')
+									  
+									  mtext("glmer(push~scale(current_bout)*sex + (1|nest_ID), family='binomial',e)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=e$lon, y=e$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+					
     			
 	  }
-		 
+	  {# how leaving the nest? - create supplementary table
+		  
+  			summary(factor(dd$type_l))
+  			summary(factor(dd$type_l[dd$cage=='n']))
+  			dn=dd[dd$cage=='n',]
+			length(dn$type_l[dn$type_l=='f'])/length(dn$type_l)
+  			ggplot(dn,aes(y = current_bout, x=type_l))+geom_boxplot()
+  			g
+			
+			# called while leaving?
+				summary(factor(dn$call_left))
+				summary(factor(dd$call_left))
+				length(dd$call_left[dd$call_left=='y'])/length(dd$call_left[!is.na(dd$call_left)])
+				table(dd$call_left,dd$sex)
+				dc = dd[!is.na(dd$call_left),]
+				dc$c_left = ifelse(dc$call_left=='y', 1,0)
+				
+				m = glmer(c_left ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')
+				m = glmer(c_left ~ sex + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')
+				plot(allEffects(m))
+				summary(glht(m))
+		}
+	  	 
 	}
 }
 		 
@@ -2422,14 +2966,6 @@
 		  
 		  
 		  
-		}
-		{#5 How leaving the nest?
-		  
-  			summary(factor(dd$type_l))
-  			summary(factor(dd$type_l[dd$cage=='n']))
-  			dn=dd[dd$cage=='n',]
-  			ggplot(dn,aes(y = current_bout, x=type_l))+geom_boxplot()
-			
 		}
 	
 	}
