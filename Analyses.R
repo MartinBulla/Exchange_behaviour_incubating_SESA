@@ -1711,9 +1711,9 @@
 		
     		
 			dd_ = dd[!is.na(dd$arrival),]
-			ex_ = dd[dd$left_before_presence=="n",]
+			ex = dd[dd$left_before_presence=="n",]
 			#ex_$obs_ID[is.na(ex_$push)]
-			ex_= ex_[!is.na(ex_$pushoff),]
+			ex_= ex[!is.na(ex$pushoff_int),]
 			ex_$push = ifelse(ex_$pushoff_int==3,1,0)
 			e= ex_[!is.na(ex_$current_bout),]
 			dx = ex_[!is.na(ex_$with_calling),]
@@ -1761,6 +1761,7 @@
 			length(dd$arrival[!is.na(dd$arrival)]) # number of exchanges
 			length(unique(dd$nest_ID[!is.na(dd$arrival)])) # number of nests
 						
+			densityplot((ex$arrival-ex$gap)/60)
 			densityplot(dd$arrival/60)
 			densityplot(log(dd$arrival))
 			dd$obs_ID[is.na(dd$arrival)]
@@ -1813,7 +1814,9 @@
 			densityplot(log(dd$gap))
 			dd$obs_ID[is.na(dd$gap)]
 			dd$obs_ID[dd$gap/60 > 1]
-			dd$obs_ID[dd$presence/60 > 4]
+			dd$obs_ID[dd$gap/60 > 4]
+			#dd[dd$gap/60 > 4,]
+		
 			
 			ggplot(dd[!is.na(dd$gap),], aes(x = sex, y = log(gap), fill = sex)) + geom_boxplot() 
 			ggplot(dd[!is.na(dd$gap),], aes(x = day_j, y = log(gap), fill = sex)) + geom_point() + stat_smooth() 
@@ -1877,6 +1880,12 @@
 				}
 				{# gap
 				  m = lmer(log(gap)~ sex*scale(day_j)+(day_j|nest_ID), dd)
+				  #dd$capture=as.factor(dd$capture)
+				  #dd$cap=as.factor(ifelse(dd$capture%in%c(1,2,3,4), 'y','n'))
+				  #ggplot(dd,aes(x=capture, y=log(gap))) + geom_point()
+				  #m = lmer(gap~ cap+sex*scale(day_j)+(day_j|nest_ID), dd)
+				  #m = lmer(log(gap)~ cap+sex*scale(day_j)+(day_j|nest_ID), dd)
+				  #m = lmer(log(gap)~ capture+sex*scale(day_j)+(day_j|nest_ID), dd)
 					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
 					dep = 'log(gap)'
 					mod = 3
@@ -2822,7 +2831,6 @@
 							  
 		
 	  }
-	   
 	   }		
 	  {# push offs
 			
@@ -2933,86 +2941,6 @@
 		 
 		 }
 	  }
-	   		
-				
-				m=glmer(push~sex +(1|nest_ID), family='binomial',e)
-    			plot(allEffects(m))
-    			summary(glht(m))
-    			
-    	#b.	Are they correlated with 
-				cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="pearson") 
-				cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="spearman") 
-    			
-				#i.	calling intensity (if yes, push offs likely reflect calling intensity)
-				
-    			#ii.	length of current and next incubation bout + incubation period or sex
-				m=glmer(push~scale(current_bout)*sex + (1|nest_ID), family='binomial',e)
-				m=glmer(push~scale(day_j)*sex+scale(current_bout)*sex +scale(current_bout)*sex + (1|nest_ID), family='binomial',e)
-				
-				m=glmer(push~scale(day_j)+scale(current_bout)*sex  + (1|nest_ID), family='binomial',ex_)
-				
-				m=glmer(push~ sex + (1|bird_ID) + (1|nest_ID), family='binomial',e)
-				m=glmer(push~ scale(day_j)*sex+scale(current_bout)*sex + (scale(current_bout)|bird_ID) + (1|nest_ID), family='binomial',e)
-				plot(allEffects(m))
-				summary(glht(m))
-    			#iii.	calling intensity in present period
-				
-    				{# model assumptions
-							m=glmer(push~scale(current_bout)*sex + (1|nest_ID), family='binomial',e)
-									
-									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
-									  dev.new(width=6,height=9)
-									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-									 
-									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
-									  qqline(resid(m))
-									  
-									  plot(fitted(m), jitter(e$push, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
-									  abline(0,1, lty=3)
-									  t.breaks <- cut(fitted(m), quantile(fitted(m)))
-									  means <- tapply(e$push, t.breaks, mean)
-									  semean <- function(x) sd(x)/sqrt(length(x))
-									  means.se <- tapply(e$push, t.breaks, semean)
-									  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
-									  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
-									  
-									  
-									 
-									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
-									  qqline(unlist(ranef(m)$nest_ID [1]))
-									  
-									  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
-									  qqline(unlist(ranef(m)$bird_ID [1]))
-									  
-									  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
-									  qqline(unlist(ranef(m)$bird_ID[2]))
-									  
-									  scatter.smooth(resid(m)~e$current_bout);abline(h=0, lty=2, col='red')
-									  scatter.smooth(resid(m)~e$sex);abline(h=0, lty=2, col='red')
-									  boxplot(resid(m)~e$sex);abline(h=0, lty=2, col='red')
-									  
-									  mtext("glmer(push~scale(current_bout)*sex + (1|nest_ID), family='binomial',e)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-									   
-									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-									  # spatial autocorrelations - nest location
-										spdata=data.frame(resid=resid(m), x=e$lon, y=e$lat)
-											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-											#cex_=c(1,2,3,3.5,4)
-											cex_=c(1,1.5,2,2.5,3)
-											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-											
-											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-								
-							dev.off()
-					}
-					
-    			
-	  }
 	  {# how leaving the nest? - create supplementary table
 		  
   			summary(factor(dd$type_l))
@@ -3035,14 +2963,40 @@
 				plot(allEffects(m))
 				summary(glht(m))
 		}
-	  {# 	 
-	}
-}
-		 
-		
+
+	  {#Relationship between durations and callings
+		  
+		  #a.	Duration of arrival minus leaving ~ push off or calling intensity
+		  		ex_$both=as.numeric(difftime(ex_$dt_left,ex_$dt_arrive, 'secs')) 
+				densityplot(~ex_$both)
+				ex_[ex_$both<0,]
+				eb = ex_[ex_$both>0,] 
+				densityplot(log(eb$arrival-eb$gap))
+				eb$
+				
+				
+				
+				
+				m = lmer(both ~ pushoff_int + call_int_1 + (1|bird_ID) + (1|nest_ID), eb)
+				#m = lmer(arrival ~ pushoff_int + call_int_1 + (1|bird_ID) + (1|nest_ID), eb)
+				m = lmer(both ~ push + call_int_1 + (1|bird_ID) + (1|nest_ID), eb)
+				#m = lmer(arrival-gap ~ push + call_int_1 + (1|bird_ID) + (1|nest_ID), eb)
+				
+				
+				plot(eb$arrival~eb$both)
+				plot(allEffects(m))
+				summary(glht(m))
+				
+				# for both as in Table 3#
+					m = lmer(log(both) ~ sex*scale(day_j)+(scale(day_j)|bird_ID), eb)
+					
+		  #b.	How are leaving ~ arrival ~ first  presence related (see distributions as there might be no variation)		
+		}
+	}		 
+}		
 		 
 	  
-	  
+	{# OLD  
 		
 		{#2 calling - only from present until left - either use time_series.csv to derive or scored intensities from observations.csv
 		  
@@ -3207,7 +3161,7 @@
 		
                 }
 		  
-		  }
+		  
 		  
 		{#3 push off
 		  
@@ -3230,8 +3184,7 @@
 	
 	}
 
-}	
-}	
+	
 
 {# DONE
 	{# prepare nests - start/end
