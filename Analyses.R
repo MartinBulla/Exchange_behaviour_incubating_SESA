@@ -2522,7 +2522,7 @@
 					m = lmer(call_c_int ~ sex*scale(current_bout) +(scale(current_bout)|bird_ID) + (1|nest_ID), f)
 					#m = lmer(next_bout ~ sex*scale(call_c_int) + (scale(call_c_int)|bird_ID) + (1|nest_ID), f)
 					
-					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'next bout', 'Current_bout:sex', 'Next_bout:sex')
+					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'Current_bout:sex')
 					dep = 'call_c_int'
 					mod = 3
 						nsim <- 5000
@@ -2548,7 +2548,7 @@
 					m = lmer(call_o_int ~ sex*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)
 					#m = lmer(next_bout ~ sex*scale(call_o_int) + (scale(call_o_int)|bird_ID) + (1|nest_ID), f)
 					
-					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'next bout', 'Current_bout:sex', 'Next_bout:sex')
+					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'Current_bout:sex')
 					dep = 'call_c_int'
 					mod = 4
 						nsim <- 5000
@@ -2571,9 +2571,9 @@
 				}
 				{# exchange gap calling
 					f = ex_[-which(is.na(ex_$call_int_c2)),]
-					m = lmer(call_int_c2 ~ sex*scale(next_bout) + (scale(next_bout)|bird_ID) + (1|nest_ID), f)
+					m = lmer(call_int_c2 ~ sex*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)
 					#m = lmer(next_bout ~ sex*scale(call_int_c2) + (scale(call_int_c2)|bird_ID) + (1|nest_ID), f)
-					pred=c('Intercept (f)','Sex(m)', 'next_bout', 'next_bout:sex')
+					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'current_bout:sex')
 					dep = 'call during gap'
 					mod = 5
 						nsim <- 5000
@@ -2596,9 +2596,9 @@
 				}
 				{# after exchange
 					f = ex_[-which(is.na(ex_$call_int_c3)),]
-					m = lmer(call_int_c3 ~ sex*scale(next_bout) + (scale(next_bout)|bird_ID) + (1|nest_ID), f)
+					m = lmer(call_int_c3 ~ sex*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)
 					#m = lmer(next_bout ~ sex*scale(call_int_c3) + (scale(call_int_c3)|bird_ID) + (1|nest_ID), f)
-					pred=c('Intercept (f)','Sex(m)', 'next_bout', 'next_bout:sex')
+					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'current_bout:sex')
 					dep = 'call after exchange'
 					mod = 6
 						nsim <- 5000
@@ -2684,12 +2684,10 @@
 	    {# Supplementary Table 6
 			{# prepare table data
 				{# calling while arriving
-					m = glmer(w_call ~ sex*scale(current_bout) + (1|bird_ID) , dx, family = 'binomial')
-							# binomial gives same results
-								#dd_$pa_bin=ifelse(dd_$pa == 0.001, 0,1)
-								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd_)
-					pred=c('Intercept (f)','Sex(m)', 'Current bout', 'Current bout:sex')
-					dep = 'calling while arriving (bin)'
+					m = lmer(next_bout ~as.factor(w_call)*sex+(1|bird_ID)+(1|nest_ID),dx)
+					
+					pred=c('Intercept (f, no)','return call','Sex(m)', 'Call:sex')
+					dep = 'next bout'
 					mod = 1
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
@@ -2698,9 +2696,9 @@
 					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
 					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
 					rownames(oi) = NULL
-						oi$estimate_r=round(oi$estimate,3)
-						oi$lwr_r=round(oi$lwr,3)
-						oi$upr_r=round(oi$upr,3)
+						oi$estimate_r=round(oi$estimate,1)
+						oi$lwr_r=round(oi$lwr,1)
+						oi$upr_r=round(oi$upr,1)
 						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
 					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
 				# Random effects var*100
@@ -2710,10 +2708,9 @@
 					o1=rbind(oii,ri)
 				}
 				{# reply
-				 
-				 m = glmer(reply ~ sex*scale(current_bout) + (1|bird_ID) + (1|nest_ID), dx_, family = 'binomial')
-					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'current_bout:sex')
-					dep = 'reply (bin)'
+				 m = lmer(next_bout ~ as.factor(reply)*sex+(1|bird_ID)+(1|nest_ID),dx_)
+					pred=c('Intercept (f, no)','reply call','Sex(m)', 'Call:sex')
+					dep = 'next bout'
 					mod = 2
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
@@ -2722,9 +2719,9 @@
 					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
 					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
 					rownames(oi) = NULL
-						oi$estimate_r=round(oi$estimate,3)
-						oi$lwr_r=round(oi$lwr,3)
-						oi$upr_r=round(oi$upr,3)
+						oi$estimate_r=round(oi$estimate,1)
+						oi$lwr_r=round(oi$lwr,1)
+						oi$upr_r=round(oi$upr,1)
 						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
 					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
 				# Random effects var*100
@@ -2733,13 +2730,17 @@
 						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
 					o2=rbind(oii,ri)
 				}
-				{# calling coming
-					f = ex_[-which(is.na(ex_$call_c_int)),]
-					m = lmer(call_c_int ~ sex*scale(current_bout) + sex*scale(next_bout) +(scale(current_bout)|bird_ID) + (1|nest_ID), f)
-					#m = lmer(next_bout ~ sex*scale(call_c_int) + (scale(call_c_int)|bird_ID) + (1|nest_ID), f)
+				{# calling 
+					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_c3)),]
+						#cor(subset(f,select = c('call_c_int','call_o_int','call_int_c2','call_int_c3')),use="pairwise.complete.obs", method="pearson") 
+						#cor(subset(f,select = c('call_c_int','call_o_int','call_int_c2','call_int_c3')),use="pairwise.complete.obs", method="spearman") 
+					m = lmer(next_bout ~sex*scale(call_c_int)+sex*scale(call_o_int)+sex*call_int_c2 + sex*call_int_c3 + (call_int_c2|bird_ID) + (1|nest_ID),f)
+					#summary(m)
+					#summary(glht(m))
+					#plot(allEffects(m))
 					
-					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'next bout', 'Current_bout:sex', 'Next_bout:sex')
-					dep = 'call_c_int'
+					pred=c('Intercept (f)','Sex(m)', 'call_arriving', 'call_incub', 'call_gap', 'call_after', 'sex:call_arriving','sex:call_incub','sex:call_gap', 'sex:call_after')
+					dep = 'next_bout'
 					mod = 3
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
@@ -2748,9 +2749,9 @@
 					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
 					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
 					rownames(oi) = NULL
-						oi$estimate_r=round(oi$estimate,3)
-						oi$lwr_r=round(oi$lwr,3)
-						oi$upr_r=round(oi$upr,3)
+						oi$estimate_r=round(oi$estimate,1)
+						oi$lwr_r=round(oi$lwr,1)
+						oi$upr_r=round(oi$upr,1)
 						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
 					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
 				# Random effects var*100
@@ -2759,85 +2760,9 @@
 						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
 					o3=rbind(oii,ri)
 				}
-			    {# calling incubating
-					f = ex_[-which(is.na(ex_$call_o_int)),]
-					m = lmer(call_o_int ~ sex*scale(current_bout) + sex*scale(next_bout) +(scale(current_bout)|bird_ID) + (1|nest_ID), f)
-					#m = lmer(next_bout ~ sex*scale(call_o_int) + (scale(call_o_int)|bird_ID) + (1|nest_ID), f)
-					
-					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'next bout', 'Current_bout:sex', 'Next_bout:sex')
-					dep = 'call_c_int'
-					mod = 4
-						nsim <- 5000
-						bsim <- sim(m, n.sim=nsim)  
-				 # Fixed effects
-					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
-					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
-					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
-					rownames(oi) = NULL
-						oi$estimate_r=round(oi$estimate,3)
-						oi$lwr_r=round(oi$lwr,3)
-						oi$upr_r=round(oi$upr,3)
-						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
-					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
-				# Random effects var*100
-					l=data.frame(summary(m)$varcor)
-					l=l[is.na(l$var2),]
-						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
-					o4=rbind(oii,ri)
-				}
-				{# exchange gap calling
-					f = ex_[-which(is.na(ex_$call_int_c2)),]
-					m = lmer(call_int_c2 ~ sex*scale(next_bout) + (scale(next_bout)|bird_ID) + (1|nest_ID), f)
-					#m = lmer(next_bout ~ sex*scale(call_int_c2) + (scale(call_int_c2)|bird_ID) + (1|nest_ID), f)
-					pred=c('Intercept (f)','Sex(m)', 'next_bout', 'next_bout:sex')
-					dep = 'call during gap'
-					mod = 5
-						nsim <- 5000
-						bsim <- sim(m, n.sim=nsim)  
-				 # Fixed effects
-					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
-					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
-					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
-					rownames(oi) = NULL
-						oi$estimate_r=round(oi$estimate,3)
-						oi$lwr_r=round(oi$lwr,3)
-						oi$upr_r=round(oi$upr,3)
-						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
-					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
-				# Random effects var*100
-					l=data.frame(summary(m)$varcor)
-					l=l[is.na(l$var2),]
-						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
-					o5=rbind(oii,ri)
-				}
-				{# after exchange
-					f = ex_[-which(is.na(ex_$call_int_c3)),]
-					m = lmer(call_int_c3 ~ sex*scale(next_bout) + (scale(next_bout)|bird_ID) + (1|nest_ID), f)
-					#m = lmer(next_bout ~ sex*scale(call_int_c3) + (scale(call_int_c3)|bird_ID) + (1|nest_ID), f)
-					pred=c('Intercept (f)','Sex(m)', 'next_bout', 'next_bout:sex')
-					dep = 'call after exchange'
-					mod = 6
-						nsim <- 5000
-						bsim <- sim(m, n.sim=nsim)  
-				 # Fixed effects
-					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
-					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
-					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
-					rownames(oi) = NULL
-						oi$estimate_r=round(oi$estimate,3)
-						oi$lwr_r=round(oi$lwr,3)
-						oi$upr_r=round(oi$upr,3)
-						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
-					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]	
-				# Random effects var*100
-					l=data.frame(summary(m)$varcor)
-					l=l[is.na(l$var2),]
-						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
-					o6=rbind(oii,ri)
-				}
 			}
 			{# create xlsx table		
-						o=rbind(o1,o2,o3,o4,o5,o6)
+						o=rbind(o1,o2,o3)
 						sname = tempfile(fileext='.xls')
 						wb = loadWorkbook(sname,create = TRUE)	
 						createSheet(wb, name = "output")
