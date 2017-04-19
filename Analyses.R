@@ -1,5 +1,8 @@
 {# TO DO 
 
+- ADD MODEL ASS
+- check sample sizes
+
 
  - update column definition
 -  # at the end created final csv file containing only data used in some analyses (exclude everything that will not show up in the analyses)
@@ -1753,7 +1756,7 @@
 			dx$w_call = ifelse(dx$with_calling == 'y', 1, 0)
 			dx_ = dx[which(dx$with_calling == 'y'),]
 			dx_ = dx_[-which(is.na(dx_$o_replies)),]
-			dx_$reply = ifelse(dx_$o_replies == 'y', 1, 0)
+			dx_$reply = ifelse(is.na(dx_$o_replies), NA, dx_$o_replies == 'y', 1, 0)
 			
 	  }
 	  {# durations
@@ -2616,8 +2619,8 @@
 					o1=rbind(oii,ri)
 				}
 				{# b. reply
-				 
-				 m = glmer(reply ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dx_, family = 'binomial')
+				 dx__=dx_[!is.na(dx_$reply),]
+				 m = glmer(reply ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dx__, family = 'binomial')
 					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
 					dep = 'reply (bin)'
 					mod = 2
