@@ -2208,7 +2208,6 @@
 							dev.off()
 					}
 				}
-		 }
 		 {# Figure 3
 			{# prepare for plotting
 				k=0.1 # distance
@@ -2446,7 +2445,7 @@
 			}
 		}
 					
-		}
+	  }
 	  {# calling - how laud is the exchange?
 		  {# run first
 			d1 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_1'))
@@ -2456,12 +2455,12 @@
 				#d1[is.na(d1$call_int), ]
 			d01 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_c_int'))
 				colnames(d01)[7] = 'call_int'
-				d01$type = '1 both present coming'
+				d01$type = '1b both present coming'
 				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
 				#d1[is.na(d1$call_int), ]	
 			d02 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_o_int'))
 				colnames(d02)[7] = 'call_int'
-				d02$type = '1 both present incubating'
+				d02$type = '1a both present incubating'
 				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
 				#d1[is.na(d1$call_int), ]		
 			d2 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c2'))
@@ -2479,6 +2478,43 @@
 			di = di[!is.na(di$call_int),]
 			#di$left_before = d$left_before_presence [match(di$obs_ID, d$obs_ID)]
 		}	
+		  {# run first TEMP
+			d1 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_1'))
+				colnames(d1)[7] = 'call_int'
+				d1$type = '1 both present'
+				d1$who = 'both'
+				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+				#d1[is.na(d1$call_int), ]
+			d01 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_c_int'))
+				colnames(d01)[7] = 'call_int'
+				d01$type = '1 both present'
+				d01$who = 'returning'
+				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+				#d1[is.na(d1$call_int), ]	
+			d02 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_o_int'))
+				colnames(d02)[7] = 'call_int'
+				d02$type = '1 both present'
+				d02$who = 'incubating'
+				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+				#d1[is.na(d1$call_int), ]		
+			d2 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c2'))
+				colnames(d2)[7] = 'call_int'
+				d2$type = '2 exchange gap'
+				d2$who = 'returning'				
+				#d2$obs_ID[is.na(d2$call_int) & d2$sound_ok == 'y']
+				#d2[is.na(d2$call_int), ]
+			
+			d3 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c3'))
+				colnames(d3)[7] = 'call_int'
+				d3$type = '3 after on nest'
+				d3$who = 'returning'					
+				#d3$obs_ID[is.na(d3$call_int) & d3$sound_ok == 'y']
+				#d3[is.na(d2$call_int), ]
+			di = rbind(d1,d01,d02,d2,d3)
+			di = di[!is.na(di$call_int),]
+			#di$left_before = d$left_before_presence [match(di$obs_ID, d$obs_ID)]
+		}	
+		  
 		  {# distribution
 			  {# calling while arriving
 				
@@ -2540,6 +2576,50 @@
 
 			ggplot(ex_,aes(y=call_int_1, x=day_j, col=nest))+geom_point()+stat_smooth(method="lm", se=FALSE)
 		}
+		  {# Figure 4
+			  
+			  labels_ <- c(
+                    `1 both present` = "From initiation to leaving",
+                    `2 exchange gap` = "Exchange gap",
+                    `3 after on nest` = "After on nest"
+                    )
+			 dev.new(width=1.85+1,height=1.5*2)
+			 ggplot(di[!di$who =='both',], aes(x = call_int, fill = who)) + 
+				geom_bar(position=position_dodge()) + 
+				facet_wrap(~type, nrow=5, labeller = as_labeller(labels_)) + 
+				ylab("Number of observations") +
+				xlab("Calling intensity") +
+				coord_cartesian(ylim = c(0, 100))+ 
+				guides(fill=guide_legend(title="Which parent:")) +
+				scale_fill_manual(values=c('#FCB42C','#535F7C')) + 
+				theme_light()+
+									theme(	axis.line=element_line(colour="grey70", size=0.25),
+											#panel.border=element_rect(colour="white"),
+											panel.border=element_rect(colour="grey70", size=0.25),
+											panel.grid = element_blank(),
+											
+											axis.title=element_text(size=7, colour="grey30"),
+											axis.title.y = element_text(vjust=1),
+											axis.title.x = element_text(vjust=0.2),
+											axis.text=element_text(size=6),# margin=units(0.5,"mm")),
+											axis.ticks.length=unit(0.5,"mm"),
+											#axis.ticks.margin,
+											
+											strip.text.x =element_text(size = 6, color="grey30",  margin=margin(1,1,1,1,"mm")), #grey50
+											strip.background=element_rect(fill="grey99",colour="grey70", size=0.25),
+											#strip.background = element_blank(), 
+											#strip.text = element_blank(),
+											panel.margin = unit(0, "mm"),
+											#legend.position="none"
+											legend.background=element_rect(colour="white"),
+											legend.key=element_rect(fill="grey99", colour="white"),
+											legend.text=element_text(size=7, colour="grey30"),
+											legend.title=element_text(size=7, colour="grey30")
+											)
+				ggsave(paste(outdir,"Figure_4.png", sep=""),width=1.85+1,height=1.5*2, units = "in")							
+				#ggsave(paste(outdir,"Figure_4.eps", sep=""),width=1.85+1,height=1.5*2, units = "in")							
+				
+		  }
 		  {# Supplementary Table 4
 			{# prepare table data
 				{# calling while arriving
@@ -2961,7 +3041,7 @@
 							  
 		
 	  }
-	    {# Supplementary Table 6
+	      {# Supplementary Table 6
 			{# prepare table data
 				{# calling while arriving
 					m = lmer(next_bout ~as.factor(w_call)*sex+(1|bird_ID)+(1|nest_ID),dx)
