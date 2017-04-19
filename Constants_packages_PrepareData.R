@@ -22,6 +22,8 @@
 		cv_y = "#f0b2b2"
 		cv_z = "#ADD8E6"
 		tem = 'dodgerblue'
+		col_f = '#FCB42C'
+		col_m = '#535F7C'
 		
 		col_p="gray53"  # color of point's outline
 		col_pb="gray98"  # color of point's background
@@ -134,7 +136,7 @@
 		
 		# number of calls and fly-offs per observation
 			# 111 not in YET as it is unclear what is going on
-			bb_=ddply(b_[!is.na(b_$who),],.(obs_ID, nest_ID, type, day_j, obs_time, lat, lon), summarise, call_i=length(behaviour[which(behaviour=='c' & who == 'o' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]),fly_i=length(behaviour[which(behaviour=='f' & who == 'o' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]))
+			bb_=ddply(b_[!is.na(b_$who),],.(obs_ID, nest_ID,bird_ID, type, day_j, obs_time, lat, lon), summarise, call_i=length(behaviour[which(behaviour=='c' & who == 'o' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]),fly_i=length(behaviour[which(behaviour=='f' & who == 'o' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]))
 			bb_$sex = d$sex[match(bb_$obs_ID, d$obs_ID)]
 			#bb_[bb_$obs_ID %in% bb_$obs_ID[duplicated(bb_$obs_ID)],]
 			#length(unique(bb_$obs_ID))
