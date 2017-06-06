@@ -61,9 +61,11 @@
 		nrow(d[d$type=='ex',])
 		nrow(d[d$type=='non',])
 		d_= ddply(d,.(nest, year ,type), summarise, n = sum(n))
+		d_= ddply(d,.(nest, year ,type), summarise, n = sum(n))
 		d_$id = paste(d_$nest, d_$year)
 		ggplot(d_, aes(x = n, col = type)) + geom_density()
 		summary(d_$n[which(d_$type == 'ex')])
+		summary(d_$n[which(d_$type == 'non')])
 		length(d_$n[which(d_$type == 'ex')])
 		length(d_$n[which(d_$type == 'non')])
 		
@@ -506,11 +508,18 @@
 						
 						# legend
 							mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='grey30', xpd=TRUE) # for printing into device use padj=-7.5
+							if(PNG == TRUE){
+							
+							symbols(c(8.5,8.5,8.5),c(3.3,2.8,2.3)-0.75,circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+							text(c(8.5,8.5,8.5)+1,c(3.3,2.8,2.3)-0.75,labels=c(1,10,20), xpd=TRUE, cex=0.5,col='grey30') 
+							
+							text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', srt=90, xpd=FALSE) 
+							}else{
 							symbols(c(8.5,8.5,8.5),c(3.3,2.8,2.3)-0.5,circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
 							text(c(8.5,8.5,8.5)+1,c(3.3,2.8,2.3)-0.5,labels=c(1,10,20), xpd=TRUE, cex=0.5,col='grey30') 
 							
 							text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', srt=90, xpd=FALSE) 
-							
+							}
 							#arrows(x0=8.5,x1=8.5, y0=1-0.1, y1=1+0.1,  code = 0, col=col_p, angle = 90, length = .025, lwd=1.5, lty=1)
 							#symbols(c(8.5),c(1),circles=sqrt(c(1)/pi),inches=0.03,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) 
 							#text(c(8.5)+1,c(1),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', adj = 0, pos=4, xpd=FALSE) 
