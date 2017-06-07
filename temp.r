@@ -3662,7 +3662,190 @@
 							dev.off()
 					}
 				}			  
-
+		  }
+	       {# Figure 5c
+				{# prepare data for plotting
+					{# model predictions	
+					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$current_bout)),]
+					f$current_bout_c=(f$current_bout-mean(f$current_bout))/sd(f$current_bout)
+					m = lmer(call_c_int ~ sex*current_bout_c+(current_bout_c|bird_ID) + (1|nest_ID), f)
+					
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim) 
+				
+				# coefficients
+					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				
+				# values to predict for		
+					newD=data.frame(sex = c('f','m'),
+									current_bout_c = seq(((5*60)-mean(f$current_bout))/sd(f$current_bout),((15*60)-mean(f$current_bout))/sd(f$current_bout), length.out = 300) #min(f$current_bout_c),max(f$current_bout_c)
+									)
+						
+				# exactly the model which was used has to be specified here
+				X <- model.matrix(~ sex + current_bout_c*sex,data=newD)	
+								
+				# calculate predicted values and creditability intervals
+					newD$pred <-(X%*%v) 
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
+							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
+							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
+					pp=newD	
+					pp$current_bout=(pp$current_bout_c*sd(f$current_bout)) + mean(f$current_bout)
+					pf_=pp[pp$sex=='f',]
+					pm_=pp[pp$sex=='m',]
+				}
+					{# raw data
+						f$n = 1
+						x = ddply(f,.(nest_ID, sex),summarise, mo=median(current_bout), q1o=quantile(current_bout,0.25), q2o= quantile(current_bout,0.75), mc=median(call_c_int), q1c=quantile(call_c_int,0.25), q2c= quantile(call_c_int,0.75), n = sum(n))
+						x$col_=ifelse(x$sex=='f','#535F7C','#FCB42C') # colors reversed because we talk about returning bird (indicated is incubating one)
+						f$col_=ifelse(f$sex=='f','#535F7C','#FCB42C') # colors reversed because we talk about returning bird (indicated is incubating one)
+					}
+				}
+				{# plot
+				if(PNG == TRUE) {
+					png(paste(outdir,"Figure_5c.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600) 
+					}else{
+					dev.new(width=1.85+0.3,height=1.5)
+					}	
+				par(mar=c(0.8,0.2,0.2,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey40", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+			
+						
+				plot(call_c_int ~ current_bout , data = f, 
+										#ylab =NULL, 
+										xaxt='n',
+										yaxt='n',
+										#xaxs = 'i',
+										#yaxs = 'i',
+										#ylim=c(0,3),
+										xlim=c(5,15)*60,
+										type='n'
+										) # col=z_g$cols, border=z_g$cols
+										
+				axis(1, at=c(5,10,15)*60, label=c(5,10,15), mgp=c(0,-0.20,0))
+				axis(2, at=c(0,1,2,3), label=c(0,1,2,3))
+				
+				mtext("Current incubation bout [h]",side=1,line=0.3, cex=0.6, las=1, col='grey30')
+				mtext("Calling intentsity\n(returning parent)",side=2,line=0.8, cex=0.55, las=3, col='grey30')
+				
+				#points( f$current_bout,jitter(f$call_c_int), pch = 21, bg=adjustcolor(f$col_, alpha.f = 0.5), col=col_p, xpd=TRUE) #
+				symbols( jitter(x$mo),jitter(x$mc), circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
+				
+				# predictions - colors reversed because we talk about returning bird (indicated is incubating one)
+					
+					# female
+							polygon(c(pm_$current_bout, rev(pm_$current_bout)), c(pm_$lwr, 
+								rev(pm_$upr)), border=NA, col=adjustcolor(col_f ,alpha.f = 0.2)) #0,0,0 black 0.5 is transparents RED
+							lines(pm_$current_bout, pm_$pred, col=col_f,lwd=1)
+							
+					# male
+							polygon(c(pf_$current_bout, rev(pf_$current_bout)), c(pf_$lwr, 
+								rev(pf_$upr)), border=NA, col=adjustcolor(col_m ,alpha.f = 0.2)) #0,0,0 black 0.5 is transparents RED
+							lines(pf_$current_bout, pf_$pred, col=col_m,lwd=1)
+							
+					
+													
+							#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
+							#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)		
+					
+					text(x=-.3,y=2.9, labels='\u2640', col='#FCB42C', cex=0.6, pos=4)
+					text(x=-.1,y=2.95, labels='\u2642', col='#535F7C', cex=0.6, pos=4)
+					
+				 if(PNG == TRUE) {dev.off()}
+			}
+		  }
+		   {# Figure 5 - not used now
+				{# prepare data for plotting
+					{# model predictions	
+					f = ex_[-which(is.na(ex_$call_o_int) | is.na(ex_$current_bout)),]
+					f$current_bout_c=(f$current_bout-mean(f$current_bout))/sd(f$current_bout)
+					m = lmer(call_o_int ~ sex*current_bout_c+(current_bout_c|bird_ID) + (1|nest_ID), f)
+										
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim) 
+				
+				# coefficients
+					v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				
+				# values to predict for		
+					newD=data.frame(sex = c('f','m'),
+									current_bout_c = seq(((5*60)-mean(f$current_bout))/sd(f$current_bout),((15*60)-mean(f$current_bout))/sd(f$current_bout), length.out = 300) #min(f$current_bout_c),max(f$current_bout_c)
+									)
+						
+				# exactly the model which was used has to be specified here
+				X <- model.matrix(~ sex + current_bout_c*sex,data=newD)	
+								
+				# calculate predicted values and creditability intervals
+					newD$pred <-(X%*%v) 
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
+							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
+							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
+					pp=newD	
+					pp$current_bout=(pp$current_bout_c*sd(f$current_bout)) + mean(f$current_bout)
+					pf_=pp[pp$sex=='f',]
+					pm_=pp[pp$sex=='m',]
+				}
+					{# raw data
+						f$n = 1
+						x = ddply(f,.(nest_ID, sex),summarise, mo=median(current_bout), q1o=quantile(current_bout,0.25), q2o= quantile(current_bout,0.75), mc=median(call_o_int), q1c=quantile(call_o_int,0.25), q2c= quantile(call_o_int,0.75), n = sum(n))
+						x$col_=ifelse(x$sex=='f','#FCB42C','#535F7C') 
+						f$col_=ifelse(f$sex=='f','#FCB42C','#535F7C') 
+					}
+				}
+				{# plot
+				if(PNG == TRUE) {
+					png(paste(outdir,"Figure_5d.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600) 
+					}else{
+					dev.new(width=1.85+0.3,height=1.5)
+					}	
+				par(mar=c(0.8,0.2,0.2,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey40", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+			
+						
+				plot(call_o_int ~ current_bout , data = f, 
+										#ylab =NULL, 
+										xaxt='n',
+										yaxt='n',
+										#xaxs = 'i',
+										#yaxs = 'i',
+										#ylim=c(0,3),
+										xlim=c(5,15)*60,
+										type='n'
+										) # col=z_g$cols, border=z_g$cols
+										
+				axis(1, at=c(5,10,15)*60, label=c(5,10,15), mgp=c(0,-0.20,0))
+				axis(2, at=c(0,1,2,3), label=c(0,1,2,3))
+				
+				mtext("Current incubation bout [h]",side=1,line=0.3, cex=0.6, las=1, col='grey30')
+				mtext("Calling intentsity\n(incubating parent)",side=2,line=0.8, cex=0.55, las=3, col='grey30')
+				
+				#points( f$current_bout,jitter(f$call_c_int), pch = 21, bg=adjustcolor(f$col_, alpha.f = 0.5), col=col_p, xpd=TRUE) #
+				symbols( jitter(x$mo),jitter(x$mc), circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
+				
+				# predictions
+					
+					# male
+							polygon(c(pm_$current_bout, rev(pm_$current_bout)), c(pm_$lwr, 
+								rev(pm_$upr)), border=NA, col=adjustcolor(col_m ,alpha.f = 0.2)) #0,0,0 black 0.5 is transparents RED
+							lines(pm_$current_bout, pm_$pred, col=col_m,lwd=1)
+							
+					# female
+							polygon(c(pf_$current_bout, rev(pf_$current_bout)), c(pf_$lwr, 
+								rev(pf_$upr)), border=NA, col=adjustcolor(col_f ,alpha.f = 0.2)) #0,0,0 black 0.5 is transparents RED
+							lines(pf_$current_bout, pf_$pred, col=col_f,lwd=1)
+							
+					
+													
+							#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
+							#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)		
+					
+					text(x=-.3,y=2.9, labels='\u2640', col='#FCB42C', cex=0.6, pos=4)
+					text(x=-.1,y=2.95, labels='\u2642', col='#535F7C', cex=0.6, pos=4)
+					
+				 if(PNG == TRUE) {dev.off()}
+			}
+		  }
+		 
 		  {# Supplementary Table 6
 			{# prepare table data
 				{# a. calling while arriving
@@ -3691,7 +3874,7 @@
 					o1=rbind(oii,ri)
 				}
 				{# b. reply
-					f = dx_[-which(is.na(dx_$next_bout) | is.na(dx_$o_replies)),]
+					f = dx[-which(is.na(dx$next_bout) | is.na(dx$o_replies)),]
 					m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),f)
 					pred=c('Intercept (f, no)','reply call','Sex(m)', 'Call:sex')
 					dep = 'next bout'
@@ -3797,12 +3980,30 @@
 					
 					}
 					{# b. reply
-						f = dx_[-which(is.na(dx_$next_bout) | is.na(dx_$o_replies)),]
-						m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),f)
+						f = dx_[-which(is.na(dx_$current_bout)| is.na(dx_$reply)),]
+						m = glmer(reply ~ sex*scale(current_bout) + (1|bird_ID) + (1|nest_ID), f, family = 'binomial')
 						
 						scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
 						scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
 						
+						plot(fitted(m), jitter(f$reply, amount=0.05), xlab="Fitted values", ylab="Probability of calling", las=1, cex.lab=1.2, cex=0.8)
+							abline(0,1, lty=3)
+							t.breaks <- cut(fitted(m), seq(0,1, by=0.1))
+							means <- tapply(f$reply, t.breaks, mean)
+							semean <- function(x) sd(x)/sqrt(length(x))
+							means.se <- tapply(f$reply, t.breaks, semean)
+							points(seq(0.05, 0.95, by=0.1), means, pch=16, col="orange")
+							segments(seq(0.05, 0.95, by=0.1), means-2*means.se, seq(0.05, 0.95,by=0.1), means+2*means.se,lwd=2, col="orange")
+							
+						plot(fitted(m), jitter(f$reply, amount=0.05), xlab="Fitted values", ylab="Probability of presence", las=1, cex.lab=1.2, cex=0.8) # what to do with the miss-fit
+							abline(0,1, lty=3)
+							t.breaks <- cut(fitted(m), seq(0,1, by=0.2))
+							means <- tapply(f$reply, t.breaks, mean)
+							semean <- function(x) sd(x)/sqrt(length(x))
+							means.se <- tapply(f$reply, t.breaks, semean)
+							points(seq(0.05, 0.95, by=0.2), means, pch=16, col="orange")
+							segments(seq(0.05, 0.95, by=0.2), means-2*means.se, seq(0.05, 0.95,by=0.2), means+2*means.se,lwd=2, col="orange")	
+			 
 						qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red')  # what to do with the miss-fit
 							qqline(resid(m))
 						
@@ -3813,11 +4014,9 @@
 						qqnorm(unlist(ranef(m)$nest_ID[1]), main = "nest",col='red')
 						qqline(unlist(ranef(m)$nest_ID[1]))
 						
+						scatter.smooth(resid(m)~f$current_bout);abline(h=0, lty=2, col='red')
 						boxplot(resid(m)~f$sex, xlab = 'sex');abline(h=0, lty=2, col='red')
 						scatter.smooth(resid(m)~f$sex);abline(h=0, lty=2, col='red')
-						boxplot(resid(m)~f$o_replies, xlab = 'sex');abline(h=0, lty=2, col='red')
-						scatter.smooth(resid(m)~as.factor(f$o_replies));abline(h=0, lty=2, col='red')
-						boxplot(resid(m)~f$sex:f$o_replies, xlab = 'sex');abline(h=0, lty=2, col='red')
 						
 						acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
 						
@@ -3838,8 +4037,8 @@
 					
 					}
 					{# c. calling coming ~ calling incubating
-						f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_c3) | is.na(ex_$next_bout)),]
-						m = lmer(next_bout ~sex*scale(call_c_int)+sex*scale(call_o_int)+sex*scale(call_int_c2) + sex*scale(call_int_c3) + (call_int_c3|bird_ID) + (1|nest_ID),f)
+						f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$current_bout)),]
+						m = lmer(call_c_int ~ sex*scale(current_bout) +(scale(current_bout)|bird_ID) + (1|nest_ID), f)
 									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
 									  dev.new(width=6,height=9)
 									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
@@ -3860,14 +4059,144 @@
 									  qqline(unlist(ranef(m)$nest_ID [1]))
 									  
 									  
-									  scatter.smooth(resid(m)~f$call_c_int);abline(h=0, lty=2, col='red')
-									  scatter.smooth(resid(m)~f$call_o_int);abline(h=0, lty=2, col='red')
-									  scatter.smooth(resid(m)~f$call_int_c2);abline(h=0, lty=2, col='red')
-									  scatter.smooth(resid(m)~f$call_int_c3);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~f$current_bout);abline(h=0, lty=2, col='red')
 									  scatter.smooth(resid(m)~f$sex);abline(h=0, lty=2, col='red')
 									  boxplot(resid(m)~f$sex);abline(h=0, lty=2, col='red')
 									  
-									   mtext("lmer(next_bout ~sex*scale(call_c_int)+sex*scale(call_o_int)+sex*scale(call_int_c2) + sex*scale(call_int_c3) + (call_int_c3|bird_ID) + (1|nest_ID),f)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   mtext("lmer(call_c_int ~ sex*scale(current_bout)+(current_bout|bird_ID) + (1|nest_ID), f)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=f$lon, y=f$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+					{# d. calling incubating
+						f = ex_[-which(is.na(ex_$call_o_int) |is.na(ex_$current_bout)),]
+						m = lmer(call_o_int ~ sex*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)
+									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									  par(mfrow=c(5,3))
+									 
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$bird_ID [1]))
+									  
+									  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
+									  qqline(unlist(ranef(m)$bird_ID[2]))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  
+									  scatter.smooth(resid(m)~f$current_bout);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~f$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~f$sex);abline(h=0, lty=2, col='red')
+									  
+									   mtext("call_o_int ~ sex*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=f$lon, y=f$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+					{# e. exchange gap calling
+						f = ex_[-which(is.na(ex_$call_int_c2) | is.na(ex_$current_bout)),]
+						m = lmer(call_int_c2 ~ sex*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)
+									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									  par(mfrow=c(5,3))
+									 
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$bird_ID [1]))
+									  
+									  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
+									  qqline(unlist(ranef(m)$bird_ID[2]))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  
+									  scatter.smooth(resid(m)~f$current_bout);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~f$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~f$sex);abline(h=0, lty=2, col='red')
+									  
+									   mtext("lmer(call_int_c2 ~ sex*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+									   
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=f$lon, y=f$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+											
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+								
+							dev.off()
+					}
+					{# f. after exchange
+						f = ex_[-which(is.na(ex_$call_int_c3) | is.na(ex_$current_bout)),]
+						m = lmer(call_int_c3 ~ sex*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)
+					
+									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									  par(mfrow=c(5,3))
+									 
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+									  qqline(resid(m))
+									  
+									  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$bird_ID [1]))
+									  
+									  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
+									  qqline(unlist(ranef(m)$bird_ID[2]))
+									  
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  
+									  
+									  scatter.smooth(resid(m)~f$current_bout);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~f$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~f$sex);abline(h=0, lty=2, col='red')
+									  
+									   mtext("lmer(call_int_c3 ~ sex*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
 									   
 									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
 									  # spatial autocorrelations - nest location
@@ -3887,7 +4216,7 @@
 				}		  
 		
 	  }
-	   	{# Figure 5c
+	   	{# Figure 5d
 			dxn = dx_[!is.na(dx_$next_bout), ]
 			{# prepare for plotting
 				k=0.1 
@@ -3899,7 +4228,6 @@
 				x$at=ifelse(dxn$o_replies=='y',ifelse(dxn$sex=='f', 1-kkk,2+kkk),
 								ifelse(dxn$sex=='f', 3.7-kkk,4.7+kkk))					
 				dxn$col_=ifelse(dxn$sex=='f','#FCB42C', '#535F7C')	
-				x$col_=ifelse(x$sex=='f','#FCB42C', '#535F7C')	
 				}	
 			{# prepare model predictions
 					m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),dxn)
@@ -3995,7 +4323,7 @@
 				 if(PNG == TRUE) {dev.off()}
 			}
 		}
-		{# Figure 5d
+		{# Figure 5e
 		
 				{# prepare data for plotting
 					{# model predictions	
