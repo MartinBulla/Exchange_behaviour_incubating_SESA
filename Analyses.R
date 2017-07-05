@@ -1254,7 +1254,7 @@
 				   }
 				   {# plot
 				 if(PNG == TRUE) {
-					png(paste(outdir,"Figure_2ab.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+					png(paste(outdir,"Figure_2ab_.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
 					}else{
 					dev.new(width=1.85+0.6,height=1.5*2)
 					}	
@@ -1267,7 +1267,7 @@
 						text(y=c(1),x=c(2+0.036), labels = 'Start of observation', col="grey70",xpd=TRUE, cex=0.5,pos=4)
 												
 						lines(y=c(0,0),x=c(2-0.048,2+0.044), lty = 3,col="grey70")
-						text(y=c(0),x=c(2+0.036), labels = 'Start of exchange', col="grey70",xpd=TRUE, cex=0.5,pos=4)
+						text(y=c(0),x=c(2+0.036), labels = 'Partner returned', col="grey70",xpd=TRUE, cex=0.5,pos=4)
 						
 						mtext("Calling time\n[proportion of observed time]",side=2,line=1, cex=0.6, las=3, col='grey30')
 						#axis(1, at=c(2,6), label=c('Before exchange', 'Regular'), mgp=c(0,-0.20,0))
@@ -2608,6 +2608,45 @@
 				ggsave(paste(outdir,"Figure_4.png", sep=""),width=1.85+1,height=1.5*2, units = "in")							
 				#ggsave(paste(outdir,"Figure_4.eps", sep=""),width=1.85+1,height=1.5*2, units = "in")							
 				
+		  }
+		  {# Figure xxx
+		  ex$nn=1
+			a = ddply(ex[-which(is.na(ex$call_c_int)|is.na(ex$call_int_c2)|is.na(ex$call_int_c3)),],.(call_c_int,call_int_c2,call_int_c3), summarise, n=sum(nn))
+			
+			dev.new(height=2.5, width=5)
+			png(paste(outdir,"Alluvial.png", sep=""), width=5,height=2.5,units="in",res=600)
+			#par(mar=c(0.8,2,0.2,2.5),xpd=TRUE) #
+			alluvial(a[,1:3], freq=a$n,
+				axis_labels = c('Initiation\nto leaving','Exchange\ngap', 'After\nexchange'),
+								#c('Initiation to leaving','Exchange gap', 'After exchange'),
+				#col = ifelse(tit$Survived == "Yes", "orange", "grey"),
+				#border = ifelse(tit$Survived == "Yes", "orange", "grey"),
+				#hide = tit$Freq == 0,
+				cex = 0.5, cex.axis = 0.7
+				)
+			dev.off()
+			
+			a = ddply(ex[-which(is.na(ex$call_c_int)|is.na(ex$call_int_c2)|is.na(ex$call_int_c3)),],.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
+			a$sex = ifelse(a$sex == 'f', 'Male', 'Female') # to make sex of returning bird
+			
+			alluvial(a[,1:4], freq=a$n,
+				axis_labels = c('Initiation to leaving','Exchange gap', 'After exchange', 'Sex'),
+				col = ifelse(a$sex == "Female", col_f, col_m),
+				#border = ifelse(tit$Survived == "Yes", "orange", "grey"),
+				#hide = tit$Freq == 0,
+				cex = 0.5, cex.axis = 0.7
+				)	
+			#dev.new(height=3, width=6.5)
+			dev.new(height=2.5, width=5)
+			png(paste(outdir,"Alluvial_sex.png", sep=""), width=5,height=2.5,units="in",res=600)
+			alluvial(a[,1:3], freq=a$n,
+				axis_labels = c('Initiation\nto leaving','Exchange\ngap', 'After\nexchange'),
+				col = ifelse(a$sex == "Female", col_f, col_m), alpha = 0.7,
+				#border = ifelse(tit$Survived == "Yes", "orange", "grey"),
+				#hide = tit$Freq == 0,
+				cex = 0.5, cex.axis = 0.7
+				)		
+			dev.off()
 		  }
 		  {# Supplementary Table 4
 			{# prepare table data
@@ -4224,6 +4263,8 @@
 				{# current bout
 					e$push_=ifelse(e$push=='y',1,0)
 					m=glmer(push ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)
+					####m=lmer(pushoff_int ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), e)
+					###densityplot(~e$pushoff_int)
 					#m=glmer(push ~ scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e) # not confounded by sex
 								# binomial gives same results
 								#dd_$pa_bin=ifelse(dd_$pa == 0.001, 0,1)
