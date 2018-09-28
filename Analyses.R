@@ -471,17 +471,19 @@
 				}
 			   {# plot
 				if(PNG == TRUE) {
-					png(paste(outdir,"Figure_1.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+					png(paste(outdir,"Figure_1_2018-09-27.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
 					}else{
 					dev.new(width=1.85+0.6,height=1.5*2)
 					}	
 				
-				par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 1.8, 0.2, 2.8),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+				par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 1.8, 0.2, 2.8),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5) #col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7,
 						
 				{# calls
-						plot(u$m~u$type_j, xlim=c(0,8), ylim=c(0,3.2),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						plot(u$m~u$type_j, xlim=c(0,8), ylim=c(0,3.2),xaxt='n',yaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
 						
-						mtext("Calling rate / 10min",side=2,line=1, cex=0.6, las=3, col='grey30')
+						axis(2, at=seq(0,3,by=0.5), lwd = 0.35)
+						mtext("Calling rate (calls/10min)",side=2,line=1, cex=0.6, las=3)
+						text(0.1,3, expression(bold('a')),cex=0.6)
 						
 						for(i in 1:length(unique(u$nest_ID))){
 									ui=u[u$nest_ID==unique(u$nest_ID)[i],]
@@ -503,18 +505,18 @@
 							points(y=pc_$pred,x=6, pch=19, cex=0.9,col="red")
 						
 						# legend
-							mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='grey30', xpd=TRUE) # for printing into device use padj=-7.5
+							mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='black', xpd=TRUE) # for printing into device use padj=-7.5
 							if(PNG == TRUE){
 							
 							symbols(c(8.5,8.5,8.5),c(3.3,2.8,2.3)-0.75,circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
-							text(c(8.5,8.5,8.5)+1,c(3.3,2.8,2.3)-0.75,labels=c(1,10,20), xpd=TRUE, cex=0.5,col='grey30') 
+							text(c(8.5,8.5,8.5)+1,c(3.3,2.8,2.3)-0.75,labels=c(1,10,20), xpd=TRUE, cex=0.5)#,col='grey30') 
 							
-							text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', srt=90, xpd=FALSE) 
+							text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5, srt=90, xpd=FALSE,col='grey30') #,col='grey30'
 							}else{
 							symbols(c(8.5,8.5,8.5),c(3.3,2.8,2.3)-0.5,circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
-							text(c(8.5,8.5,8.5)+1,c(3.3,2.8,2.3)-0.5,labels=c(1,10,20), xpd=TRUE, cex=0.5,col='grey30') 
+							text(c(8.5,8.5,8.5)+1,c(3.3,2.8,2.3)-0.5,labels=c(1,10,20), xpd=TRUE, cex=0.5) #,col='grey30'
 							
-							text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5,col='grey30', srt=90, xpd=FALSE) 
+							text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5, srt=90, xpd=FALSE,col='grey30') #
 							}
 							#arrows(x0=8.5,x1=8.5, y0=1-0.1, y1=1+0.1,  code = 0, col=col_p, angle = 90, length = .025, lwd=1.5, lty=1)
 							#symbols(c(8.5),c(1),circles=sqrt(c(1)/pi),inches=0.03,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) 
@@ -523,20 +525,20 @@
 							#points(8.5, 1.5, pch=19,cex=0.9, col='red',xpd=NA)
 							#arrows(x0=8.5,x1=8.5, y0=1.5-0.3, y1=1.5+0.3,  code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
 							#arrows(x0=7.75,x1=6.3, y0=2.2, y1=1.8,  code = 2, col=col_p, angle = 30, length = .025, lwd=1, lty=1)
-							mtext('Predictions &\n95%CrI',side = 4,line=-0.3,padj=2, cex=0.5,las=1,col='red', xpd=TRUE) 
+							mtext('Predictions &\n95%CI',side = 4,line=-0.3,padj=2, cex=0.5,las=1,col='red', xpd=TRUE) 
 									# use if plotting within RData
 									#mtext('Weighted\nmedian',side = 4,line=3, cex=0.5,padj=-3.25,adj=0.5, las=1,col='grey30',xpd=TRUE)
 									#points(12.5, 85, pch=19, col='black',xpd=NA)
 					}				
 				{# fly-offs
-						plot(x$m~x$type_j, xlim=c(0,8), ylim=c(0,1),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+						plot(x$m~x$type_j, xlim=c(0,8), ylim=c(0,1),xaxt='n', yaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
 						
-												
-						axis(1, at=c(2,6), label=c('Before exchange', 'Regular'), mgp=c(0,-0.20,0))
-						mtext("Incubation",side=1,line=0.4, cex=0.5, las=1, col='grey30')
+						text(0.1,1, expression(bold('b')),cex=0.6)						
+						axis(1, at=c(2,6), label=c('Before nest relief', 'Control'), mgp=c(0,-0.20,0), lwd= 0, col =NA)
+						#mtext("Incubation",side=1,line=0.4, cex=0.5, las=1)#, col='grey30')
 											
-						#axis(2, at=seq(0,100,by=20))
-						mtext("Fly-off probability",side=2,line=1, cex=0.6, las=3, col='grey30')
+						axis(2, at=seq(0,1,by=0.2), lwd = 0.35)
+						mtext("Fly-off probability",side=2,line=1, cex=0.6, las=3)#, col='grey30')
 						
 						for(i in 1:length(unique(x$nest_ID))){
 									ui=x[x$nest_ID==unique(x$nest_ID)[i],]
@@ -1190,9 +1192,11 @@
 					# calling	
 						ggplot(bo_, aes(y = deltaT, x = obs_time))+geom_point()
 						ggplot(bo_, aes(x = deltaT))+geom_density()
+						ggplot(bo_, aes(x = obs_time))+geom_density()
 						ggplot(bo_, aes(x = deltaT/obs_time))+geom_density()
 						ggplot(bo_, aes(x = deltaT/obs_time, fill = bird_ID))+geom_density(alpha=0.3)+ theme(legend.position="none")
 						ggplot(bo_, aes(x = deltaT/obs_time, col = bird_ID))+geom_density() + theme(legend.position="none")
+						ggplot(bo_, aes(x = deltaT/obs_time, y =  col = bird_ID))+geom_density() + theme(legend.position="none")
 						
 						ggplot(bo_, aes(x = deltaT/obs_time))+geom_histogram()
 						ggplot(u, aes(x = m))+geom_histogram()
@@ -1222,7 +1226,7 @@
 				   {# run first 
 					{# model estimates
 						# calling
-						 m = lmer(deltaT/obs_time ~ 1+(1|nest_ID) , bo_)
+						 m = lmer(deltaT ~ 1+(1|nest_ID) , bo_)
 							nsim <- 5000
 							bsim <- sim(m, n.sim=nsim)  
 						v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
@@ -2365,9 +2369,9 @@
 				eb$push_sex=ifelse(eb$push=='y',ifelse(eb$sex=='f', 1-k,k+1),
 								ifelse(eb$sex=='f', 4-k,k+4))
 				x = eb
-				eb$col_=ifelse(eb$sex=='f','#FCB42C', '#535F7C')	
-				x$at=ifelse(eb$push=='y',ifelse(eb$sex=='f', 1-kkk,2+kkk),
-								ifelse(eb$sex=='f', 3.7-kkk,4.7+kkk))	
+				x$col_=ifelse(x$sex=='f','#FCB42C', '#535F7C')	
+				x$at=ifelse(x$push=='y',ifelse(x$sex=='f', 1-kkk,2+kkk),
+								ifelse(x$sex=='f', 3.7-kkk,4.7+kkk))	
 				
 				
 				}	
@@ -2454,7 +2458,7 @@
 					
 					#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels 
 					text(c(1.5,4.2), par("usr")[3]-0.25, labels = c('Yes','No'),  xpd = TRUE, cex=0.5, col="grey30")
-					mtext("Pushed from the nest",side=1,line=0, cex=0.6, las=1, col='grey30')
+					mtext("Pushed off the nest",side=1,line=0, cex=0.6, las=1, col='grey30')
 					
 					mtext("From initiation to leaving [s]",side=2,line=1.3, cex=0.55, las=3, col='grey30')
 					
@@ -2536,6 +2540,15 @@
 				plot(allEffects(m))
 				summary(glht(m))
 				}
+			  {# strategies
+				x = ex_[-which(is.na(ex_$with_calling) | is.na(ex_$call_c_int) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_c3)),]
+				nrow(x)
+				# no calling at all
+				nrow(x[which(ex_$with_calling == 'n' & ex_$call_c_int ==0 & ex_$call_int_c2 == 0  & ex_$call_int_c3 == 0),])/nrow(x)
+				
+				# 3-2-0
+				nrow(x[which(ex_$with_calling == 'n' & ex_$call_c_int ==0 & ex_$call_int_c2 == 0  & ex_$call_int_c3 == 0),])/nrow(x)
+			   }
 				cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="pearson") 
 				cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="spearman") 
 
@@ -2611,6 +2624,7 @@
 		  }
 		  {# Figure xxx
 		  ex$nn=1
+			# simple
 			a = ddply(ex[-which(is.na(ex$call_c_int)|is.na(ex$call_int_c2)|is.na(ex$call_int_c3)),],.(call_c_int,call_int_c2,call_int_c3), summarise, n=sum(nn))
 			
 			dev.new(height=2.5, width=5)
@@ -2626,9 +2640,28 @@
 				)
 			dev.off()
 			
+			# sex
 			a = ddply(ex[-which(is.na(ex$call_c_int)|is.na(ex$call_int_c2)|is.na(ex$call_int_c3)),],.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
 			a$sex = ifelse(a$sex == 'f', 'Male', 'Female') # to make sex of returning bird
 			
+			if(PNG == TRUE) {
+					png(paste(outdir,"Alluvial_sex.png", sep=""), width=5,height=2.5,units="in",res=600)
+					}else{
+					dev.new(width=5,height=2.5)
+					#dev.new(width=3.55,height=1.75)
+					}	
+			
+			
+			alluvial(a[,1:3], freq=a$n,
+				axis_labels = c('Initiation\nto leaving','Exchange\ngap', 'After\nexchange'),
+				col = ifelse(a$sex == "Female", col_f, col_m), alpha = 0.7, #change alpha to 1 if printing to esp
+				border="white",
+				#border = ifelse(tit$Survived == "Yes", "orange", "grey"),
+				#hide = tit$Freq == 0,
+				cex = 0.5, cex.axis = 0.7
+				)		
+			 if(PNG == TRUE) {dev.off()}
+		  
 			alluvial(a[,1:4], freq=a$n,
 				axis_labels = c('Initiation to leaving','Exchange gap', 'After exchange', 'Sex'),
 				col = ifelse(a$sex == "Female", col_f, col_m),
@@ -2636,17 +2669,7 @@
 				#hide = tit$Freq == 0,
 				cex = 0.5, cex.axis = 0.7
 				)	
-			#dev.new(height=3, width=6.5)
-			dev.new(height=2.5, width=5)
-			png(paste(outdir,"Alluvial_sex.png", sep=""), width=5,height=2.5,units="in",res=600)
-			alluvial(a[,1:3], freq=a$n,
-				axis_labels = c('Initiation\nto leaving','Exchange\ngap', 'After\nexchange'),
-				col = ifelse(a$sex == "Female", col_f, col_m), alpha = 0.7,
-				#border = ifelse(tit$Survived == "Yes", "orange", "grey"),
-				#hide = tit$Freq == 0,
-				cex = 0.5, cex.axis = 0.7
-				)		
-			dev.off()
+			#
 		  }
 		  {# Supplementary Table 4
 			{# prepare table data
@@ -3094,7 +3117,7 @@
 				{# plot
 				if(PNG == TRUE) {
 					#png(paste(outdir,"Figure_5a.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600) 
-					png(paste(outdir,"Figure_5a_med.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600) 
+					png(paste(outdir,"Figure_5a_med.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600, type = 'windows') 
 					}else{
 					dev.new(width=1.85+0.3,height=1.5)
 					}	
@@ -3118,8 +3141,8 @@
 				mtext("Calling intentsity\n(incubating parent)",side=1,line=0.85, cex=0.6, las=1, col='grey30')
 				mtext("Calling intentsity\n(returning parent)",side=2,line=0.8, cex=0.55, las=3, col='grey30')
 				
-				#points(jitter(f$call_o_int), jitter(f$call_c_int), pch = 21, bg=adjustcolor(f$col_, alpha.f = 0.5), col=col_p, xpd=TRUE) #
-				symbols(jitter(x$mo), jitter(x$mc), circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
+				points(jitter(f$call_o_int), jitter(f$call_c_int), pch = 21, bg=adjustcolor(f$col_, alpha.f = 0.5), col=col_p, xpd=TRUE) #
+				#symbols(jitter(x$mo), jitter(x$mc), circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
 				
 				# predictions
 					
@@ -3168,7 +3191,7 @@
 									)
 						
 				# exactly the model which was used has to be specified here
-				X <- model.matrix(~ sex + call_o_int*sex + day_j*sex,data=newD)	
+				X <- model.matrix(~ sex + call_c_int*sex + day_j*sex,data=newD)	
 								
 				# calculate predicted values and creditability intervals
 					newD$pred <-(X%*%v) 
@@ -4086,7 +4109,7 @@
 				}
 				{# plot
 				if(PNG == TRUE) {
-					png(paste(outdir,"Figure_5d.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600) 
+					png(paste(outdir,"Figure_5d_raw.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600) 
 					}else{
 					dev.new(width=1.85+0.3,height=1.5)
 					}	
@@ -4110,8 +4133,8 @@
 				mtext("Calling intensity of returned parent\nduring exchange gap [h]",side=1,line=0.9, cex=0.6, las=1, col='grey30')
 				mtext("Next incubation bout [h]",side=2,line=1, cex=0.55, las=3, col='grey30')
 				
-				#points( f$current_bout,jitter(f$call_c_int), pch = 21, bg=adjustcolor(f$col_, alpha.f = 0.5), col=col_p, xpd=TRUE) #
-				symbols( jitter(x$mo),jitter(x$mc), circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
+				points( jitter(f$call_int_c2), f$next_bout,pch = 21, bg=adjustcolor(f$col_, alpha.f = 0.5), col=col_p, xpd=TRUE) #
+				#symbols( jitter(x$mo),jitter(x$mc), circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
 				
 				# predictions
 					
@@ -4142,6 +4165,7 @@
 					{# model predictions	
 					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_c3) | is.na(ex_$next_bout)),]
 					f$next_bout = f$next_bout/60
+					#f = f[f$call_int_c3!=3,]
 					#summary(f$call_int_c3[f$sex == 'f']) # male calling
 					#summary(f$call_int_c3[f$sex == 'm']) # female calling
 					m = lmer(next_bout ~sex*call_c_int+sex*call_o_int+sex*call_int_c2 + sex*call_int_c3 + (call_int_c3|bird_ID) + (1|nest_ID),f)
@@ -4183,6 +4207,7 @@
 				}
 					{# raw data
 						f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_c3) | is.na(ex_$next_bout)),]
+						#f = f[f$call_int_c3!=3,]
 						f$n = 1
 						f$next_bout = f$next_bout/60
 						x = ddply(f,.(nest_ID, sex),summarise, mc=median(next_bout), q1c=quantile(next_bout,0.25), q2c= quantile(next_bout,0.75), mo=median(call_int_c3), q1o=quantile(call_int_c3,0.25), q2o= quantile(call_int_c3,0.75), n = sum(n))
@@ -4192,7 +4217,7 @@
 				}
 				{# plot
 				if(PNG == TRUE) {
-					png(paste(outdir,"Figure_5e.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600) 
+					png(paste(outdir,"Figure_5e_raw.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600) 
 					}else{
 					dev.new(width=1.85+0.3,height=1.5)
 					}	
@@ -4216,8 +4241,8 @@
 				mtext("Calling intensity of returned parent\nafter exchange [h]",side=1,line=0.9, cex=0.6, las=1, col='grey30')
 				mtext("Next incubation bout [h]",side=2,line=1, cex=0.55, las=3, col='grey30')
 				
-				#points( f$current_bout,jitter(f$call_c_int), pch = 21, bg=adjustcolor(f$col_, alpha.f = 0.5), col=col_p, xpd=TRUE) #
-				symbols( jitter(x$mo),jitter(x$mc), circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
+				points( jitter(f$call_int_c3),f$next_bout, pch = 21, bg=adjustcolor(f$col_, alpha.f = 0.5), col=col_p, xpd=TRUE) #
+				#symbols( jitter(x$mo),jitter(x$mc), circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
 				
 				# predictions
 					
@@ -4249,7 +4274,13 @@
 		{# distribution
 		  	summary(factor(e$push))
 			length(e$push[e$push=='y'])/length(e$push)
-			table(e$push, e$sex)
+			length(unique(e$nest[e$push=='y']))
+			length(unique(e$nest))
+			table(e$push, paste(e$sex,e$nest))
+			ee = e[e$push == 'y',]
+			table(ee$sex, ee$nest)
+			18/68
+			6/61
 				length(e$push[e$push=='y' & e$sex=='f'])/length(e$push[e$sex=='f']) # female incubates
 				length(e$push[e$push=='y' & e$sex=='m'])/length(e$push[e$sex=='m'])
 				
