@@ -1,3 +1,7 @@
+# TRY with SYMBOLS FIGURE 2ab
+# MERGE FIGURE 1 and 2 into one
+
+
 {# TO DO 
 - ADD MODEL ASS
 - check sample sizes
@@ -1170,8 +1174,10 @@
           			#h$sin_=sin(h$rad)
           			#h$cos_=cos(h$rad)
 					bo_ = bo[bo$behaviour == 'c' & bo$who == 'o' & bo$type == 'ex',]
+					boo = bo[bo$behaviour == 'c' & bo$who == 'o',]
 					length(unique(bo_$obs_ID))
 					bf = bo[bo$behaviour == 'f' & bo$who == 'o' & bo$type == 'ex',]
+					bff = bo[bo$behaviour == 'f' & bo$who == 'o',]
 					length(unique(bf$obs_ID))
 					
 					{# DELETE if u and w not used in distributions
@@ -1191,7 +1197,10 @@
 				{# distributions
 					# calling	
 						ggplot(bo_, aes(y = deltaT, x = obs_time))+geom_point()
-						ggplot(bo_, aes(x = deltaT))+geom_density()
+						ggplot(boo, aes(x = deltaT,col = type))+geom_density()
+						ggplot(boo, aes(x = deltaT/obs_time,col = type))+geom_density()
+						ggplot(boo, aes(y = deltaT/obs_time,x = type))+geom_boxplot()
+						ggplot(boo, aes(y = deltaT,x = type))+geom_boxplot()
 						ggplot(bo_, aes(x = obs_time))+geom_density()
 						ggplot(bo_, aes(x = deltaT/obs_time))+geom_density()
 						ggplot(bo_, aes(x = deltaT/obs_time, fill = bird_ID))+geom_density(alpha=0.3)+ theme(legend.position="none")
@@ -1208,6 +1217,12 @@
 						ggplot(bo_, aes(y = deltaT/obs_time, x = nest_ID))+geom_boxplot()
 					
 					# fly-offs
+						ggplot(bff, aes(y = obs_time,x = type))+geom_boxplot()
+						ggplot(bff, aes(x = deltaT,col = type))+geom_density()
+						ggplot(bff, aes(x = deltaT/obs_time,col = type))+geom_density()
+						ggplot(bff, aes(y = deltaT/obs_time,x = type))+geom_boxplot()
+						ggplot(bff, aes(y = deltaT,x = type))+geom_boxplot()
+						
 						ggplot(bf, aes(y = deltaT, x = obs_time))+geom_point()
 						ggplot(bf, aes(x = deltaT/obs_time))+geom_density()
 						ggplot(bf, aes(x = deltaT/obs_time,fill = bird_ID))+geom_density(alpha=0.3) +  theme(legend.position="none")
@@ -1223,40 +1238,222 @@
 						ggplot(bf, aes(y = deltaT/obs_time, x = nest_ID))+geom_boxplot()
 				}				
 				{# Figure 2ab
-				   {# run first 
-					{# model estimates
+					agg = FALSE
+				  {# run first 
+					{# predictions
 						# calling
-						 m = lmer(deltaT ~ 1+(1|nest_ID) , bo_)
+						m = lmer(deltaT ~ type+(1|nest_ID) , boo)
 							nsim <- 5000
 							bsim <- sim(m, n.sim=nsim)  
-						v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
-						ci = apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))	
-						# fly-offs
-						 m = lmer(deltaT/obs_time ~ 1+(1|nest_ID) , bf)
+							# values to predict for		
+							v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+						newD=data.frame(type = c('ex', 'non'))
+				
+						# exactly the model which was used has to be specified here
+						X <- model.matrix(~ type,data=newD)	
+										
+						# calculate predicted values and creditability intervals
+							newD$pred <-(X%*%v) 
+									predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+									for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
+									newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
+									newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
+							pc=newD	
+				# fly-offs
+						 m = lmer(deltaT ~ type + (1|nest_ID) , bff)
 							nsim <- 5000
 							bsim <- sim(m, n.sim=nsim)  
-						vf = apply(bsim@fixef, 2, quantile, prob=c(0.5))
-						cif = apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
+							v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
+							# exactly the model which was used has to be specified here
+						newD=data.frame(type = c('ex', 'non'))
+						X <- model.matrix(~ type,data=newD)	
+								
+				# calculate predicted values and creditability intervals
+					newD$pred <-(X%*%v) 
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
+							newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
+							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
+					pp = newD		
 					}		
 					{# raw data
-						bo_$n = 1
-						u=ddply(bo_,.(nest_ID,obs_ID, type), summarise,m=median(deltaT/obs_time), q1=quantile(deltaT/obs_time,0.25), q2= quantile(deltaT/obs_time,0.75), n = sum(n))
-						u$type_j=2
-						u$type_j=jitter(u$type_j)
+						boo$n = 1
+						u=ddply(boo,.(nest_ID,obs_ID, type), summarise,m=median(deltaT), q1=quantile(deltaT,0.25), q2= quantile(deltaT,0.75), n = sum(n))
 						
-						bf$n = 1
-						w=ddply(bf,.(nest_ID,obs_ID, type), summarise,m=median(deltaT/obs_time), q1=quantile(deltaT/obs_time,0.25), q2= quantile(deltaT/obs_time,0.75), n = sum(n))
-						w$type_j=2
+						bff$n = 1
+						w=ddply(bff,.(nest_ID,obs_ID, type), summarise,m=median(deltaT), q1=quantile(deltaT,0.25), q2= quantile(deltaT,0.75), n = sum(n))
+						w$type_j=ifelse(w$type=='ex', 1,2)
 						w$type_j=jitter(w$type_j)
 							# dummy variable to keep bubbles in the fly off plot of same size as in calling plot
 							w2=w[1,]
 							w2$nest_ID=w2$obs_ID='xxx'
 							w2$m = w2$q1 = w2$q2 = 2
-							w2$n = 10
+							w2$n = 12
 							w=rbind(w,w2)
 						}
-				   }
-				   {# plot
+				}
+				{# plot
+				 if(PNG == TRUE) {
+					png(paste(outdir,"Figure_2ab_box.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+					}else{
+					dev.new(width=1.85+0.6,height=1.5*2)
+					}	
+				
+				 par(mfrow=c(2,1),mar=c(0.25,0,0,3.5),oma = c(2.1, 2.3, 0.2, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #	
+				 
+				{# call
+				{# prepare for plotting
+				k=0.1 
+				kk=k*2# distance for boxplots
+				kkk=k*2 # distance for points
+				boo$type_sex=ifelse(boo$type=='ex',ifelse(boo$sex=='f', 1-k,k+1),
+								ifelse(boo$sex=='f', 4-k,k+4))
+				boo$n = 1
+				boo$col_=ifelse(boo$sex=='f','#FCB42C', '#535F7C')	
+					boo$at=ifelse(boo$type=='ex',ifelse(boo$sex=='f', 1-kkk,2+kkk),
+									ifelse(boo$sex=='f', 3.7-kkk,4.7+kkk))
+				if(agg == TRUE){
+					
+					u=ddply(boo,.(nest_ID,obs_ID, type, type_sex,col_,at), summarise,deltaT=median(deltaT), q1=quantile(deltaT,0.25), q2= quantile(deltaT,0.75), n = sum(n))
+					x=u
+						
+					}else{
+					x = boo
+					}
+				
+				}	
+					
+				boxplot(deltaT ~ type_sex, data = boo, 
+										#ylab =NULL, 
+										xaxt='n',
+										#yaxt='n',
+										ylim=c(0,30),
+										par(bty='n'),
+										#at=c(1,2,3.5,4.5),
+										at=c(1,2,3.7,4.7), type='n',
+										outcex=0.5, outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1, 
+										lwd = 0.25, 
+										#ylim=c(0,1),
+										outcol="white",boxcol='white',whiskcol='white',staplecol='white',medcol='white'
+										) # col=z_g$cols, border=z_g$cols
+										
+				# TRY IT WITH SYMBOL
+				for (i in 1:nrow(x)){stripchart(x$deltaT[i]~ factor(x$type_sex[i]), at = x$at[i],
+											#bg = x$col_[i],
+											col="gray63",
+											#col = x$col_[i],
+											bg = adjustcolor(x$col_[i], alpha.f = 0.4),
+											pch =21, cex=0.5,
+											vertical = TRUE, add = TRUE, method = "jitter") 
+											}
+					
+				boxplot(deltaT ~ type_sex, data = boo, 
+										ylab = NULL,xaxt='n', yaxt='n',
+										#at=c(1,2,3.5,4.5),
+										at=c(1+kk,2-kk,3.7+kk,4.7-kk),
+										type='n',
+										outcex=0.5,outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1, 
+										lwd = 1,
+										border=c('#FCB42C','#535F7C','#FCB42C','#535F7C'),
+										col = adjustcolor("white", alpha.f = 0), # trick for PNGs, to show what is underneath the boxplot else can be taken out
+										#outcol="darkgrey",boxcol='darkgrey',whiskcol='darkgrey',staplecol='darkgrey',medcol='darkgrey', 
+										#par(bty='l'),
+										add=TRUE
+										)					
+					text(0.1,30, expression(bold('c')),cex=0.6)
+					#text(x=0.3,y=30*0.97, labels='\u2640', col='#FCB42C', cex=0.6, pos=4)
+					#text(x=0.3+0.2,y=30, labels='\u2642', col='#535F7C', cex=0.6, pos=4)
+					#text(x=0.3,y=30*0.88, labels="Prediction & 95%CrI", col='red', cex=0.5, pos=4)
+					#mtext("Prediction\n95%CrI",side=3,line=-1.5, cex=0.5, las=1, col='red')
+					#axis(1, at=c(1.5,4.2, 6.9), labels=FALSE)
+					
+					#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels 
+					#text(c(1.5,4.2), par("usr")[3]-0.25, labels = c('Before nest relief','Control'),  xpd = TRUE, cex=0.5, col="grey30")
+					#mtext("Pushed off the nest",side=1,line=0, cex=0.6, las=1, col='grey30')
+					
+					mtext("Time to nest relief [min]",side=2,line=1, cex=0.55, las=3, col='grey30')
+					
+					# predictions	
+						points(y=pc$pred,x=c(1.5,4.2), pch=20, cex=0.9,col="red")
+					# 95%CI 
+						arrows(x0=c(1.5,4.2), y0=pc$lwr,x1=c(1.5,4.2), y1=pc$upr,
+						code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
+				}				
+				 {# fly
+				 	{# prepare for plotting
+				k=0.1 
+				kk=k*2# distance for boxplots
+				kkk=k*2 # distance for points
+				bff$type_sex=ifelse(bff$type=='ex',ifelse(bff$sex=='f', 1-k,k+1),
+								ifelse(bff$sex=='f', 4-k,k+4))
+				x = bff
+				x$col_=ifelse(x$sex=='f','#FCB42C', '#535F7C')	
+				x$at=ifelse(x$type=='ex',ifelse(x$sex=='f', 1-kkk,2+kkk),
+								ifelse(x$sex=='f', 3.7-kkk,4.7+kkk))	
+				
+				}	
+				
+				 boxplot(deltaT ~ type_sex, data = bff, 
+										#ylab =NULL, 
+										xaxt='n',
+										#yaxt='n',
+										ylim=c(0,30),
+										par(bty='n'),
+										#at=c(1,2,3.5,4.5),
+										at=c(1,2,3.7,4.7), type='n',
+										outcex=0.5, outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1, 
+										lwd = 0.25, 
+										#ylim=c(0,1),
+										outcol="white",boxcol='white',whiskcol='white',staplecol='white',medcol='white'
+										) # col=z_g$cols, border=z_g$cols
+										
+								
+				for (i in 1:nrow(x)){stripchart(x$deltaT[i]~ factor(x$type_sex[i]), at = x$at[i],
+											#bg = x$col_[i],
+											col="gray63",
+											#col = x$col_[i],
+											bg = adjustcolor(x$col_[i], alpha.f = 0.4),
+											pch =21, cex=0.5,
+											vertical = TRUE, add = TRUE, method = "jitter") 
+											}
+					
+				boxplot(deltaT ~ type_sex, data = bff, 
+										ylab = NULL,xaxt='n', yaxt='n',
+										#at=c(1,2,3.5,4.5),
+										at=c(1+kk,2-kk,3.7+kk,4.7-kk),
+										type='n',
+										outcex=0.5,outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1, 
+										lwd = 1,
+										border=c('#FCB42C','#535F7C','#FCB42C','#535F7C'),
+										col = adjustcolor("white", alpha.f = 0), # trick for PNGs, to show what is underneath the boxplot else can be taken out
+										#outcol="darkgrey",boxcol='darkgrey',whiskcol='darkgrey',staplecol='darkgrey',medcol='darkgrey', 
+										#par(bty='l'),
+										add=TRUE
+										)					
+					
+					text(0.1,30, expression(bold('d')),cex=0.6)
+					#text(x=0.3,y=30*0.97, labels='\u2640', col='#FCB42C', cex=0.6, pos=4)
+					#text(x=0.3+0.2,y=30, labels='\u2642', col='#535F7C', cex=0.6, pos=4)
+					#text(x=0.3,y=30*0.88, labels="Prediction & 95%CrI", col='red', cex=0.5, pos=4)
+					#mtext("Prediction\n95%CrI",side=3,line=-1.5, cex=0.5, las=1, col='red')
+					#axis(1, at=c(1.5,4.2, 6.9), labels=FALSE)
+					
+					#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels 
+					text(c(1.5,4.2), par("usr")[3]-0.25, labels = c('Before nest relief','Control'),  xpd = TRUE, cex=0.5, col="grey30")
+					#mtext("Pushed off the nest",side=1,line=0, cex=0.6, las=1, col='grey30')
+					
+					mtext("Time to nest relief [min]",side=2,line=1, cex=0.55, las=3, col='grey30')
+					
+					# predictions	
+						points(y=pp$pred,x=c(1.5,4.2), pch=20, cex=0.9,col="red")
+					# 95%CI 
+						arrows(x0=c(1.5,4.2), y0=pp$lwr,x1=c(1.5,4.2), y1=pp$upr,
+						code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
+				}				
+			 
+				 if(PNG == TRUE) {dev.off()}
+			}
+			   {# plot - OLD LATER DELETE
 				 if(PNG == TRUE) {
 					png(paste(outdir,"Figure_2ab_.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
 					}else{
@@ -1265,7 +1462,7 @@
 				
 				 par(mfrow=c(2,1),mar=c(0.25,0,0,3.5),oma = c(2.1, 2.3, 0.2, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
 				 {# calls
-					plot(u$m~u$type_j, xlim=c(2-0.044,2+0.044), ylim=c(0,1),xaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
+					boxplot(boo$deltaT~boo$type,  ylim=c(0,30),xaxt='n',  ylab = "Time to nest relief [min]",xlab = NULL,type='n')
 						
 						lines(y=c(1,1),x=c(2-0.048,2+0.044), lty = 3,col="grey70")
 						text(y=c(1),x=c(2+0.036), labels = 'Start of observation', col="grey70",xpd=TRUE, cex=0.5,pos=4)
@@ -1330,6 +1527,8 @@
 				{# Supplementary Table 2
 				  {# prepare table data	
 					{# calling simple
+					m = lmer(deltaT/obs_time ~ type+(1|nest_ID) , boo)
+					m = lmer(deltaT ~ type+(1|nest_ID) , boo)
 					m = lmer(deltaT/obs_time ~ 1+(1|nest_ID) , bo_)
 						pred=c('Intercept')
 						nsim <- 5000
@@ -1352,6 +1551,7 @@
 				}
 					{# calling sex
 					m = lmer(deltaT/obs_time ~ sex+(1|nest_ID) , bo_)
+					m = lmer(deltaT/obs_time ~ type*sex+(1|nest_ID) , boo)
 						pred=c('Intercept (f)', 'sex(m)')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
@@ -1373,6 +1573,9 @@
 				}
 					{# fly-off simple
 					m = lmer(deltaT/obs_time ~ 1+(1|nest_ID) , bf)
+					m = lmer(deltaT/obs_time ~ type+(1|nest_ID) , bff)
+					m = lmer(deltaT ~ type+(1|nest_ID) , bff)
+					m = lmer(deltaT ~ type+(1|nest_ID) , bff[bff$obs_time>25,])
 						pred=c('Intercept')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
@@ -1392,7 +1595,7 @@
 						ri=data.frame(model='3',dependent = 'proportion of observation period fly-off occured', type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
 					o3=rbind(oii,ri)
 				}
-					{# calling sex
+					{# fly-off sex
 					m = lmer(deltaT/obs_time ~ sex+(1|nest_ID) , bf)
 						pred=c('Intercept (f)', 'sex(m)')
 						nsim <- 5000
