@@ -1527,10 +1527,8 @@
 				{# Supplementary Table 2
 				  {# prepare table data	
 					{# calling simple
-					m = lmer(deltaT/obs_time ~ type+(1|nest_ID) , boo)
 					m = lmer(deltaT ~ type+(1|nest_ID) , boo)
-					m = lmer(deltaT/obs_time ~ 1+(1|nest_ID) , bo_)
-						pred=c('Intercept')
+						pred=c('Intercept(ex)','non')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
 					# Fixed effects
@@ -1550,9 +1548,8 @@
 					o1=rbind(oii,ri)
 				}
 					{# calling sex
-					m = lmer(deltaT/obs_time ~ sex+(1|nest_ID) , bo_)
-					m = lmer(deltaT/obs_time ~ type*sex+(1|nest_ID) , boo)
-						pred=c('Intercept (f)', 'sex(m)')
+					m = lmer(deltaT ~ type*sex+(1|nest_ID) , boo)
+						pred=c('Intercept (ex,f)', 'type(non)','sex(m)','type:sex')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
 					# Fixed effects
@@ -1572,11 +1569,8 @@
 					o2=rbind(oii,ri)
 				}
 					{# fly-off simple
-					m = lmer(deltaT/obs_time ~ 1+(1|nest_ID) , bf)
-					m = lmer(deltaT/obs_time ~ type+(1|nest_ID) , bff)
 					m = lmer(deltaT ~ type+(1|nest_ID) , bff)
-					m = lmer(deltaT ~ type+(1|nest_ID) , bff[bff$obs_time>25,])
-						pred=c('Intercept')
+						pred=c('Intercept(ex)','non')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
 					# Fixed effects
@@ -1596,8 +1590,8 @@
 					o3=rbind(oii,ri)
 				}
 					{# fly-off sex
-					m = lmer(deltaT/obs_time ~ sex+(1|nest_ID) , bf)
-						pred=c('Intercept (f)', 'sex(m)')
+					m = lmer(deltaT/obs_time ~ type*sex+(1|nest_ID) , bff)
+						pred=c('Intercept (ex,f)', 'type(non)','sex(m)','type:sex')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
 					# Fixed effects
