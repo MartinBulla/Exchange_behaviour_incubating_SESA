@@ -11,6 +11,7 @@
 	     wd = "/Users/martinbulla/Dropbox/Science/MS/Exchanges_SESA/Analyses/Data/"# "C:/Users/mbulla/Documents/Dropbox/Science/MS/Exchanges_SESA/Database/"
 		 wd2 = "/Users/martinbulla/Dropbox/Science/MS/Exchanges_SESA/Analyses/R/"		 
 	     outdir = "/Users/martinbulla/Dropbox/Science/MS/Exchanges_SESA/Analyses/plots/" 
+	     ta = "/Users/martinbulla/Dropbox/Science/MS/Exchanges_SESA/Analyses/Tables/" 
 		 #wd2 = "C:/Users/mbulla/Documents/Dropbox/Science/MS/Exchanges_SESA/Analyses/"		 
 	     #outdir = "C:/Users/mbulla/Documents/Dropbox/Science/MS/Exchanges_SESA/Analyses/plots/" 
 		#wd = "C:/Users/OWNER/Dropbox/exchanges_SESA/Database/"	
@@ -276,236 +277,224 @@
 				l=l[is.na(l$var2),]
 					ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
 					ri$estimate_r = paste(ri$estimate_r,"%",sep='')
-				o4=rbind(oii,ri)
-	  
-	  {# create xlsx table		
+				o4=rbind(oii,ri) 
+	  # create xlsx table		
 				o=rbind(o1,o2,o3,o4)
-				sname = tempfile(fileext='.xls')
-				wb = loadWorkbook(sname,create = TRUE)	
-				createSheet(wb, name = "output")
-				writeWorksheet(wb, o, sheet = "output")
-				#createSheet(wb, name = "output_AIC")
-				#writeWorksheet(wb, rbind(o), sheet = "output_AIC")
-				saveWorkbook(wb)
-				shell(sname)
-		}
-	 }
-		 	{# model assumptions
-				{# presence before exchange
-					 m = lmer(pa~ sex*day_j+(day_j|nest_ID), dd)
-							
-					
-								#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
-								  dev.new(width=6,height=9)
-								  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-								 
-								  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-								  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-								  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
-								  qqline(resid(m))
-								  
-								  x = data.frame(fit =fitted(m),res = resid(m))
-								  scatter.smooth(x$fit[x$fit<400],x$res[x$fit<400],col='red');abline(h=0, lty=2)
-								  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-								  
-								  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
-								  qqline(unlist(ranef(m)$nest_ID [1]))
-								  
-								  qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
-								  qqline(unlist(ranef(m)$nest_ID[2]))
-								  
-								  scatter.smooth(resid(m)~dd$day_j);abline(h=0, lty=2, col='red')
-								  scatter.smooth(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
-								  boxplot(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
-								  
-								   mtext("lmer(log(pad)~ sex*day_j+(day_j|nest_ID), dd)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-								   
-								    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-								  # spatial autocorrelations - nest location
-									spdata=data.frame(resid=resid(m), x=dd$lon, y=dd$lat)
-										spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-										#cex_=c(1,2,3,3.5,4)
-										cex_=c(1,1.5,2,2.5,3)
-										spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-										plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-										legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-										
-										plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-										plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-							
-						dev.off()
-				}
-				{# arrival
-					m = lmer(log(arrival) ~ left_type + sex*day_j+(day_j|nest_ID), dd)
-													
-								  dev.new(width=6,height=9)
-								  #png(paste(outdir,"model_ass/Supplementary_Table_3b_.png", sep=""), width=6,height=9,units="in",res=600)
-								  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-								 								  
-								  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-								  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-								  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
-								  qqline(resid(m))
-								  
-								  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
-								  qqline(unlist(ranef(m)$nest_ID [1]))
-								  
-								  qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
-								  qqline(unlist(ranef(m)$nest_ID[2]))
-								  
-								  scatter.smooth(resid(m)~dd$day_j);abline(h=0, lty=2, col='red')
-								  scatter.smooth(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
-								  boxplot(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
-								  
-								  scatter.smooth(resid(m)~dd$left_type);abline(h=0, lty=2, col='red')
-								  boxplot(resid(m)~dd$left_type);abline(h=0, lty=2, col='red')
-								   mtext("lmer(log(arrival) ~ left_type + sex*day_j+(day_j|nest_ID), dd)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-								   
-								    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-								  # spatial autocorrelations - nest location
-									spdata=data.frame(resid=resid(m), x=dd$lon, y=dd$lat)
-										spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-										#cex_=c(1,2,3,3.5,4)
-										cex_=c(1,1.5,2,2.5,3)
-										spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-										plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-										legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-										
-										plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-										plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-							
-						dev.off()
-				}
-				{# gap
-					 m = lmer(log(gap)~ sex*day_j+(day_j|nest_ID), dd)
-								 dev.new(width=6,height=9)
-								#png(paste(outdir,"model_ass/Supplementary_Table_3c.png", sep=""), width=6,height=9,units="in",res=600)
-								  
-								  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-								 								  
-								  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-								  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-								  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
-								  qqline(resid(m))
-								  
-								  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
-								  qqline(unlist(ranef(m)$nest_ID [1]))
-								  
-								  qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
-								  qqline(unlist(ranef(m)$nest_ID[2]))
-								  
-								  scatter.smooth(resid(m)~dd$day_j);abline(h=0, lty=2, col='red')
-								  scatter.smooth(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
-								  boxplot(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
-								  
-								   mtext("lmer(log(gap)~ sex*day_j+(day_j|nest_ID), dd)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-								   
-								    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-								  # spatial autocorrelations - nest location
-									spdata=data.frame(resid=resid(m), x=dd$lon, y=dd$lat)
-										spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-										#cex_=c(1,2,3,3.5,4)
-										cex_=c(1,1.5,2,2.5,3)
-										spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-										plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-										legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-										
-										plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-										plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-							
-						dev.off()
-				}
-				{# presence before exchange
-					 m = lmer(both ~ sex*push + sex*day_j+(as.numeric(push)|bird_ID) + (1|nest_ID), eb)
+				sname = 'Table_S3'
+				tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
+				openFile(tmp)
+				"mydata.xlsx")
+	
+	  # model assumptions
+			# presence before exchange
+				 m = lmer(pa~ sex*day_j+(day_j|nest_ID), dd)
+						
+				
+							#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
+							  dev.new(width=6,height=9)
+							  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+							 
+							  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+							  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+							  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+							  qqline(resid(m))
+							  
+							  x = data.frame(fit =fitted(m),res = resid(m))
+							  scatter.smooth(x$fit[x$fit<400],x$res[x$fit<400],col='red');abline(h=0, lty=2)
+							  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+							  
+							  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+							  qqline(unlist(ranef(m)$nest_ID [1]))
+							  
+							  qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
+							  qqline(unlist(ranef(m)$nest_ID[2]))
+							  
+							  scatter.smooth(resid(m)~dd$day_j);abline(h=0, lty=2, col='red')
+							  scatter.smooth(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+							  boxplot(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+							  
+							   mtext("lmer(log(pad)~ sex*day_j+(day_j|nest_ID), dd)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+							   
+							    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+							  # spatial autocorrelations - nest location
+								spdata=data.frame(resid=resid(m), x=dd$lon, y=dd$lat)
+									spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+									#cex_=c(1,2,3,3.5,4)
+									cex_=c(1,1.5,2,2.5,3)
+									spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+									plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+									legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+									
+									plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+									plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+						
+					dev.off()
+			# arrival
+				m = lmer(log(arrival) ~ left_type + sex*day_j+(day_j|nest_ID), dd)
+												
+							  dev.new(width=6,height=9)
+							  #png(paste(outdir,"model_ass/Supplementary_Table_3b_.png", sep=""), width=6,height=9,units="in",res=600)
+							  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+							 								  
+							  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+							  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+							  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+							  qqline(resid(m))
+							  
+							  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+							  qqline(unlist(ranef(m)$nest_ID [1]))
+							  
+							  qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
+							  qqline(unlist(ranef(m)$nest_ID[2]))
+							  
+							  scatter.smooth(resid(m)~dd$day_j);abline(h=0, lty=2, col='red')
+							  scatter.smooth(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+							  boxplot(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+							  
+							  scatter.smooth(resid(m)~dd$left_type);abline(h=0, lty=2, col='red')
+							  boxplot(resid(m)~dd$left_type);abline(h=0, lty=2, col='red')
+							   mtext("lmer(log(arrival) ~ left_type + sex*day_j+(day_j|nest_ID), dd)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+							   
+							    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+							  # spatial autocorrelations - nest location
+								spdata=data.frame(resid=resid(m), x=dd$lon, y=dd$lat)
+									spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+									#cex_=c(1,2,3,3.5,4)
+									cex_=c(1,1.5,2,2.5,3)
+									spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+									plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+									legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+									
+									plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+									plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+						
+					dev.off()
+			# gap
+				 m = lmer(log(gap)~ sex*day_j+(day_j|nest_ID), dd)
 							 dev.new(width=6,height=9)
-							#png(paste(outdir,"model_ass/Supplementary_Table_3d.png", sep=""), width=6,height=9,units="in",res=600)
-								  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-								 
-								  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-								  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red');abline(h=0, lty=2)
-								  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
-								  qqline(resid(m))
-								  
-								  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
-								  qqline(unlist(ranef(m)$nest_ID [1]))
-								  
-								  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
-								  qqline(unlist(ranef(m)$bird_ID [1]))
-								  
-								  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
-								  qqline(unlist(ranef(m)$bird_ID[2]))
-								  
-								  scatter.smooth(resid(m)~eb$day_j);abline(h=0, lty=2, col='red')
-								  scatter.smooth(resid(m)~eb$sex);abline(h=0, lty=2, col='red')
-								  boxplot(resid(m)~eb$sex);abline(h=0, lty=2, col='red')
-								  
-								  scatter.smooth(resid(m)~eb$push);abline(h=0, lty=2, col='red')
-								  boxplot(resid(m)~eb$push);abline(h=0, lty=2, col='red')
-								  
-								   mtext("lmer(both ~ sex*push + sex*day_j+(as.numeric(push)|bird_ID) + (1|nest_ID), eb)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-								   
-								    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-								  # spatial autocorrelations - nest location
-									spdata=data.frame(resid=resid(m), x=eb$lon, y=eb$lat)
-										spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-										#cex_=c(1,2,3,3.5,4)
-										cex_=c(1,1.5,2,2.5,3)
-										spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-										plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-										legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-										
-										plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-										plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-							
-						dev.off()
-				}
-				{# presence before exchange log - worse fit
-					 m = lmer(log(both) ~ sex*push + sex*day_j+(as.numeric(push)|bird_ID) + (1|nest_ID), eb)
-							 dev.new(width=6,height=9)
-							#png(paste(outdir,"model_ass/Supplementary_Table_3d_log.png", sep=""), width=6,height=9,units="in",res=600)
-								  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-								 
-								  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-								  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red');abline(h=0, lty=2)
-								  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
-								  qqline(resid(m))
-								  
-								  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
-								  qqline(unlist(ranef(m)$nest_ID [1]))
-								  
-								  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
-								  qqline(unlist(ranef(m)$bird_ID [1]))
-								  
-								  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
-								  qqline(unlist(ranef(m)$bird_ID[2]))
-								  
-								  scatter.smooth(resid(m)~eb$day_j);abline(h=0, lty=2, col='red')
-								  scatter.smooth(resid(m)~eb$sex);abline(h=0, lty=2, col='red')
-								  boxplot(resid(m)~eb$sex);abline(h=0, lty=2, col='red')
-								  
-								  scatter.smooth(resid(m)~eb$push);abline(h=0, lty=2, col='red')
-								  boxplot(resid(m)~eb$push);abline(h=0, lty=2, col='red')
-								  
-								   mtext("lmer(log(both) ~ sex*push + sex*day_j+(as.numeric(push)|bird_ID) + (1|nest_ID), eb)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-								   
-								    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-								  # spatial autocorrelations - nest location
-									spdata=data.frame(resid=resid(m), x=eb$lon, y=eb$lat)
-										spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-										#cex_=c(1,2,3,3.5,4)
-										cex_=c(1,1.5,2,2.5,3)
-										spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-										plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-										legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-										
-										plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-										plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-							
-						dev.off()
-				}
-			}
-	 {# Figure 2
-		{# prepare for plotting
+							#png(paste(outdir,"model_ass/Supplementary_Table_3c.png", sep=""), width=6,height=9,units="in",res=600)
+							  
+							  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+							 								  
+							  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+							  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+							  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+							  qqline(resid(m))
+							  
+							  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+							  qqline(unlist(ranef(m)$nest_ID [1]))
+							  
+							  qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
+							  qqline(unlist(ranef(m)$nest_ID[2]))
+							  
+							  scatter.smooth(resid(m)~dd$day_j);abline(h=0, lty=2, col='red')
+							  scatter.smooth(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+							  boxplot(resid(m)~dd$sex);abline(h=0, lty=2, col='red')
+							  
+							   mtext("lmer(log(gap)~ sex*day_j+(day_j|nest_ID), dd)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+							   
+							    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+							  # spatial autocorrelations - nest location
+								spdata=data.frame(resid=resid(m), x=dd$lon, y=dd$lat)
+									spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+									#cex_=c(1,2,3,3.5,4)
+									cex_=c(1,1.5,2,2.5,3)
+									spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+									plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+									legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+									
+									plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+									plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+						
+					dev.off()
+			# presence before exchange
+				 m = lmer(both ~ sex*push + sex*day_j+(as.numeric(push)|bird_ID) + (1|nest_ID), eb)
+						 dev.new(width=6,height=9)
+						#png(paste(outdir,"model_ass/Supplementary_Table_3d.png", sep=""), width=6,height=9,units="in",res=600)
+							  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+							 
+							  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+							  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red');abline(h=0, lty=2)
+							  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+							  qqline(resid(m))
+							  
+							  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+							  qqline(unlist(ranef(m)$nest_ID [1]))
+							  
+							  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
+							  qqline(unlist(ranef(m)$bird_ID [1]))
+							  
+							  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
+							  qqline(unlist(ranef(m)$bird_ID[2]))
+							  
+							  scatter.smooth(resid(m)~eb$day_j);abline(h=0, lty=2, col='red')
+							  scatter.smooth(resid(m)~eb$sex);abline(h=0, lty=2, col='red')
+							  boxplot(resid(m)~eb$sex);abline(h=0, lty=2, col='red')
+							  
+							  scatter.smooth(resid(m)~eb$push);abline(h=0, lty=2, col='red')
+							  boxplot(resid(m)~eb$push);abline(h=0, lty=2, col='red')
+							  
+							   mtext("lmer(both ~ sex*push + sex*day_j+(as.numeric(push)|bird_ID) + (1|nest_ID), eb)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+							   
+							    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+							  # spatial autocorrelations - nest location
+								spdata=data.frame(resid=resid(m), x=eb$lon, y=eb$lat)
+									spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+									#cex_=c(1,2,3,3.5,4)
+									cex_=c(1,1.5,2,2.5,3)
+									spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+									plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+									legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+									
+									plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+									plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+						
+					dev.off()
+			# presence before exchange log - worse fit
+				 m = lmer(log(both) ~ sex*push + sex*day_j+(as.numeric(push)|bird_ID) + (1|nest_ID), eb)
+						 dev.new(width=6,height=9)
+						#png(paste(outdir,"model_ass/Supplementary_Table_3d_log.png", sep=""), width=6,height=9,units="in",res=600)
+							  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+							 
+							  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+							  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red');abline(h=0, lty=2)
+							  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+							  qqline(resid(m))
+							  
+							  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+							  qqline(unlist(ranef(m)$nest_ID [1]))
+							  
+							  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
+							  qqline(unlist(ranef(m)$bird_ID [1]))
+							  
+							  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
+							  qqline(unlist(ranef(m)$bird_ID[2]))
+							  
+							  scatter.smooth(resid(m)~eb$day_j);abline(h=0, lty=2, col='red')
+							  scatter.smooth(resid(m)~eb$sex);abline(h=0, lty=2, col='red')
+							  boxplot(resid(m)~eb$sex);abline(h=0, lty=2, col='red')
+							  
+							  scatter.smooth(resid(m)~eb$push);abline(h=0, lty=2, col='red')
+							  boxplot(resid(m)~eb$push);abline(h=0, lty=2, col='red')
+							  
+							   mtext("lmer(log(both) ~ sex*push + sex*day_j+(as.numeric(push)|bird_ID) + (1|nest_ID), eb)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+							   
+							    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+							  # spatial autocorrelations - nest location
+								spdata=data.frame(resid=resid(m), x=eb$lon, y=eb$lat)
+									spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+									#cex_=c(1,2,3,3.5,4)
+									cex_=c(1,1.5,2,2.5,3)
+									spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+									plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+									legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+									
+									plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+									plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+						
+					dev.off()				
+	# Figure 2
+	  # prepare for plotting
 			k=0.1 
 			kk=k*2# distance for boxplots
 			kkk=k*2 # distance for points
@@ -520,8 +509,8 @@
 			
 			
 			}	
-		{# prepare model predictions
-			   m = lmer(both ~ sex*push + sex*day_j+(as.numeric(as.factor(push))|bird_ID) + (1|nest_ID), ebb)
+	  # prepare model predictions
+			m = lmer(both ~ sex*push + sex*day_j+(as.numeric(as.factor(push))|bird_ID) + (1|nest_ID), ebb)
 					nsim <- 5000
 					bsim <- sim(m, n.sim=nsim)  
 			# coefficients
@@ -545,18 +534,16 @@
 				pp=newD	
 				pt_=pp[pp$push=='y',]
 				pc_=pp[pp$push=='n',]
-					
-		}
-		{# plot
-		if(PNG == TRUE) {
+	  # plot
+		 if(PNG == TRUE) {
 				#png(paste(outdir,"Figure_2_new_mac.png", sep=""), width=1.85+0.6,height=1.5,units="in",res=600) 
 				quartz(file = paste(outdir,"Figure_2_new_mac.png", sep=""), type = "png", width=1.85+0.6,height=1.5, dpi = 600)
 				}else{
 				dev.new(width=1.85+0.6,height=1.5)
 				}	
-		#par(mar=c(0.8,0,0,2.5),oma = c(0.7, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey40", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
-		par(mar=c(0.3,0,0,1.2),oma = c(1.2, 1.7, 0.1, 2.4),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5)
-		#par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 2.2, 0.2, 2.4),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5) 			
+		 #par(mar=c(0.8,0,0,2.5),oma = c(0.7, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey40", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+		 par(mar=c(0.3,0,0,1.2),oma = c(1.2, 1.7, 0.1, 2.4),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5)
+		 #par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 2.2, 0.2, 2.4),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5) 			
 			boxplot(both ~ push_sex, data = ebb, 
 									#ylab =NULL, 
 									xaxt='n',
@@ -618,10 +605,8 @@
 					code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
 							
 			 if(PNG == TRUE) {dev.off()}
-		}
-	}
- }
-	  
+			 
+   #### CONTINUE HERE
 	  {# calling - how laud is the exchange?
 		  {# run first
 			d1 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_1'))
