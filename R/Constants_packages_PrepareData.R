@@ -4,7 +4,7 @@
 	}
 	
 	{# load packages
-		sapply(c('alluvial','arm','blmeco','effects', 'data.table','ggplot2','grid', 'lattice','magrittr','matrixStats','multcomp','pastecs','plyr','raster','readxl','stringr', 'writexl'), #XLConnect
+		sapply(c('alluvial','arm','blmeco','effects', 'data.table','ggplot2','grid', 'lattice','magrittr','matrixStats','multcomp','pastecs', 'PBSmodelling','plyr','raster','readxl','stringr', 'writexl'), #XLConnect
     		function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE) ))
 
 	}

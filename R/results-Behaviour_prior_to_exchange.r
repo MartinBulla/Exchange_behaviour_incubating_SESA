@@ -227,7 +227,7 @@
 				}			
 			}
 	
-			{# Supplementery Table S1 - if you keep only one random slope - do not report it - just state it in the Table notes
+			{# Table S1 - if you keep only one random slope - do not report it - just state it in the Table notes
 			  {# prepare table data
 				{# calling - type
 				m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
@@ -316,15 +316,10 @@
 				}	
 			  }
 			  {# create xlsx table		
-						o=rbind(o1,o2,o3,o4)
-						sname = tempfile(fileext='.xls')
-						wb = loadWorkbook(sname,create = TRUE)	
-						createSheet(wb, name = "output")
-						writeWorksheet(wb, o, sheet = "output")
-						#createSheet(wb, name = "output_AIC")
-						#writeWorksheet(wb, rbind(o), sheet = "output_AIC")
-						saveWorkbook(wb)
-						shell(sname)
+					o=rbind(o1,o2,o3,o4)
+					sname = 'Table_S1'
+					tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
+					openFile(tmp)
 				}
 			}
 				{# model assumptions
@@ -811,7 +806,7 @@
 			}
 			   }
 					
-				{# Supplementary Table S2
+				{# Table S2
 				  {# prepare table data	
 					{# calling simple
 					m = lmer(deltaT ~ type+(1|nest_ID/obs_ID) , boo)
@@ -903,15 +898,10 @@
 				}
 			      }
 				  {# create xlsx table		
-						o=rbind(o1,o2,o3,o4)
-						sname = tempfile(fileext='.xls')
-						wb = loadWorkbook(sname,create = TRUE)	
-						createSheet(wb, name = "output")
-						writeWorksheet(wb, o, sheet = "output")
-						#createSheet(wb, name = "output_AIC")
-						#writeWorksheet(wb, rbind(o), sheet = "output_AIC")
-						saveWorkbook(wb)
-						shell(sname)
+					  o=rbind(o1,o2,o3,o4)
+					  sname = 'Table_S2'
+					  tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
+					  openFile(tmp)
 				}
 				}
 				   {# model assumptions
