@@ -2,6 +2,8 @@
 	# SEX in the loaded data refers to the INCUBATING PARENT (in time series of the one showing the behaviour
 
 ##### add this to Supp table ri$estimate_r = paste(ri$estimate_r,"%",sep='')
+##### check descriptive part - calling correlations
+##### check and likely delete ex, and ex_ datasets
 
 # SETTINGS & DATA
     # do you want plots in R (PNG=FALSE) or as PNG (PNG = TRUE)?
@@ -848,42 +850,7 @@
 				 if(PNG == TRUE) {dev.off()}
 
   # calling - how laud is the exchange?
-		# run first
-			d1 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_1'))
-				colnames(d1)[7] = 'call_int'
-				d1$type = '1 both present'
-				d1$who = 'both'
-				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
-				#d1[is.na(d1$call_int), ]
-			d01 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_c_int'))
-				colnames(d01)[7] = 'call_int'
-				d01$type = '1 both present'
-				d01$who = 'returning'
-				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
-				#d1[is.na(d1$call_int), ]
-			d02 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_o_int'))
-				colnames(d02)[7] = 'call_int'
-				d02$type = '1 both present'
-				d02$who = 'incubating'
-				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
-				#d1[is.na(d1$call_int), ]
-			d2 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c2'))
-				colnames(d2)[7] = 'call_int'
-				d2$type = '2 exchange gap'
-				d2$who = 'returning'
-				#d2$obs_ID[is.na(d2$call_int) & d2$sound_ok == 'y']
-				#d2[is.na(d2$call_int), ]
-
-			d3 = subset(ex_,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c3'))
-				colnames(d3)[7] = 'call_int'
-				d3$type = '3 after on nest'
-				d3$who = 'returning'
-				#d3$obs_ID[is.na(d3$call_int) & d3$sound_ok == 'y']
-				#d3[is.na(d2$call_int), ]
-			di = rbind(d1,d01,d02,d2,d3)
-			di = di[!is.na(di$call_int),]
-			#di$left_before = d$left_before_presence [match(di$obs_ID, d$obs_ID)]
-		# distribution
+		# distributions
 			# calling while initiating nest exchange
 				# overall
 				summary(factor(dd$with_calling))
@@ -915,30 +882,31 @@
 				summary(dry$sex)
 				length(unique(dry$nest[dry$sex == 'f']))
 				length(unique(dry$nest[dry$sex == 'm']))
+		    # returning parent is quiet
+		    	# all cases
+		    	x = dd[-which(is.na(dd$with_calling) | is.na(dd$call_c_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
+				nrow(x)
+					
+				nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
+				
+				# cases were incubating left only after the returning arrived
+				x = dd[-which(is.na(dd$with_calling) | is.na(dd$call_c_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
+				x = x[x$left_before_presence=="n",]
+				nrow(x)
+				nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
 
-		    # strategies
-					x = ex_[-which(is.na(ex_$with_calling) | is.na(ex_$call_c_int) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_c3)),]
-					nrow(x)
-					# no calling at all
-					nrow(x[which(ex_$with_calling == 'n' & ex_$call_c_int ==0 & ex_$call_int_c2 == 0  & ex_$call_int_c3 == 0),])/nrow(x)
+		   # correlations - TO BE CHECKED
+				cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="pearson")
+				cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="spearman")
 
-					# 3-2-0
-					nrow(x[which(ex_$with_calling == 'n' & ex_$call_c_int ==0 & ex_$call_int_c2 == 0  & ex_$call_int_c3 == 0),])/nrow(x)
-
-		   # correlations
-					cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="pearson")
-					cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="spearman")
-
-					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int)),]
-					cor(subset(f,select = c('day_j','call_o_int')),use="pairwise.complete.obs", method="spearman")
-					cor(subset(f,select = c('day_j','call_o_int')),use="pairwise.complete.obs", method="pearson")
-
-				  	ggplot(di, aes(x = call_int, fill = as.factor(call_int))) +
-					geom_bar(position=position_dodge()) +
-					facet_wrap(~type, nrow=5) +
-					scale_fill_brewer(palette = "Blues")
-
-
+				f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int)),]
+				cor(subset(f,select = c('day_j','call_o_int')),use="pairwise.complete.obs", method="spearman")
+				cor(subset(f,select = c('day_j','call_o_int')),use="pairwise.complete.obs", method="pearson")
+				  	
+				ggplot(di, aes(x = call_int, fill = as.factor(call_int))) +
+				geom_bar(position=position_dodge()) +
+				facet_wrap(~type, nrow=5) +
+				scale_fill_brewer(palette = "Blues")
 
 				ggplot(di, aes(y = call_int, x = as.numeric(as.factor(type)), col=factor(obs_ID))) + geom_line()
 
@@ -957,56 +925,98 @@
 				ggplot(ex_,aes(y=call_int_1, x=day_j, col=nest))+geom_point()+stat_smooth(method="lm", se=FALSE)
 
 	    # Figure 3abc
-			labels_ <- c(
-                    `1 both present` = "From initiation to leaving",
-                    `2 exchange gap` = "Exchange gap",
-                    `3 after on nest` = "After on nest"
-                    )
-			labels_abc <- c(
-                    `1 both present` = "a",
-                    `2 exchange gap` = "b",
-                    `3 after on nest` = "c"
-                    )
- 			#geom_text(aes(x, y,label=lab),	data=data.frame(x=3.5, y=100, who = c("both"), lab=c("a", "b", "c"), type=c("1 both present","2 exchange gap","3 after on nest")), size=2, colour = "grey30")
-			dev.new(width=1.85+1,height=1.5*2)
-			ggplot(di[!di$who =='both',], aes(x = call_int, fill = who)) +
-				geom_bar(position=position_dodge()) +
-				facet_wrap(~type, nrow=5, labeller = as_labeller(labels_)) +
-				ylab("Number of observations") +
-				xlab("Calling intensity") +
-				coord_cartesian(ylim = c(0, 100))+
-				guides(fill=guide_legend(title="Which parent:")) +
-				scale_fill_manual(values=c('#FCB42C','#535F7C')) +
-				theme_light()+
-									theme(	axis.line=element_line(colour="grey70", size=0.25),
-											#panel.border=element_rect(colour="white"),
-											panel.border=element_rect(colour="grey70", size=0.25),
-											panel.grid = element_blank(),
+			# prepare labels
+				labels_ <- c(
+	                    `1 both present` = "From initiation to leaving",
+	                    `2 exchange gap` = "Exchange gap",
+	                    `3 after on nest` = "After on nest"
+	                    )
+				labels_abc <- c(
+	                    `1 both present` = "a",
+	                    `2 exchange gap` = "b",
+	                    `3 after on nest` = "c"
+	                    )
+			# prepare data
+		    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+				d1 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_1'))
+					colnames(d1)[7] = 'call_int'
+					d1$type = '1 both present'
+					d1$who = 'both'
+					#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+					#d1[is.na(d1$call_int), ]
+				d01 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_c_int'))
+					colnames(d01)[7] = 'call_int'
+					d01$type = '1 both present'
+					d01$who = 'returning'
+					#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+					#d1[is.na(d1$call_int), ]
+				d02 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_o_int'))
+					colnames(d02)[7] = 'call_int'
+					d02$type = '1 both present'
+					d02$who = 'incubating'
+					#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+					#d1[is.na(d1$call_int), ]
+				d2 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c2'))
+					colnames(d2)[7] = 'call_int'
+					d2$type = '2 exchange gap'
+					d2$who = 'returning'
+					#d2$obs_ID[is.na(d2$call_int) & d2$sound_ok == 'y']
+					#d2[is.na(d2$call_int), ]
 
-											axis.title=element_text(size=7, colour="grey30"),
-											axis.title.y = element_text(vjust=1),
-											axis.title.x = element_text(vjust=0.2),
-											axis.text=element_text(size=6),# margin=units(0.5,"mm")),
-											axis.ticks.length=unit(0.5,"mm"),
-											#axis.ticks.margin,
+				d3 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c3'))
+					colnames(d3)[7] = 'call_int'
+					d3$type = '3 after on nest'
+					d3$who = 'returning'
+					#d3$obs_ID[is.na(d3$call_int) & d3$sound_ok == 'y']
+					#d3[is.na(d2$call_int), ]
+				di = rbind(d1,d01,d02,d2,d3)
+				di = di[!is.na(di$call_int),]
+				#di$left_before = d$left_before_presence [match(di$obs_ID, d$obs_ID)]
+ 			# plot
+ 				#geom_text(aes(x, y,label=lab),	data=data.frame(x=3.5, y=100, who = c("both"), lab=c("a", "b", "c"), type=c("1 both present","2 exchange gap","3 after on nest")), size=2, colour = "grey30")
+				dev.new(width=1.85+1,height=1.5*2)
+				ggplot(di[!di$who =='both',], aes(x = call_int, fill = who)) +
+					geom_bar(position=position_dodge()) +
+					facet_wrap(~type, nrow=5, labeller = as_labeller(labels_)) +
+					ylab("Number of observations") +
+					xlab("Calling intensity") +
+					coord_cartesian(ylim = c(0, 100))+
+					guides(fill=guide_legend(title="Which parent:")) +
+					scale_fill_manual(values=c('#FCB42C','#535F7C')) +
+					theme_light()+
+										theme(	axis.line=element_line(colour="grey70", size=0.25),
+												#panel.border=element_rect(colour="white"),
+												panel.border=element_rect(colour="grey70", size=0.25),
+												panel.grid = element_blank(),
 
-											strip.text.x =element_text(size = 6, color="grey30",  margin=margin(1,1,1,1,"mm")), #grey50
-											strip.background=element_rect(fill="grey99",colour="grey70", size=0.25),
-											#strip.background = element_blank(),
-											#strip.text = element_blank(),
-											panel.margin = unit(0, "mm"),
-											#legend.position="none"
-											legend.background=element_rect(colour="white"),
-											legend.key=element_rect(fill="grey99", colour="white"),
-											legend.text=element_text(size=7, colour="grey30"),
-											legend.title=element_text(size=7, colour="grey30")
-											)
-				ggsave(paste(outdir,"Figure_3abc.png", sep=""),width=1.85+1,height=1.5*2, units = "in")
-				#ggsave(paste(outdir,"Figure_4.eps", sep=""),width=1.85+1,height=1.5*2, units = "in")
+												axis.title=element_text(size=7, colour="grey30"),
+												axis.title.y = element_text(vjust=1),
+												axis.title.x = element_text(vjust=0.2),
+												axis.text=element_text(size=6),# margin=units(0.5,"mm")),
+												axis.ticks.length=unit(0.5,"mm"),
+												#axis.ticks.margin,
+
+												strip.text.x =element_text(size = 6, color="grey30",  margin=margin(1,1,1,1,"mm")), #grey50
+												strip.background=element_rect(fill="grey99",colour="grey70", size=0.25),
+												#strip.background = element_blank(),
+												#strip.text = element_blank(),
+												panel.margin = unit(0, "mm"),
+												#legend.position="none"
+												legend.background=element_rect(colour="white"),
+												legend.key=element_rect(fill="grey99", colour="white"),
+												legend.text=element_text(size=7, colour="grey30"),
+												legend.title=element_text(size=7, colour="grey30")
+												)
+				if(PNG==TRUE){ggsave(paste(outdir,"Figure_3abc.png", sep=""),width=1.85+1,height=1.5*2, units = "in")}
+					#ggsave(paste(outdir,"Figure_4.eps", sep=""),width=1.85+1,height=1.5*2, units = "in")
+		    # legend
+		    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+		    	nrow(dp)
+		    	length(unique(dp$nest))
 	    # Figure 3d
+			ex = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
 			ex$nn=1
-
-			a = ddply(ex[-which(is.na(ex$call_c_int)|is.na(ex$call_int_c2)|is.na(ex$call_int_c3)),],.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
+			a = ddply(xx,.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
 			a$sex = ifelse(a$sex == 'f', 'Male', 'Female') # to make sex of returning bird
 
 			if(PNG == TRUE) {
