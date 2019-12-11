@@ -40,7 +40,7 @@
 								ifelse(dd$dt_left < dd$dt_arrive, '2 while around','3 during exchange'))))
 
 		dd$left_before_presence = as.factor(dd$left_before_presence)
-		dd$sex_r = ifelse(dd$sex == 'f','m','f')
+		dd$sex_returning = ifelse(dd$sex == 'f','m','f')
 
 		# add colors for Figure Temp
 		  col_bef = col_m
@@ -186,12 +186,12 @@
 		# Table S3 - REDO
 		  # prepare table data
 			 # a. presence before exchange
-				    m = lmer(pa ~ sex_r*scale(day_j)+(day_j|nest_ID), dd)
+				    m = lmer(pa ~ sex_returning*scale(day_j)+(day_j|nest_ID), dd)
 							# binomial gives same results
 								#dd$pa_bin=ifelse(dd$pa == 0.001, 0,1)
 								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd)
 					#'plot(allEffects(m))
-					pred=c('Intercept (f)','Sex_r(m)', 'Day', 'Day:sex') # note that sex of returning bird is oposite of this
+					pred=c('Intercept (f)','sex_returning(m)', 'Day', 'Day:sex') # note that sex of returning bird is oposite of this
 					dep = 'presence'
 					mod = 1
 						nsim <- 5000
@@ -215,9 +215,9 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o1=rbind(oii,ri)
 			 # b. arrival
-				 	m = lmer(log(arrival) ~ left_type + sex_r*scale(day_j)+(scale(day_j)|nest_ID), dd)
+				 	m = lmer(log(arrival) ~ left_type + sex_returning*scale(day_j)+(scale(day_j)|nest_ID), dd)
 				 	#'plot(allEffects(m))
-					pred=c('Intercept (f & before)','Left between', 'Left after', 'Sex_r(m)', 'Day', 'Day:sex') # note that sex of returning bird is oposite of this
+					pred=c('Intercept (f & before)','Left between', 'Left after', 'sex_returning(m)', 'Day', 'Day:sex') # note that sex of returning bird is oposite of this
 					dep = 'log(arrival)'
 					mod = 2
 						nsim <- 5000
@@ -240,7 +240,7 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o2=rbind(oii,ri)
 			 # c. gap
-				  m = lmer(log(gap)~ sex_r*scale(day_j)+(day_j|nest_ID), dd)
+				  m = lmer(log(gap)~ sex_returning*scale(day_j)+(day_j|nest_ID), dd)
 				  #'plot(allEffects(m))
 				  #dd$capture=as.factor(dd$capture)
 				  #dd$cap=as.factor(ifelse(dd$capture%in%c(1,2,3,4), 'y','n'))
@@ -248,7 +248,7 @@
 				  #m = lmer(gap~ cap+sex*scale(day_j)+(day_j|nest_ID), dd)
 				  #m = lmer(log(gap)~ cap+sex*scale(day_j)+(day_j|nest_ID), dd)
 				  #m = lmer(log(gap)~ capture+sex*scale(day_j)+(day_j|nest_ID), dd)
-					pred=c('Intercept (f)','Sex_r(m)', 'Day', 'Day:sex') # note that sex of returning bird is oposite of this
+					pred=c('Intercept (f)','sex_returning(m)', 'Day', 'Day:sex') # note that sex of returning bird is oposite of this
 					dep = 'log(gap)'
 					mod = 3
 						nsim <- 5000
@@ -270,9 +270,9 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o3=rbind(oii,ri)
 			 # d. start to left
-				 m = lmer(both ~ sex_r*push + sex_r*scale(day_j)+(push01|bird_ID) + (1|nest_ID), eb)
+				 m = lmer(both ~ sex_returning*push + sex_returning*scale(day_j)+(push01|bird_ID) + (1|nest_ID), eb)
 				 #'plot(allEffects(m))
-					pred=c('Intercept (f & n)','Sex_r(m)','Push(y)', 'Day', 'Day:push', 'Day:sex') # sex of the pusing bird is the oposite of this
+					pred=c('Intercept (f & n)','sex_returning(m)','Push(y)', 'Day', 'Day:push', 'Day:sex') # sex of the pusing bird is the oposite of this
 					dep = 'both'
 					mod = 4
 						nsim <- 5000
@@ -507,23 +507,23 @@
 
 						dev.off()
 		# text data for 'd'
-		  		m = lmer(both ~ sex_r*push + day_j+(push01|bird_ID) + (1|nest_ID), eb)
+		  		m = lmer(both ~ sex_returning*push + day_j+(push01|bird_ID) + (1|nest_ID), eb)
 		  		nsim <- 5000
 				bsim <- sim(m, n.sim=nsim)
 		  		apply(bsim@fixef, 2, quantile, prob=c(0.025,0.5,0.975))
 
-		  		m = lmer(both ~ sex_r*push + sex_r*day_j+(push01|bird_ID) + (1|nest_ID), eb)
+		  		m = lmer(both ~ sex_returning*push + sex_returning*day_j+(push01|bird_ID) + (1|nest_ID), eb)
 		 		nsim <- 5000
 				bsim <- sim(m, n.sim=nsim)
 				v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
 		  	 	# values to predict for
 					newD=data.frame(push=0.5,
-									sex_r = 0.5,
+									sex_returning = 0.5,
 									day_j = seq(min(eb$day_j), max(eb$day_j), length.out = 100)
 									)
 
 				# exactly the model which was used has to be specified here
-				X <- model.matrix(~ sex_r*push + sex_r*day_j,data=newD)
+				X <- model.matrix(~ sex_returning*push + sex_returning*day_j,data=newD)
 
 				# calculate predicted values and creditability intervals
 					newD$pred <-(X%*%v)
@@ -1039,11 +1039,16 @@
 		# Table S4
 			# prepare table data
 				# a. calling while arriving
+					dx = dd[dd$left_before_presence=="n" & !is.na(dd$with_calling),]
+					dx$w_call = ifelse(dx$with_calling == 'y', 1, 0)
+					nrow(dx)
+					length(unique(dx$bird_ID))
+					length(unique(dx$nest_ID))
 					m = glmer(w_call ~ sex_returning*scale(day_j) + (1|bird_ID) + (1|nest_ID), dx, family = 'binomial')
 							# binomial gives same results
 								#dd$pa_bin=ifelse(dd$pa == 0.001, 0,1)
 								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd)
-					pred=c('Intercept (f)','Sex_returning(m)', 'Day', 'Day:sex')
+					pred=c('Intercept (f)','sex_returning(m)', 'Day', 'Day:sex')
 					dep = 'calling while arriving (bin)'
 					mod = 1
 						nsim <- 5000
@@ -1069,6 +1074,9 @@
 				# b. reply
 					dr= dd[dd$with_calling %in% c('y') & !is.na(dd$o_replies) & dd$left_type %in% c('2 while around', '3 during exchange')]
 					dr$reply = ifelse(dr$o_replies == 'y', 1, 0)
+					nrow(dr)
+					length(unique(dr$bird_ID))
+					length(unique(dr$nest_ID))
 					m = glmer(reply ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dr, family = 'binomial')
 					#m = glm(reply ~ scale(day_j) , dr, family = 'binomial') # gives same results
 					pred=c('Intercept (inc f)','Sex(m)','Day','Sex:Day')
@@ -1092,7 +1100,11 @@
 						#ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
 					o2=oii
 				# c. calling coming ~ calling incubating
-					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int)),]
+					f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_o_int) | dd$left_before_presence=="y"),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+					
 					m = lmer(call_c_int ~ sex + scale(call_o_int)*sex + scale(day_j)*sex + (call_o_int|bird_ID) + (1|nest_ID), f)
 
 					pred=c('Intercept (f)','Sex(m)', 'Call_incub', 'Day', 'Call_incub:sex','Day:sex')
@@ -1118,7 +1130,11 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o3=rbind(oii,ri)
 				# d. exchange gap calling
-					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_int_c2)),]
+					f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_int_c2) | dd$left_before_presence=="y"),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+					
 					m = lmer(call_int_c2 ~ sex_returning + scale(call_c_int)*sex_returning + scale(day_j)*sex_returning + (call_c_int|bird_ID) + (1|nest_ID), f)
 					pred=c('Intercept (f)','sex_returning(m)', 'Call_com', 'Day', 'Call_com:sex','Day:sex')
 					dep = 'call during gap'
@@ -1142,7 +1158,11 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o4=rbind(oii,ri)
 				# e. after exchange
-					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_int_c3)),]
+					f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+
 					m = lmer(call_int_c3 ~ sex_returning + scale(call_c_int)*sex_returning + scale(day_j)*sex_returning + (call_c_int|bird_ID) + (1|nest_ID), f)
 					pred=c('Intercept (f)','sex_returning(m)', 'Call_com', 'Day', 'Call_com:sex','Day:sex')
 					dep = 'call after exchange'
@@ -1404,10 +1424,13 @@
 
  		# Figure 5a new
 			# prepare data for plotting
-				f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$current_bout) | is.na(ex_$call_o_int)),]
+				f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_o_int) | dd$left_before_presence=="y"),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
 					#f$sex_returning = ifelse(f$sex == 'f','m','f')
 				# model predictions
-					m = lmer(call_c_int ~ sex + call_o_int*sex + day_j*sex +current_bout*sex +(call_o_int|bird_ID) + (1|nest_ID), f)
+					m = lmer(call_c_int ~ sex + call_o_int*sex  +day_j*sex +(call_o_int|bird_ID) + (1|nest_ID), f)
 
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)
@@ -1418,12 +1441,12 @@
 				# values to predict for
 					newD=data.frame(sex = c('f','m'),
 									call_o_int = seq(min(f$call_o_int),max(f$call_o_int), length.out = 300),
-									day_j = mean(f$day_j),
-									current_bout = mean(f$current_bout)
+									day_j = mean(f$day_j)
+									#current_bout = mean(f$current_bout)
 									)
 
 				# exactly the model which was used has to be specified here
-				X <- model.matrix(~ sex + call_o_int*sex + day_j*sex +current_bout*sex,data=newD)
+				X <- model.matrix(~ sex + call_o_int*sex  +day_j*sex,data=newD)
 
 				# calculate predicted values and creditability intervals
 					newD$pred <-(X%*%v)
@@ -1500,9 +1523,10 @@
 				 if(PNG == TRUE) {dev.off()}
 		# Figure 5b new
 			# prepare data for plotting
-				f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_int_c2)),]
-				f$sex_returning = ifelse(f$sex == 'f','m','f')
-
+				f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_int_c2) | dd$left_before_presence=="y"),]
+				nrow(f)
+				length(unique(f$bird_ID))
+				length(unique(f$nest_ID))
 				# model predictions
 					m = lmer(call_int_c2 ~ sex_returning + call_c_int*sex_returning + day_j*sex_returning + (call_c_int|bird_ID) + (1|nest_ID), f)
 
@@ -1591,6 +1615,10 @@
 				 if(PNG == TRUE) {dev.off()}
 		# Figure 5c new
 			dxn = dx_[!is.na(dx_$next_bout), ]
+			dxn = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | !dd$with_calling %in% c('y') | is.na(dd$o_replies)),]
+				nrow(dxn)
+				length(unique(dxn$bird_ID))
+				length(unique(dxn$nest_ID))
 			# prepare for plotting
 				k=0.1
 				kk=k*2# distance for boxplots
@@ -1702,9 +1730,13 @@
 
 				 if(PNG == TRUE) {dev.off()}
 		# Figure 5d new
-			f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_c3) | is.na(ex_$next_bout)),]
-			f$sex_returning = as.factor(ifelse(f$sex == 'f','m','f'))
+		
 			f$next_bout = f$next_bout/60
+
+			f = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | is.na(dd$call_c_int) | is.na(dd$call_o_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
 			# model predictions
 				#summary(f$call_int_c3[f$sex == 'f']) # male calling
 				#summary(f$call_int_c3[f$sex == 'm']) # female calling
@@ -1808,7 +1840,13 @@
 		# Table S5
 			# prepare table data
 				# a. calling while arriving
-					f = dx[-which(is.na(dx$current_bout)),]
+					f = dd[-which(is.na(dd$current_bout) | dd$left_before_presence == 'y' | is.na(dd$with_calling)),]
+					f$w_call = ifelse(f$with_calling == 'y', 1, 0)
+
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+										
 					m = glmer(w_call ~ sex_returning*scale(current_bout) + (1|bird_ID)+ (1|nest_ID) , f, family = 'binomial')
 							# binomial gives same results
 								#dd$pa_bin=ifelse(dd$pa == 0.001, 0,1)
@@ -1835,7 +1873,11 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o1=rbind(oii,ri)
 				# b. reply
-				 	f = dx_[-which(is.na(dx_$current_bout)| is.na(dx_$reply)),]
+				 	f = dd[-which(is.na(dd$current_bout) | dd$left_before_presence == 'y' | !dd$with_calling %in% c('y')  | is.na(dd$o_replies)),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+					
 				 	m = glmer(reply ~ sex*scale(current_bout) + (1|bird_ID) + (1|nest_ID), f, family = 'binomial')
 					pred=c('Intercept (f)','Sex(m)', 'current_bout', 'current_bout:sex')
 					dep = 'reply (bin)'
@@ -1859,7 +1901,11 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o2=oii#rbind(oii,ri)
 				# c. calling coming
-					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$current_bout)),]
+					f = dd[-which(is.na(dd$current_bout) | dd$left_before_presence == 'y' |  is.na(dd$call_c_int)),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+					
 					m = lmer(call_c_int ~ sex*scale(current_bout) +(scale(current_bout)|bird_ID) + (1|nest_ID), f)
 					#m = lmer(next_bout ~ sex*scale(call_c_int) + (scale(call_c_int)|bird_ID) + (1|nest_ID), f) # sex of the returning bird is the oposite of this
 
@@ -1885,6 +1931,11 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 				# d. calling incubating
 					f = ex_[-which(is.na(ex_$call_o_int) |is.na(ex_$current_bout)),]
+					f = dd[-which(is.na(dd$current_bout) | dd$left_before_presence == 'y' |  is.na(dd$call_o_int)),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+				
 					m = lmer(call_o_int ~ sex*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)
 					#m = lmer(next_bout ~ sex*scale(call_o_int) + (scale(call_o_int)|bird_ID) + (1|nest_ID), f)
 
@@ -1910,7 +1961,11 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o4=rbind(oii,ri)
 				# e. exchange gap calling
-					f = ex_[-which(is.na(ex_$call_int_c2) | is.na(ex_$current_bout)),]
+					f = dd[-which(is.na(dd$current_bout) | dd$left_before_presence == 'y' |  is.na(dd$call_int_c2)),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+				
 					m = lmer(call_int_c2 ~ sex_returning*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)
 					#m = lmer(next_bout ~ sex*scale(call_int_c2) + (scale(call_int_c2)|bird_ID) + (1|nest_ID), f)
 					pred=c('Intercept (f)','sex_returning(m)', 'current_bout', 'current_bout:sex') # sex of the returning bird is the oposite of this
@@ -1935,7 +1990,11 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o5=rbind(oii,ri)
 				# f. after exchange
-					f = ex_[-which(is.na(ex_$call_int_c3) | is.na(ex_$current_bout)),]
+					f = dd[-which(is.na(dd$current_bout) | dd$left_before_presence == 'y' |  is.na(dd$call_int_c3)),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+					
 					m = lmer(call_int_c3 ~ sex_returning*scale(current_bout) + (scale(current_bout)|bird_ID) + (1|nest_ID), f)
 					#m = lmer(next_bout ~ sex*scale(call_int_c3) + (scale(call_int_c3)|bird_ID) + (1|nest_ID), f)
 					pred=c('Intercept (f)','sex_returning(m)', 'current_bout', 'current_bout:sex') # sex of the reutrning bird is the oposite of this
@@ -2235,7 +2294,6 @@
 											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 
 							dev.off()
-
 		# Table XX - complex models including S4 and S5, not used for now
 			# prepare table data
 				# a. calling while arriving
@@ -2609,8 +2667,12 @@
 		# Table S6
 			# prepare table data
 				# a. calling while arriving
-					f = dx[-which(is.na(dx$next_bout) | is.na(dx$w_call)),]
-					f$sex_returning = ifelse(f$sex == 'f','m','f')
+					f = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | is.na(dd$with_calling)),]
+					f$w_call = ifelse(f$with_calling == 'y', 1, 0)
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+				
 					m = lmer(next_bout ~as.factor(w_call)*sex_returning+(1|bird_ID)+(1|nest_ID),f)
 
 					pred=c('Intercept (f, no)','return call','sex_returning(m)', 'Call:sex')
@@ -2635,7 +2697,11 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o1=rbind(oii,ri)
 				# b. reply
-					f = dx_[-which(is.na(dx_$next_bout) | is.na(dx_$o_replies)),]
+					f = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | !dd$with_calling %in% c('y') | is.na(dd$o_replies)),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+				
 					m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),f)
 					pred=c('Intercept (f, no)','reply call','Sex(m)', 'Call:sex')
 					dep = 'next bout'
@@ -2659,8 +2725,11 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o2=rbind(oii,ri)
 				# c. calling
-					f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_c3) | is.na(ex_$next_bout)),]
-					f$sex_returning = as.factor(ifelse(f$sex == 'f','m','f'))
+					f = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | is.na(dd$call_c_int) | is.na(dd$call_o_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
+					nrow(f)
+					length(unique(f$bird_ID))
+					length(unique(f$nest_ID))
+			
 					#ggplot(f, aes(x = as.factor(call_int_c3), y = next_bout, fill = sex_returning))+geom_boxplot()+xlab('calling after exchange')
 						#cor(subset(f,select = c('call_c_int','call_o_int','call_int_c2','call_int_c3')),use="pairwise.complete.obs", method="pearson")
 						#cor(subset(f,select = c('call_c_int','call_o_int','call_int_c2','call_int_c3')),use="pairwise.complete.obs", method="spearman")
