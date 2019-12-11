@@ -168,22 +168,293 @@
 				summary(eb$both)
 				length(eb$both[!is.na(eb$both)]) # number of exchanges
 				length(unique(eb$nest_ID[!is.na(eb$both)])) # number of nests
+		  # please-leave
+		  		pl = dd[dd$left_type %in%c('3 during exchange'),]
+				
+				summary(factor(pl$push)) # number of cases
+				nrow(pl[pl$push == 'y'])/nrow(pl) # proportion of cases
+				length(unique(pl$nest_ID[pl$push == 'y'])) # number of nests with please leave
+				length(unique(pl$nest_ID[pl$push == 'y']))/length(unique(pl$nest_ID)) # proportion of nests
 
-				# please-leave
-				summary(factor(eb$push))
-				nrow(eb[eb$push == 'y'])/nrow(eb)
-				length(unique(eb$nest_ID[eb$push == 'y']))
-				length(unique(eb$nest_ID))
+				# do both sexes please leave display at a given nest
+				ee = pl[pl$push == 'y',]
+				table(ee$sex_returning, ee$nest)	 # 5 nest with female only, 8 nests with male only
+				
+				# distribution across incubating sex
+				table(pl$push, pl$sex) 	
+				length(pl$push[pl$push=='y' & pl$sex=='f'])/length(pl$push[pl$sex=='f']) # female incubates
+				length(pl$push[pl$push=='y' & pl$sex=='m'])/length(pl$push[pl$sex=='m'])
+	
+				# correlation between push off and calling intensity
+						en = pl[!is.na(pl$call_int_1),]
+						cor(en$pushoff_int,en$call_int_1,method = 'spearman')
+						cor(en$pushoff_int,en$call_int_1,method = 'pearson')
+						ggplot(en,aes(x=call_int_1, y=pushoff_int))+geom_point()+stat_smooth(method='lm')
+						ggplot(en,aes(x=call_int_1, y=as.numeric(as.factor(push))))+geom_point()+stat_smooth(method='lm')
+    	# Table S7 - CHANGE NAME
+			# prepare table data
+				# current bout
+					e = dd[dd$left_type %in%c('3 during exchange') & !is.na(dd$current_bout),]
+					nrow(e)
+					length(unique(e$bird_ID))
+					length(unique(e$nest_ID))
 
-				densityplot(eb$both)
-				densityplot(log(eb$both))
-						{# correlation between push off and calling intensity
-						cor(eb_$pushoff_int,eb_$call_int_1,method = 'spearman')
-						cor(eb_$pushoff_int,eb_$call_int_1,method = 'pearson')
-						ggplot(eb_,aes(x=call_int_1, y=pushoff_int))+geom_point()+stat_smooth(method='lm')
-						ggplot(eb_,aes(x=call_int_1, y=as.numeric(as.factor(push))))+geom_point()+stat_smooth(method='lm')
-						}
-		# Table S3 - REDO
+					m=glmer(push01 ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)
+					#m=glmer(push_ ~ sex_returning*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)
+					#m=lmer(push_ ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), e)
+					#m=lmer(push_ ~ sex_returning*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), e)
+					#m=lmer(current_bout ~ push*sex_returning+ (1|bird_ID)+(1|nest_ID), e)
+					####m=lmer(pushoff_int ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), e)
+					###densityplot(~e$pushoff_int)
+					#m=glmer(push ~ scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e) # not confounded by sex
+								# binomial gives same results
+								#dd$pa_bin=ifelse(dd$pa == 0.001, 0,1)
+								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd)
+					pred=c('Intercept (f)','Sex(m)', 'Current bout', 'Current bout:sex')
+					dep = 'push'
+					mod = 1
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)
+						#apply(bsim@fixef, 2, quantile, prob=c(0.025,0.5,0.975))
+						#plot(allEffects(m))
+				 	# Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,2)
+						oi$lwr_r=round(oi$lwr,2)
+						oi$upr_r=round(oi$upr,2)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]
+					# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
+					o1=rbind(oii,ri)
+				# day of incubation
+					e = dd[dd$left_type %in%c('3 during exchange') & !is.na(dd$current_bout),]
+					m=glmer(push01 ~ sex*scale(day_j)+ (scale(day_j)|bird_ID), family='binomial',e)
+								# binomial gives same results
+								#dd$pa_bin=ifelse(dd$pa == 0.001, 0,1)
+								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd)
+					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
+					dep = 'push'
+					mod = 2
+						nsim <- 5000
+						bsim <- sim(m, n.sim=nsim)
+					# Fixed effects
+					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
+					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+					rownames(oi) = NULL
+						oi$estimate_r=round(oi$estimate,2)
+						oi$lwr_r=round(oi$lwr,2)
+						oi$upr_r=round(oi$upr,2)
+						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]
+					# Random effects var*100
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
+					o2=rbind(oii,ri)
+			# create xlsx table
+				o=rbind(o1,o2)
+				sname = 'Table_S7'
+				tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
+				openFile(tmp)
+		    # model assumptions
+				# current bout
+							m=glmer(push01 ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)
+								#png(paste(out_,"model_ass/Supplementary_Table_6.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red')
+									  qqline(resid(m))
+
+									  plot(fitted(m), jitter(e$push_, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+									  abline(0,1, lty=3)
+									  t.breaks <- cut(fitted(m), quantile(fitted(m)))
+									  means <- tapply(e$push_, t.breaks, mean)
+									  semean <- function(x) sd(x)/sqrt(length(x))
+									  means.se <- tapply(e$push_, t.breaks, semean)
+									  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
+									  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
+
+									  e$fit = fitted(m)
+									  ee = e[e$fit<0.01,]
+									  plot(ee$fit, jitter(ee$push_, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+									  abline(0,1, lty=3)
+									  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3], pch=16, col="orange")
+									  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3]-2*means.se[1:3], quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3]+2*means.se[1:3],lwd=2, col="orange")
+
+									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$nest_ID [1]))
+									  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$bird_ID [1]))
+									  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
+									  qqline(unlist(ranef(m)$bird_ID[2]))
+
+									  scatter.smooth(resid(m)~e$current_bout);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~e$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~e$sex);abline(h=0, lty=2, col='red')
+
+									  mtext("m=glmer(push ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=e$lon, y=e$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+
+							dev.off()
+				# day of incubation
+							m=glmer(push01 ~ sex*scale(day_j)+ (scale(day_j)|bird_ID), family='binomial',e)
+									#png(paste(out_,"model_ass/Supplementary_Table_6.png", sep=""), width=6,height=9,units="in",res=600)
+									  dev.new(width=6,height=9)
+									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+									 scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red')
+									  qqline(resid(m))
+
+									  plot(fitted(m), jitter(e$push_, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+									  abline(0,1, lty=3)
+									  t.breaks <- cut(fitted(m), quantile(fitted(m)))
+									  means <- tapply(e$push_, t.breaks, mean)
+									  semean <- function(x) sd(x)/sqrt(length(x))
+									  means.se <- tapply(e$push_, t.breaks, semean)
+									  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
+									  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
+
+									  e$fit = fitted(m)
+									  ee = e[e$fit<0.01,]
+									  plot(ee$fit, jitter(ee$push_, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+									  abline(0,1, lty=3)
+									  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3], pch=16, col="orange")
+									  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3]-2*means.se[1:3], quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3]+2*means.se[1:3],lwd=2, col="orange")
+
+
+									  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
+									  qqline(unlist(ranef(m)$bird_ID [1]))
+									  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
+									  qqline(unlist(ranef(m)$bird_ID[2]))
+
+									  scatter.smooth(resid(m)~e$day_j);abline(h=0, lty=2, col='red')
+									  scatter.smooth(resid(m)~e$sex);abline(h=0, lty=2, col='red')
+									  boxplot(resid(m)~e$sex);abline(h=0, lty=2, col='red')
+
+									  mtext("m=glmer(push ~ sex*scale(day)+ (scale(day)|bird_ID)+(1|nest_ID), family='binomial',e)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+
+									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+									  # spatial autocorrelations - nest location
+										spdata=data.frame(resid=resid(m), x=e$lon, y=e$lat)
+											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+											#cex_=c(1,2,3,3.5,4)
+											cex_=c(1,1.5,2,2.5,3)
+											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+
+											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+
+							dev.off()
+		
+		# Figure pleaseLeave	
+			# raw data
+				e = dd[dd$left_type %in%c('3 during exchange') & !is.na(dd$current_bout),]
+				e$n = 1
+						#x = ddply(f,.(nest_ID, sex_returning_returning),summarise, mo=median(call_o_int), q1o=quantile(call_o_int,0.25), q2o= quantile(call_o_int,0.75), mc=median(call_c_int), q1c=quantile(call_c_int,0.25), q2c= quantile(call_c_int,0.75), n = sum(n))
+
+				e$col_=ifelse(e$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
+
+				x = ddply(e,.(sex_returning,day_j),summarise, push = mean(push01), n = sum(n))
+						#x$call_o_int = ifelse(x$sex_returning == 'f', x$call_o_int-0.2, x$call_o_int+0.2)
+						# call based on x-axis - incubating parent
+						x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
+			# predict
+				e = dd[dd$left_type %in%c('3 during exchange') & !is.na(dd$current_bout),]
+				m=glmer(push01 ~ sex_returning*day_j+ (day_j|bird_ID), family='binomial',e) 
+				nsim <- 5000
+				bsim <- sim(m, n.sim=nsim)
+				v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+			  	# values to predict for
+					l = list()
+					for(i in c('m','f')){
+						ei = e[e$sex_returning == i]
+						l[[i]]=data.frame(	sex_returning = i,
+											day_j = seq(min(ei$day_j), max(ei$day_j), length.out = 100)
+											)
+							}
+					newD = do.call(rbind,l)
+
+				# exactly the model which was used has to be specified here
+					X <- model.matrix(~ sex_returning*day_j,data=newD)
+
+					# calculate predicted values and creditability intervals
+						newD$pred <-plogis(X%*%v)
+								predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+								for(i in 1:nsim) predmatrix[,i] <- plogis(X%*%bsim@fixef[i,])
+								newD$lwr <- (apply(predmatrix, 1, quantile, prob=0.025))
+								newD$upr <- (apply(predmatrix, 1, quantile, prob=0.975))
+						pp=newD
+						ppf = pp[pp$sex_returning == 'f',]
+						ppm = pp[pp$sex_returning == 'm',]
+			# plot
+				if(PNG == TRUE){
+					png(paste(outdir,"Figure_plsLeave.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+						}else{ dev.new(width=1.85+0.3,height=1.5)}
+				par(mar=c(0.4,0.1,0.6,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+
+				plot(pred ~ day_j, data = pp,
+											#ylab =NULL,
+											xaxt='n',
+											yaxt='n',
+											#xaxs = 'i',
+											#yaxs = 'i',
+											ylim = c(0,1),
+											xlim = c(0,30),
+											type='n'
+											) # col=z_g$cols, border=z_g$cols
+
+					
+					#points(e$push) ~ jitter(dd$day_j), col = adjustcolor(dd$colr, alpha.f = 0.8), bg = adjustcolor(dd$colr, alpha.f = 0.4), pch =21, cex = 0.4)
+
+					# predictions
+						polygon(c(ppf$day_j, rev(ppf$day_j)), c(ppf$lwr,
+										rev(ppf$upr)), border=NA, col=adjustcolor(col_f,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+						lines(ppf$day_j, ppf$pred, col=col_f,lwd=1)
+
+						polygon(c(ppm$day_j, rev(ppm$day_j)), c(ppm$lwr,
+										rev(ppm$upr)), border=NA, col=adjustcolor(col_m,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+						lines(ppm$day_j, ppm$pred, col=col_m,lwd=1)
+
+						#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
+								#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
+
+					symbols(x$day_j, x$push, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
+					axis(1, at=seq(0,30,by = 10), label=seq(0,30,by = 10), mgp=c(0,-0.20,0), lwd = 0.35)
+					axis(2, at=seq(0,1,by = 0.2), label=c('0%', '20%', '40%', '60%', '80%','100%'), lwd = 0.35)
+
+					mtext("Incubation day",side=1,line=0.4, cex=0.55, las=1, col='black')
+					mtext("Please-leave display",side=2,line=1.1, cex=0.55, las=3, col='black')
+
+			
+					 if(PNG == TRUE) {dev.off()}
+				
+		# Table S3
 		  # prepare table data
 			 # a. presence before exchange
 				    m = lmer(pa ~ sex_returning*scale(day_j)+(day_j|nest_ID), dd)
@@ -506,7 +777,7 @@
 										plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 
 						dev.off()
-		# text data for 'd'
+		  # text data for 'd'
 		  		m = lmer(both ~ sex_returning*push + day_j+(push01|bird_ID) + (1|nest_ID), eb)
 		  		nsim <- 5000
 				bsim <- sim(m, n.sim=nsim)
@@ -567,7 +838,7 @@
 					pp1 = pp[pp$left_type == '1 before presence',]
 					pp2 = pp[pp$left_type == '2 while around',]
 					pp3 = pp[pp$left_type == '3 during exchange',]
-			# plot
+		  # plot
 				if(PNG == TRUE){
 					png(paste(outdir,"Figure_Temp.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 						}else{ dev.new(width=1.85+0.3,height=1.5)}
@@ -1422,7 +1693,7 @@
 
 							dev.off()
 
- 		# Figure 5a new
+ 		# Figure 4a new
 			# prepare data for plotting
 				f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_o_int) | dd$left_before_presence=="y"),]
 					nrow(f)
@@ -1470,7 +1741,7 @@
 			# plot
 				if(PNG == TRUE) {
 					#png(paste(outdir,"Figure_5a_colASxaxis.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
-					png(paste(outdir,"Figure_5a_colASxaxis.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600, type = 'windows')
+					png(paste(outdir,"Figure_4a.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 					}else{
 					dev.new(width=1.85+0.3,height=1.5)
 					}
@@ -1521,7 +1792,7 @@
 					#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels
 
 				 if(PNG == TRUE) {dev.off()}
-		# Figure 5b new
+		# Figure 4b new
 			# prepare data for plotting
 				f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_int_c2) | dd$left_before_presence=="y"),]
 				nrow(f)
@@ -1563,13 +1834,13 @@
 						x$call_c_int = ifelse(x$sex == 'f', x$call_c_int-0.2, x$call_c_int+0.2)
 						x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
 
-						ggplot(f,aes(x = as.factor(call_o_int), y = call_c_int, col = sex_returning))+geom_boxplot()
-						ggplot(x,aes(x = as.factor(mo), y = mc, col = sex_returning))+geom_boxplot()
+						#ggplot(f,aes(x = as.factor(call_o_int), y = call_c_int, col = sex_returning))+geom_boxplot()
+						#ggplot(x,aes(x = as.factor(mo), y = mc, col = sex_returning))+geom_boxplot()
 						xf=x[x$sex_returning=='f',]
 						xm=x[x$sex_returning=='m',]
 			# plot
 				if(PNG == TRUE) {
-					png(paste(outdir,"Figure_5b_new.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+					png(paste(outdir,"Figure_4b.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 					}else{
 					dev.new(width=1.85+0.3,height=1.5)
 					}
@@ -1613,8 +1884,7 @@
 					#text(x=-.1,y=2.95, labels='\u2642', col='#535F7C', cex=0.6, pos=4)
 
 				 if(PNG == TRUE) {dev.off()}
-		# Figure 5c new
-			dxn = dx_[!is.na(dx_$next_bout), ]
+		# Figure 4c new
 			dxn = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | !dd$with_calling %in% c('y') | is.na(dd$o_replies)),]
 				nrow(dxn)
 				length(unique(dxn$bird_ID))
@@ -1655,7 +1925,7 @@
 					pp=newD
 			# plot
 				if(PNG == TRUE) {
-					png(paste(outdir,"Figure_5c_new.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+					png(paste(outdir,"Figure_4c.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 					}else{
 					dev.new(width=1.85+0.3,height=1.5)
 					}
@@ -1729,11 +1999,9 @@
 						code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
 
 				 if(PNG == TRUE) {dev.off()}
-		# Figure 5d new
-		
-			f$next_bout = f$next_bout/60
-
+		# Figure 4d new
 			f = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | is.na(dd$call_c_int) | is.na(dd$call_o_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
+			f$next_bout = f$next_bout/60
 					nrow(f)
 					length(unique(f$bird_ID))
 					length(unique(f$nest_ID))
@@ -1788,7 +2056,7 @@
 						x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
 			# plot
 				if(PNG == TRUE) {
-					png(paste(outdir,"Figure_5d_med.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+					png(paste(outdir,"Figure_4d.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 					}else{
 					dev.new(width=1.85+0.3,height=1.5)
 					}
@@ -2884,247 +3152,57 @@
 
 							dev.off()
 
-  # push offs
-		e$sex_returning = as.factor(ifelse(e$sex == 'f', 'm','f') )# sex of pushing parent
-		e$push_=ifelse(e$push=='y',1,0)
-		f=e
-		# distribution
-		  	summary(factor(e$push))
-			length(e$push[e$push=='y'])/length(e$push)
-			length(unique(e$nest[e$push=='y']))
-			length(unique(e$nest[e$push=='y']))/length(unique(e$nest))
-
-			table(e$push, paste(e$sex,e$nest))
-			ee = e[e$push == 'y',]
-			table(ee$sex, ee$nest)
-			18/68
-			6/61
-				length(e$push[e$push=='y' & e$sex=='f'])/length(e$push[e$sex=='f']) # female incubates
-				length(e$push[e$push=='y' & e$sex=='m'])/length(e$push[e$sex=='m'])
-
-				densityplot(~ex_$pushoff_int)
-    			densityplot(~ex_$push)
-				ggplot(e, aes(y = push_, x = current_bout))+geom_point() + stat_smooth(method='lm')
-    	# Table S7
-			# prepare table data
-				# current bout
-					m=glmer(push_ ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)
-					#m=glmer(push_ ~ sex_returning*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)
-					#m=lmer(push_ ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), e)
-					#m=lmer(push_ ~ sex_returning*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), e)
-					#m=lmer(current_bout ~ push*sex_returning+ (1|bird_ID)+(1|nest_ID), e)
-					####m=lmer(pushoff_int ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), e)
-					###densityplot(~e$pushoff_int)
-					#m=glmer(push ~ scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e) # not confounded by sex
-								# binomial gives same results
-								#dd$pa_bin=ifelse(dd$pa == 0.001, 0,1)
-								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd)
-					pred=c('Intercept (f)','Sex(m)', 'Current bout', 'Current bout:sex')
-					dep = 'push'
-					mod = 1
-						nsim <- 5000
-						bsim <- sim(m, n.sim=nsim)
-						apply(bsim@fixef, 2, quantile, prob=c(0.025,0.5,0.975))
-						plot(allEffects(m))
-				 	# Fixed effects
-					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
-					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
-					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
-					rownames(oi) = NULL
-						oi$estimate_r=round(oi$estimate,2)
-						oi$lwr_r=round(oi$lwr,2)
-						oi$upr_r=round(oi$upr,2)
-						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
-					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]
-					# Random effects var*100
-					l=data.frame(summary(m)$varcor)
-					l=l[is.na(l$var2),]
-						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
-						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
-					o1=rbind(oii,ri)
-				# day of incubation
-					e$push_=ifelse(e$push=='y',1,0)
-					m=glmer(push ~ sex*scale(day_j)+ (scale(day_j)|bird_ID), family='binomial',e)
-								# binomial gives same results
-								#dd$pa_bin=ifelse(dd$pa == 0.001, 0,1)
-								#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd)
-					pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
-					dep = 'push'
-					mod = 2
-						nsim <- 5000
-						bsim <- sim(m, n.sim=nsim)
-					# Fixed effects
-					v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
-					ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
-					oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
-					rownames(oi) = NULL
-						oi$estimate_r=round(oi$estimate,2)
-						oi$lwr_r=round(oi$lwr,2)
-						oi$upr_r=round(oi$upr,2)
-						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
-					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]
-					# Random effects var*100
-					l=data.frame(summary(m)$varcor)
-					l=l[is.na(l$var2),]
-						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
-						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
-					o2=rbind(oii,ri)
-
-			# create xlsx table
-				o=rbind(o1,o2)
-				sname = 'Table_S5'
-				tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
-				openFile(tmp)
-				}
-		    # model assumptions
-				# current bout
-							e$push_=ifelse(e$push=='y',1,0)
-							m=glmer(push ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)
-								#png(paste(out_,"model_ass/Supplementary_Table_6.png", sep=""), width=6,height=9,units="in",res=600)
-									  dev.new(width=6,height=9)
-									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-									  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red')
-									  qqline(resid(m))
-
-									  plot(fitted(m), jitter(e$push_, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
-									  abline(0,1, lty=3)
-									  t.breaks <- cut(fitted(m), quantile(fitted(m)))
-									  means <- tapply(e$push_, t.breaks, mean)
-									  semean <- function(x) sd(x)/sqrt(length(x))
-									  means.se <- tapply(e$push_, t.breaks, semean)
-									  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
-									  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
-
-									  e$fit = fitted(m)
-									  ee = e[e$fit<0.01,]
-									  plot(ee$fit, jitter(ee$push_, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
-									  abline(0,1, lty=3)
-									  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3], pch=16, col="orange")
-									  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3]-2*means.se[1:3], quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3]+2*means.se[1:3],lwd=2, col="orange")
-
-									  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
-									  qqline(unlist(ranef(m)$nest_ID [1]))
-									  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
-									  qqline(unlist(ranef(m)$bird_ID [1]))
-									  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
-									  qqline(unlist(ranef(m)$bird_ID[2]))
-
-									  scatter.smooth(resid(m)~e$current_bout);abline(h=0, lty=2, col='red')
-									  scatter.smooth(resid(m)~e$sex);abline(h=0, lty=2, col='red')
-									  boxplot(resid(m)~e$sex);abline(h=0, lty=2, col='red')
-
-									  mtext("m=glmer(push ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-
-									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-									  # spatial autocorrelations - nest location
-										spdata=data.frame(resid=resid(m), x=e$lon, y=e$lat)
-											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-											#cex_=c(1,2,3,3.5,4)
-											cex_=c(1,1.5,2,2.5,3)
-											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-
-											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-
-							dev.off()
-				# day of incubation
-							e$push_=ifelse(e$push=='y',1,0)
-							m=glmer(push ~ sex*scale(day_j)+ (scale(day_j)|bird_ID), family='binomial',e)
-									#png(paste(out_,"model_ass/Supplementary_Table_6.png", sep=""), width=6,height=9,units="in",res=600)
-									  dev.new(width=6,height=9)
-									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-									 scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-									  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-									  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red')
-									  qqline(resid(m))
-
-									  plot(fitted(m), jitter(e$push_, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
-									  abline(0,1, lty=3)
-									  t.breaks <- cut(fitted(m), quantile(fitted(m)))
-									  means <- tapply(e$push_, t.breaks, mean)
-									  semean <- function(x) sd(x)/sqrt(length(x))
-									  means.se <- tapply(e$push_, t.breaks, semean)
-									  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
-									  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
-
-									  e$fit = fitted(m)
-									  ee = e[e$fit<0.01,]
-									  plot(ee$fit, jitter(ee$push_, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
-									  abline(0,1, lty=3)
-									  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3], pch=16, col="orange")
-									  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3]-2*means.se[1:3], quantile(fitted(m),c(0.125,0.375,0.625,0.875))[1:3], means[1:3]+2*means.se[1:3],lwd=2, col="orange")
-
-
-									  qqnorm(unlist(ranef(m)$bird_ID [1]), main = "ran intercept",col='red')
-									  qqline(unlist(ranef(m)$bird_ID [1]))
-									  qqnorm(unlist(ranef(m)$bird_ID[2]), main = "ran slope",col='red')
-									  qqline(unlist(ranef(m)$bird_ID[2]))
-
-									  scatter.smooth(resid(m)~e$day_j);abline(h=0, lty=2, col='red')
-									  scatter.smooth(resid(m)~e$sex);abline(h=0, lty=2, col='red')
-									  boxplot(resid(m)~e$sex);abline(h=0, lty=2, col='red')
-
-									  mtext("m=glmer(push ~ sex*scale(day)+ (scale(day)|bird_ID)+(1|nest_ID), family='binomial',e)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-
-									    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-									  # spatial autocorrelations - nest location
-										spdata=data.frame(resid=resid(m), x=e$lon, y=e$lat)
-											spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-											#cex_=c(1,2,3,3.5,4)
-											cex_=c(1,1.5,2,2.5,3)
-											spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-											plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-											legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-
-											plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-
-							dev.off()
-
   # how leaving the nest? - create supplementary table
-		# distributions
+		# distributions - for cases without enclosure 
   			#summary(factor(dd$type_l))
   			# only those cases where cage was not present
 			dn=dd[dd$cage=='n',]
-			length(unique(dn$nest))
+			summary(factor(dn$type_l))
+
+			length(dn$type_l[dn$type_l=='f'])/length(dn$type_l) # %
+			length(unique(dn$nest))  # number of nests
+
 			length(unique(dn$nest[dn$type_l=='f']))
-			length(unique(dn$nest[dn$type_l=='wf']))
+						length(unique(dn$nest[dn$type_l=='wf']))
 			length(unique(dn$nest[dn$type_l=='w']))
-			summary(factor(dd$type_l[dd$cage=='n']))
+	
 
-			length(dn$type_l[dn$type_l=='f'])/length(dn$type_l)
-  			ggplot(dn,aes(y = current_bout, x=type_l))+geom_boxplot()
-  			g
+			ggplot(dn,aes(y = current_bout, x=type_l))+geom_boxplot()
+		# distributions - called while leaving?
+			# cases without enclosure
+				dn=dd[dd$cage=='n',]
+				dnc = dn[!is.na(dn$call_left),]
+				summary(factor(dnc$call_left))
+				length(dnc$call_left[dnc$call_left%in%c('y')])/length(dnc$call_left[])
 
-			# called while leaving?
-				summary(factor(dn$call_left))
-				length(dn$call_left[dn$call_left=='y'])/length(dn$call_left)
+				table(dnc$call_left, dnc$sex)
+				length(dnc$call_left[dnc$call_left%in%c('y') & dnc$sex == 'm'])/length(dnc$call_left[ dnc$sex == 'm'])
+				length(dnc$call_left[dnc$call_left%in%c('y') & dnc$sex == 'f'])/length(dnc$call_left[ dnc$sex == 'f'])
+			# all cases
+				dc = dd[!is.na(dd$call_left),]
+				summary(factor(dc$call_left))
+				length(dc$call_left[dc$call_left%in%c('y')])/length(dc$call_left[])
 
-				length(dn$call_left[dn$call_left=='y' & !is.na(dn$call_left) & dn$sex == 'm'])/length(dn$call_left[!is.na(dn$call_left)  & dn$sex == 'm'])
-				length(dn$call_left[dn$call_left=='y' & !is.na(dn$call_left) & dn$sex == 'f'])/length(dn$call_left[!is.na(dn$call_left)  & dn$sex == 'f'])
+				table(dc$call_left, dc$sex)
+				length(dc$call_left[dc$call_left%in%c('y') & dc$sex == 'm'])/length(dc$call_left[ dc$sex == 'm'])
+				length(dc$call_left[dc$call_left%in%c('y') & dc$sex == 'f'])/length(dc$call_left[ dc$sex == 'f'])
 
-				length(dd$call_left[dd$call_left=='y' & !is.na(dd$call_left) & dd$sex == 'm'])/length(dd$call_left[!is.na(dd$call_left)  & dd$sex == 'm'])
-				length(dd$call_left[dd$call_left=='y' & !is.na(dd$call_left) & dd$sex == 'f'])/length(dd$call_left[!is.na(dd$call_left)  & dd$sex == 'f'])
 				dc = dd[-which(is.na(dd$call_left)),]
 				table(dc$call_left,dc$sex)
-				dc$c_left = ifelse(dc$call_left=='y', 1,0)
-
-				m = glmer(c_left ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')
-				m = glmer(c_left ~ sex + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')
-				plot(allEffects(m))
-				summary(glht(m))
+				
 		# Table S8
 			# prepare table data
 				dc = dd[!is.na(dd$call_left),]
 				dc$c_left = ifelse(dc$call_left=='y', 1,0)
-
+				nrow(dc)
+				length(unique(dc$bird_ID))
+				length(unique(dc$nest_ID))
 				m = glmer(c_left ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')
-				ggplot(dc, aes(y = c_left, x = sex))+geom_boxplot()
 				#m = glmer(c_left ~ sex + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')
+				#plot(allEffects(m))
+				#summary(glht(m))
+				#ggplot(dc, aes(y = c_left, x = sex))+geom_boxplot()
+			
 				pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
 					dep = 'call_left'
 					mod = 1
@@ -3145,15 +3223,16 @@
 					l=l[is.na(l$var2),]
 						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
 					o1=rbind(oii,ri)
-				}
+				
 			# create xlsx table
-				o=rbind(o1,o2,o3,o4,o5,o6)
-				sname = 'Table_S5'
-				tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
+				sname = 'Table_S8'
+				tmp = write_xlsx(o1, paste0(ta,sname,'.xlsx'))
 				openFile(tmp)
+
 			# model assumptions
 					dc = dd[!is.na(dd$call_left),]
 					dc$c_left = ifelse(dc$call_left=='y', 1,0)
+
 					m = glmer(c_left ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')
 									#png(paste(out_,"model_ass/Supplementary_Table_6.png", sep=""), width=6,height=9,units="in",res=600)
 									  dev.new(width=6,height=9)

@@ -78,7 +78,7 @@
 			d$nest_ID=paste(d$nest,d$year)
 			#d$bird_ID_unique = x$bird_ID[match(d$nest_ID, x$nest_ID)] # each bird is recorded only in one single nest ddply(d,.(bird_ID_unique), summarise, nests = length(unique(nest_ID)))
 			d$bird_ID = paste(d$year, d$nest_ID, d$sex)
-			d$sex=as.factor(d$sex)
+			d$sex=d$sex
 			d$day_j = as.numeric(format(d$dt_on ,"%j")) - as.numeric(format(d$inc_start,"%j"))+1
 			d$presence=as.numeric(d$dt_left-d$dt_1st_presence)
 			d$lat = n$lat[match(tolower(paste(d$year, d$nest)),tolower(paste(n$year, n$nest)))] 
@@ -147,4 +147,6 @@
 	   # only exchange observations
 	   dd=d[d$type=='ex',]
 	   dd$left_bin=ifelse(dd$left_before_presence=='y',1,0)	
+	   dd$push = ifelse(is.na(dd$pushoff_int), NA, ifelse(dd$pushoff_int==3,'y','n'))
+	   dd$push01 = ifelse(is.na(dd$push), NA, ifelse(dd$push == 'y', 1, 0))
 }
