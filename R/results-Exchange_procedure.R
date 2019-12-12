@@ -1914,7 +1914,7 @@
 				dxn$col_=ifelse(dxn$sex=='f','#FCB42C', '#535F7C')
 				x$col_=ifelse(x$sex=='f','#FCB42C', '#535F7C')
 			# prepare model predictions
-				m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),dxn)
+				m = lmer(next_bout ~ o_replies+sex+(1|bird_ID)+(1|nest_ID),dxn)
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)
 
@@ -3024,7 +3024,7 @@
 					#summary(glht(m))
 					#plot(allEffects(m))
 
-					pred=c('Intercept (f)','sex_returning(m)', 'call_arriving', 'call_incub', 'call_gap', 'call_after', 'sex:call_arriving','sex:call_incub','sex:call_gap', 'sex:call_after')
+					pred=c('Intercept (f)','sex_returning(m)', 'call_arriving', 'call_incub', 'call_gap', 'call_after', 'sex_returning:call_arriving','sex_returning:call_incub','sex_returning:call_gap', 'sex_returning:call_after')
 					dep = 'next_bout'
 					mod = 3
 						nsim <- 5000
@@ -3124,7 +3124,7 @@
 								#mtext("glmer(success_bin~prop_ip+uni_last+(1|sp),data=g,family='binomial')", side = 3, line = -1.2, cex=0.8,outer = TRUE)
 				# c. calling coming ~ calling incubating
 						f = ex_[-which(is.na(ex_$call_c_int) | is.na(ex_$call_o_int) | is.na(ex_$call_int_c2) | is.na(ex_$call_int_c3) | is.na(ex_$next_bout)),]
-						m = lmer(next_bout ~sex*scale(call_c_int)+sex*scale(call_o_int)+sex*scale(call_int_c2) + sex*scale(call_int_c3) + (call_int_c3|bird_ID) + (1|nest_ID),f)
+						m = lmer(next_bout ~sex_returning*scale(call_c_int)+sex_returning*scale(call_o_int)+sex_returning*scale(call_int_c2) + sex_returning*scale(call_int_c3) + (call_int_c3|bird_ID) + (1|nest_ID),f)
 									#png(paste(out_,"model_ass/Supplementary_Table_2.png", sep=""), width=6,height=9,units="in",res=600)
 									  dev.new(width=6,height=9)
 									  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
