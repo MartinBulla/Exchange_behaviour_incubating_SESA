@@ -1704,7 +1704,7 @@
 
 							dev.off()
 
- 		# Figure 4a new
+ 		# Figure 4a
 			# prepare data for plotting
 				f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_o_int) | dd$left_before_presence=="y"),]
 					nrow(f)
@@ -1803,7 +1803,7 @@
 					#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels
 
 				 if(PNG == TRUE) {dev.off()}
-		# Figure 4b new
+		# Figure 4b
 			# prepare data for plotting
 				f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_int_c2) | dd$left_before_presence=="y"),]
 				nrow(f)
@@ -1895,7 +1895,7 @@
 					#text(x=-.1,y=2.95, labels='\u2642', col='#535F7C', cex=0.6, pos=4)
 
 				 if(PNG == TRUE) {dev.off()}
-		# Figure 4c new
+		# Figure 4c
 			dxn = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | !dd$with_calling %in% c('y') | is.na(dd$o_replies)),]
 			dxn = dxn[dxn$left_type %in% c('3 during exchange'),]
 
@@ -2012,7 +2012,7 @@
 						code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
 
 				 if(PNG == TRUE) {dev.off()}
-		# Figure 4d new
+		# Figure 4d
 			f = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | is.na(dd$call_c_int) | is.na(dd$call_o_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
 			f$next_bout = f$next_bout/60
 					nrow(f)
@@ -2022,7 +2022,6 @@
 				#summary(f$call_int_c3[f$sex == 'f']) # male calling
 				#summary(f$call_int_c3[f$sex == 'm']) # female calling
 				m = lmer(next_bout ~sex_returning*call_c_int+sex_returning*call_o_int+sex_returning*call_int_c2 + sex_returning*call_int_c3 + (call_int_c3|bird_ID) + (1|nest_ID),f)
-
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)
 
@@ -2033,16 +2032,16 @@
 					newD1=data.frame(sex_returning = c('f'),
 									call_c_int = mean(f$call_c_int),
 									call_o_int = mean(f$call_o_int),
-									call_int_c2 = seq(0,3, length.out = 300) ,
-									call_int_c3 = mean(f$call_int_c3)
+									call_int_c2 = mean(f$call_int_c3) ,
+									call_int_c3 = seq(0,max(f$call_int_c3[f$sex_returning == 'f']), length.out = 300)
 									#min(f$current_bout_c),max(f$current_bout_c)
 									)
 
 					newD2=data.frame(sex_returning = c('m'),
 									call_c_int = mean(f$call_c_int),
 									call_o_int = mean(f$call_o_int),
-									call_int_c2 = seq(0,3, length.out = 300) ,
-									call_int_c3 = mean(f$call_int_c3)
+									call_int_c2 = mean(f$call_int_c3) ,
+									call_int_c3 = seq(0,max(f$call_int_c3[f$sex_returning == 'm']), length.out = 300)
 									#min(f$current_bout_c),max(f$current_bout_c)
 									)
 
@@ -2063,19 +2062,19 @@
 						f$n = 1
 						f$col_=ifelse(f$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
 
-						x = ddply(f,.(nest_ID, sex_returning),summarise, mc=median(next_bout), q1c=quantile(next_bout,0.25), q2c= quantile(next_bout,0.75), mo=median(call_int_c2), q1o=quantile(call_int_c2,0.25), q2o= quantile(call_int_c2,0.75), n = sum(n))
+						x = ddply(f,.(nest_ID, sex_returning),summarise, mc=median(next_bout), q1c=quantile(next_bout,0.25), q2c= quantile(next_bout,0.75), mo=median(call_int_c3), q1o=quantile(call_int_c3,0.25), q2o= quantile(call_int_c3,0.75), n = sum(n))
 
 						#x$call_o_int = ifelse(x$sex == 'f', x$call_o_int-0.2, x$call_o_int+0.2)
 						x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
 			# plot
 				if(PNG == TRUE) {
-					png(paste(outdir,"Figure_4d.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+					png(paste(outdir,"Figure_4d_after.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 					}else{
 					dev.new(width=1.85+0.3,height=1.5)
 					}
 				par(mar=c(0.8,0.1,0.2,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
 
-				plot(next_bout ~ call_int_c2 , data = f,
+				plot(next_bout ~ call_int_c3 , data = f,
 										#ylab =NULL,
 										xaxt='n',
 										yaxt='n',
@@ -2088,14 +2087,14 @@
 
 				# predictions
 					# call int of returned female
-							polygon(c(pf_$call_int_c2, rev(pf_$call_int_c2)), c(pf_$lwr,
+							polygon(c(pf_$call_int_c3, rev(pf_$call_int_c3)), c(pf_$lwr,
 								rev(pf_$upr)), border=NA, col=adjustcolor(col_f ,alpha.f = 0.2)) #0,0,0 black 0.5 is transparents RED
-							lines(pf_$call_int_c2, pf_$pred, col=col_f,lwd=1)
+							lines(pf_$call_int_c3, pf_$pred, col=col_f,lwd=1)
 
 					# call int of returned male
-							polygon(c(pm_$call_int_c2, rev(pm_$call_int_c2)), c(pm_$lwr,
+							polygon(c(pm_$call_int_c3, rev(pm_$call_int_c3)), c(pm_$lwr,
 								rev(pm_$upr)), border=NA, col=adjustcolor(col_m ,alpha.f = 0.2)) #0,0,0 black 0.5 is transparents RED
-							lines(pm_$call_int_c2, pm_$pred, col=col_m,lwd=1)
+							lines(pm_$call_int_c3, pm_$pred, col=col_m,lwd=1)
 
 						#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
 							#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
@@ -2104,7 +2103,7 @@
 
 				axis(1, at=c(0,1,2,3), label=c(0,1,2,3), mgp=c(0,-0.20,0), lwd = 0.35)
 				axis(2, at=seq(0,20, by=5), label = TRUE,lwd = 0.35)
-				mtext("Calling of returned parent\n[during exchange gap]",side=1,line=0.9, cex=0.55, las=1, col='black') #line=0.85
+				mtext("Calling of returned parent\n[after sitting down]",side=1,line=0.9, cex=0.55, las=1, col='black') #line=0.85
 				mtext("Next incubation bout [h]",side=2,line=1, cex=0.55, las=3, col='black') #line=0.8
 				mtext(expression(bold('d')),side=3,line=-0.4, cex=0.6,  col='black')
 
