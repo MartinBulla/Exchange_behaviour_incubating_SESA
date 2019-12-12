@@ -191,6 +191,14 @@
 						cor(en$pushoff_int,en$call_int_1,method = 'pearson')
 						ggplot(en,aes(x=call_int_1, y=pushoff_int))+geom_point()+stat_smooth(method='lm')
 						ggplot(en,aes(x=call_int_1, y=as.numeric(as.factor(push))))+geom_point()+stat_smooth(method='lm')
+		  # nest relief duration
+		  		nr = dd[dd$left_type %in% c('3 during exchange'),]
+		  		nr$nr_dur = as.numeric(difftime(nr$dt_on, nr$dt_arrive, unit = 'sec'))
+		  		summary(nr$nr_dur)
+		  		summary(nr$nr_dur/60)
+		  		nrow(nr)
+				length(unique(nr$nest_ID))
+
     	# Table S7 - CHANGE NAME
 			# prepare table data
 				# current bout
