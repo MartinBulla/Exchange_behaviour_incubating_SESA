@@ -2988,6 +2988,7 @@
 					length(unique(f$nest_ID))
 				
 					m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),f)
+					#m = lmer(next_bout ~ o_replies+sex+(1|bird_ID)+(1|nest_ID),f)
 					pred=c('Intercept (f, no)','reply call','Sex(m)', 'Call:sex')
 					dep = 'next bout'
 					mod = 2
