@@ -2117,7 +2117,6 @@
 
 				 if(PNG == TRUE) {dev.off()}
 
-
 		# Table S5
 			# prepare table data
 				# a. calling while arriving
@@ -2155,6 +2154,8 @@
 					o1=rbind(oii,ri)
 				# b. reply
 				 	f = dd[-which(is.na(dd$current_bout) | dd$left_before_presence == 'y' | !dd$with_calling %in% c('y')  | is.na(dd$o_replies)),]
+				 	f = f[f$left_type %in% c('3 during exchange'),]
+				 	f$reply = ifelse(f$o_replies == 'n', 0,1)
 					nrow(f)
 					length(unique(f$bird_ID))
 					length(unique(f$nest_ID))
@@ -2210,6 +2211,7 @@
 					l=l[is.na(l$var2),]
 						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
+					o3=rbind(oii,ri)	
 				# d. calling incubating
 					f = ex_[-which(is.na(ex_$call_o_int) |is.na(ex_$current_bout)),]
 					f = dd[-which(is.na(dd$current_bout) | dd$left_before_presence == 'y' |  is.na(dd$call_o_int)),]
@@ -2304,7 +2306,7 @@
 				sname = 'Table_S5'
 				tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 				openFile(tmp)
-		 	# model assumptions
+		# model assumptions
 				# a. calling while arriving
 						f = dx[-which(is.na(dx$current_bout)),]
 						m = glmer(w_call ~ sex*scale(current_bout) + (1|bird_ID) , f, family = 'binomial')
@@ -2575,7 +2577,8 @@
 											plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 
 							dev.off()
-		# Table XX - complex models including S4 and S5, not used for now
+		
+		# Table XX - complex models including S4 and S5, not used in the manuscript, but gives similar results
 			# prepare table data
 				# a. calling while arriving
 					f = dx[-which(is.na(dx$current_bout)),]
@@ -2979,6 +2982,8 @@
 					o1=rbind(oii,ri)
 				# b. reply
 					f = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | !dd$with_calling %in% c('y') | is.na(dd$o_replies)),]
+					f = f[f$left_type %in% c('3 during exchange'),]
+
 					nrow(f)
 					length(unique(f$bird_ID))
 					length(unique(f$nest_ID))
@@ -3046,7 +3051,7 @@
 					sname = 'Table_S6'
 					tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 					openFile(tmp)
-			# model assumptions
+		# model assumptions
 				# a. calling while arriving
 						f = dx[-which(is.na(dx$next_bout) | is.na(dx$w_call)),]
 						m = lmer(next_bout ~as.factor(w_call)*sex+(1|bird_ID)+(1|nest_ID),f)
