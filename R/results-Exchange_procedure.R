@@ -1142,23 +1142,27 @@
 				length(ddn2$with_calling[ddn2$with_calling=='y'])/length(ddn2$with_calling)
 
 				# sexes
-				table(ddn$with_calling,ddn$sex)
-				table(ddn2$with_calling,ddn2$sex)
+				table(ddn$with_calling,ddn$sex_returning)
+				table(ddn2$with_calling,ddn2$sex_returning)
 
-				length(ddn$with_calling[ddn$with_calling=='y' & ddn$sex=='f'])/length(ddn$with_calling[ddn$sex=='f'])
-				length(ddn$with_calling[ddn$with_calling=='y' & ddn$sex=='m'])/length(ddn$with_calling[ddn$sex=='m'])
-				length(ddn2$with_calling[ddn2$with_calling=='y' & ddn2$sex=='f'])/length(ddn2$with_calling[ddn2$sex=='f'])
-				length(ddn2$with_calling[ddn2$with_calling=='y' & ddn2$sex=='m'])/length(ddn2$with_calling[ddn2$sex=='m'])
+				length(ddn$with_calling[ddn$with_calling=='y' & ddn$sex_returning=='f'])/length(ddn$with_calling[ddn$sex_returning=='f'])
+				length(ddn$with_calling[ddn$with_calling=='y' & ddn$sex_returning=='m'])/length(ddn$with_calling[ddn$sex_returning=='m'])
+				length(ddn2$with_calling[ddn2$with_calling=='y' & ddn2$sex_returning=='f'])/length(ddn2$with_calling[ddn2$sex_returning=='f'])
+				length(ddn2$with_calling[ddn2$with_calling=='y' & ddn2$sex_returning=='m'])/length(ddn2$with_calling[ddn2$sex_returning=='m'])
+				
+				#ddn2$w_call = ifelse(ddn2$with_calling == 'y', 1, 0)
+				#m = glmer(w_call ~ sex_returning*scale(day_j) + (1|bird_ID) + (1|nest_ID), ddn2, family = 'binomial')
+				#m = glmer(w_call ~ sex_returning + (1|bird_ID) + (1|nest_ID), ddn2, family = 'binomial')
+				#plot(allEffects(m))
+				#summary(glht(m))
 
-				m = glmer(w_call ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dx, family = 'binomial')
-				m = glmer(w_call ~ sex + (1|bird_ID) + (1|nest_ID), dx, family = 'binomial')
-				plot(allEffects(m))
-				summary(glht(m))
 			# reply (has 1 observation less, as reply was NA)
-				dr= dd[dd$with_calling %in% c('y') & !is.na(dd$o_replies) & dd$left_type %in% c('2 while around', '3 during exchange')]
+				dr= dd[dd$with_calling %in% c('y') & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
 				summary(factor(dr$o_replies))
+
 				dry = dr[dr$o_replies %in% c('y')]
-				summary(dry$sex)
+				nrow(dry)/nrow(dr) # % of cases with reply
+				summary(factor(dry$sex))
 				length(unique(dry$nest[dry$sex == 'f']))
 				length(unique(dry$nest[dry$sex == 'm']))
 		    # returning parent is quiet
@@ -1351,7 +1355,7 @@
 						ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 					o1=rbind(oii,ri)
 				# b. reply
-					dr= dd[dd$with_calling %in% c('y') & !is.na(dd$o_replies) & dd$left_type %in% c('2 while around', '3 during exchange')]
+					dr= dd[dd$with_calling %in% c('y') & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
 					dr$reply = ifelse(dr$o_replies == 'y', 1, 0)
 					nrow(dr)
 					length(unique(dr$bird_ID))
@@ -1374,10 +1378,10 @@
 						#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
 					oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]
 					# Random effects var*100
-					#l=data.frame(summary(m)$varcor)
-					#l=l[is.na(l$var2),]
-						#ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
-					o2=oii
+					l=data.frame(summary(m)$varcor)
+					l=l[is.na(l$var2),]
+						ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+					o2=rbind(oii, ri)
 				# c. calling coming ~ calling incubating
 					f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_o_int) | dd$left_before_presence=="y"),]
 					nrow(f)
@@ -1469,8 +1473,7 @@
 				sname = 'Table_S4'
 				tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 				openFile(tmp)
-
-			# model assumptions
+		# model assumptions
 				# a. calling while arriving
 						m = glmer(w_call ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dx, family = 'binomial')
 
@@ -1894,6 +1897,8 @@
 				 if(PNG == TRUE) {dev.off()}
 		# Figure 4c new
 			dxn = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | !dd$with_calling %in% c('y') | is.na(dd$o_replies)),]
+			dxn = dxn[dxn$left_type %in% c('3 during exchange'),]
+
 				nrow(dxn)
 				length(unique(dxn$bird_ID))
 				length(unique(dxn$nest_ID))
