@@ -1029,8 +1029,6 @@
 				x$at=ifelse(x$push=='y',ifelse(x$sex=='f', 1-kkk,2+kkk),
 								ifelse(x$sex=='f', 3.7-kkk,4.7+kkk))
 
-
-				}
 		  # prepare model predictions
 				m = lmer(both ~ sex*push + sex*day_j+(as.numeric(as.factor(push))|bird_ID) + (1|nest_ID), ebb)
 						nsim <- 5000
@@ -1165,6 +1163,25 @@
 				summary(factor(dry$sex))
 				length(unique(dry$nest[dry$sex == 'f']))
 				length(unique(dry$nest[dry$sex == 'm']))
+		    
+		    # between initiation and leaving 
+				# returning
+		    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+				summary(factor(dp$call_c_int))
+		    	nrow(dp[dp$call_c_int == 0,])/nrow(dp)
+		    	# incubating
+		    	dp = dd[-which(is.na(dd$call_o_int) | dd$left_before_presence=="y"),]
+		    	summary(factor(dp$call_o_int))
+		    	nrow(dp[dp$call_o_int == 0,])/nrow(dp)
+		    # between left and sitting down - exchange gap
+		    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+				summary(factor(dp$call_int_c2))
+		      	nrow(dp[dp$call_int_c2 == 0,])/nrow(dp)
+		    # after sitting down
+				dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+				summary(factor(dp$call_int_c3))
+		      	nrow(dp[dp$call_int_c3 == 0,])/nrow(dp)
+
 		    # returning parent is quiet
 		    	# all cases
 		    	x = dd[-which(is.na(dd$with_calling) | is.na(dd$call_c_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
@@ -1177,6 +1194,12 @@
 				x = x[x$left_before_presence=="n",]
 				nrow(x)
 				nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
+
+			# both silent 
+				x = dd[-which(is.na(dd$with_calling) | is.na(dd$call_o_int)| is.na(dd$call_c_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
+				x = x[x$left_before_presence=="n",]
+				nrow(x)
+				nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_o_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
 
 		   # correlations - TO BE CHECKED
 				cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="pearson")
