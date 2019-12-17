@@ -1134,15 +1134,21 @@
 			ddn2 = ddn[ddn$left_type %in% c('2 while around', '3 during exchange')]
 			length(ddn2$with_calling[ddn2$with_calling=='y'])/length(ddn2$with_calling)
 
+			# only for cases where incubating bird left only after nest relief initiation
+			summary(factor(dd$with_calling[dd$left_type %in% c('3 during exchange')]))
+			ddn3 = ddn[ddn$left_type %in% c('3 during exchange')]
+			length(ddn3$with_calling[ddn3$with_calling=='y'])/length(ddn3$with_calling)
+
 			# sexes
 			table(ddn$with_calling,ddn$sex_returning)
 			table(ddn2$with_calling,ddn2$sex_returning)
+			table(ddn3$with_calling,ddn3$sex_returning)
 
 			length(ddn$with_calling[ddn$with_calling=='y' & ddn$sex_returning=='f'])/length(ddn$with_calling[ddn$sex_returning=='f'])
 			length(ddn$with_calling[ddn$with_calling=='y' & ddn$sex_returning=='m'])/length(ddn$with_calling[ddn$sex_returning=='m'])
 			length(ddn2$with_calling[ddn2$with_calling=='y' & ddn2$sex_returning=='f'])/length(ddn2$with_calling[ddn2$sex_returning=='f'])
 			length(ddn2$with_calling[ddn2$with_calling=='y' & ddn2$sex_returning=='m'])/length(ddn2$with_calling[ddn2$sex_returning=='m'])
-			
+				
 			#ddn2$w_call = ifelse(ddn2$with_calling == 'y', 1, 0)
 			#m = glmer(w_call ~ sex_returning*scale(day_j) + (1|bird_ID) + (1|nest_ID), ddn2, family = 'binomial')
 			#m = glmer(w_call ~ sex_returning + (1|bird_ID) + (1|nest_ID), ddn2, family = 'binomial')
