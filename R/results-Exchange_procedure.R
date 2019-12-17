@@ -1143,11 +1143,16 @@
 			table(ddn$with_calling,ddn$sex_returning)
 			table(ddn2$with_calling,ddn2$sex_returning)
 			table(ddn3$with_calling,ddn3$sex_returning)
+			nrow(ddn)
+			nrow(ddn2)
+			nrow(ddn3)
 
 			length(ddn$with_calling[ddn$with_calling=='y' & ddn$sex_returning=='f'])/length(ddn$with_calling[ddn$sex_returning=='f'])
 			length(ddn$with_calling[ddn$with_calling=='y' & ddn$sex_returning=='m'])/length(ddn$with_calling[ddn$sex_returning=='m'])
 			length(ddn2$with_calling[ddn2$with_calling=='y' & ddn2$sex_returning=='f'])/length(ddn2$with_calling[ddn2$sex_returning=='f'])
 			length(ddn2$with_calling[ddn2$with_calling=='y' & ddn2$sex_returning=='m'])/length(ddn2$with_calling[ddn2$sex_returning=='m'])
+			length(ddn3$with_calling[ddn3$with_calling=='y' & ddn3$sex_returning=='f'])/length(ddn3$with_calling[ddn3$sex_returning=='f'])
+			length(ddn3$with_calling[ddn3$with_calling=='y' & ddn3$sex_returning=='m'])/length(ddn3$with_calling[ddn3$sex_returning=='m'])
 				
 			#ddn2$w_call = ifelse(ddn2$with_calling == 'y', 1, 0)
 			#m = glmer(w_call ~ sex_returning*scale(day_j) + (1|bird_ID) + (1|nest_ID), ddn2, family = 'binomial')
@@ -1157,6 +1162,7 @@
 
 		# reply (has 1 observation less, as reply was NA)
 			dr= dd[dd$with_calling %in% c('y') & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
+			nrow(dr)
 			summary(factor(dr$o_replies))
 
 			dry = dr[dr$o_replies %in% c('y')]
@@ -1346,7 +1352,8 @@
 	# Table S4
 		# prepare table data
 			# a. calling while arriving
-				dx = dd[dd$left_before_presence=="n" & !is.na(dd$with_calling),]
+				dx = dd[dd$left_before_presence=="n" & !is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange'),]# & dd$left_type %in% c('2 while around','3 during exchange'),]#'2 while around',
+				#dx = dd[ !is.na(dd$with_calling) ,]# & dd$left_type %in% c('2 while around','3 during exchange'),]#'2 while around',
 				dx$w_call = ifelse(dx$with_calling == 'y', 1, 0)
 				nrow(dx)
 				length(unique(dx$bird_ID))
@@ -1354,7 +1361,8 @@
 				m = glmer(w_call ~ sex_returning*scale(day_j) + (1|bird_ID) + (1|nest_ID), dx, family = 'binomial')
 						# binomial gives same results
 							#dd$pa_bin=ifelse(dd$pa == 0.001, 0,1)
-							#m = glmer(pa_bin~ sex*day_j+(day_j|nest_ID),family='binomial', dd)
+					#m = glmer(w_call~ sex_returning*scale(day_j)+(day_j|nest_ID),family='binomial', dx)
+				
 				pred=c('Intercept (f)','sex_returning(m)', 'Day', 'Day:sex')
 				dep = 'calling while arriving (bin)'
 				mod = 1
@@ -1385,6 +1393,7 @@
 				length(unique(dr$bird_ID))
 				length(unique(dr$nest_ID))
 				m = glmer(reply ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dr, family = 'binomial')
+				#m = glmer(reply ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dr, family = 'binomial')
 				#m = glm(reply ~ scale(day_j) , dr, family = 'binomial') # gives same results
 				pred=c('Intercept (inc f)','Sex(m)','Day','Sex:Day')
 				dep = 'reply (bin)'
@@ -1728,7 +1737,7 @@
 
 						dev.off()
 
-		# Figure 4a
+	# Figure 4a
 		# prepare data for plotting
 			f = dd[-which(is.na(dd$call_c_int) | is.na(dd$call_o_int) | dd$left_before_presence=="y"),]
 				nrow(f)
@@ -1938,7 +1947,7 @@
 			dxn$col_=ifelse(dxn$sex=='f','#FCB42C', '#535F7C')
 			x$col_=ifelse(x$sex=='f','#FCB42C', '#535F7C')
 		# prepare model predictions
-			m = lmer(next_bout ~ o_replies+sex+(1|bird_ID)+(1|nest_ID),dxn)
+			m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),dxn)
 					nsim <- 5000
 					bsim <- sim(m, n.sim=nsim)
 
@@ -2144,6 +2153,7 @@
 		# prepare table data
 			# a. calling while arriving
 				f = dd[-which(is.na(dd$current_bout) | dd$left_before_presence == 'y' | is.na(dd$with_calling)),]
+				f = f[f$left_type %in% c('3 during exchange'),]
 				f$w_call = ifelse(f$with_calling == 'y', 1, 0)
 
 				nrow(f)
@@ -3012,7 +3022,6 @@
 				length(unique(f$nest_ID))
 			
 				m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),f)
-				#m = lmer(next_bout ~ o_replies+sex+(1|bird_ID)+(1|nest_ID),f)
 				pred=c('Intercept (f, no)','reply call','Sex(m)', 'Call:sex')
 				dep = 'next bout'
 				mod = 2
@@ -3193,6 +3202,44 @@
 										plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 
 						dev.off()
+
+	# within text info on replies - roughly 1 - 7h difference
+		f = dd[-which(is.na(dd$next_bout) | dd$left_before_presence == 'y' | !dd$with_calling %in% c('y') | is.na(dd$o_replies)),]
+		f = f[f$left_type %in% c('3 during exchange'),]
+
+		# no interaction
+		m = lmer(next_bout ~ o_replies+sex+(1|bird_ID)+(1|nest_ID),f)
+				nsim <- 5000
+				bsim <- sim(m, n.sim=nsim)
+			 	# Fixed effects
+				v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
+
+				diff_h = quantile(bsim@fixef[,2]/60,  prob=c(0.025,0.5,0.975))
+				diff_per = quantile(bsim@fixef[,2]/bsim@fixef[,1],  prob=c(0.025,0.5,0.975))
+
+		# interaction
+		m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),f)
+				nsim <- 5000
+				bsim <- sim(m, n.sim=nsim)
+			 	# Fixed effects
+				v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
+
+				
+				quantile((bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/60,  prob=c(0.025,0.5,0.975)) # male
+				quantile((bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/(bsim@fixef[,1] + bsim@fixef[,2]),  prob=c(0.025,0.5,0.975)) # male
+				
+
+				quantile(bsim@fixef[,2]/60,  prob=c(0.025,0.5,0.975)) # female
+				quantile(bsim@fixef[,2]/bsim@fixef[,1],  prob=c(0.025,0.5,0.975)) # female
+
+				mfh = c(bsim@fixef[,2]/60, (bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/60)
+				quantile(mfh,  prob=c(0.025,0.5,0.975)) # hour diff
+				
+				mfp = c(bsim@fixef[,2]/bsim@fixef[,1], (bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/(bsim@fixef[,1] + bsim@fixef[,2]))
+				quantile(bsim@fixef[,2]/bsim@fixef[,1],  prob=c(0.025,0.5,0.975)) # % diff	
+
 
 # how leaving the nest? - create supplementary table
 	# distributions - for cases without enclosure 
