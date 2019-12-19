@@ -1,8 +1,4 @@
-##### TO DO
-##### check descriptive part - calling correlations
-##### check and likely delete ex, and ex_ datasets
-
-# RESULTS section Exchange procedure - vocalization
+### RESULTS section Exchange procedure - vocalization ###
 
 # SETTINGS & DATA
     # do you want plots in R (PNG=FALSE) or as PNG (PNG = TRUE)?
@@ -22,44 +18,6 @@
 		source(paste0(wd2, 'Constants_packages_PrepareData.R'))
 		dd = dd[!is.na(dd$arrival),]
 	
-# LIKELY DELETE
-		
-		dd = dd[!is.na(dd$arrival),]
-		ex = dd[dd$left_before_presence=="n",]
-		#ex_$obs_ID[is.na(ex_$push)]
-		ex_= ex[!is.na(ex$pushoff_int),]
-		ex_$push = ifelse(ex_$pushoff_int==3,'y','n')
-		ex_$push01 = ifelse(ex_$push == 'y', 1, 0)
-		ex_$both=as.numeric(difftime(ex_$dt_left,ex_$dt_arrive, 'secs')) # time when both present in the vicinity of the nest
-		eb = ex_[ex_$both>=0,] # only for cases where incubating bird left after the returning initiated the exchange
-		#eb$sex = ifelse(eb$sex == 'f', 'm','f') # sex of pushing parent
-		eb_ = eb[!is.na(eb$call_int_1),]
-
-		e= ex_[!is.na(ex_$current_bout),]
-		dx = ex_[!is.na(ex_$with_calling),]
-		dx$w_call = ifelse(dx$with_calling == 'y', 1, 0)
-		dx_ = dx[which(dx$with_calling == 'y'),]
-		dx_ = dx_[-which(is.na(dx_$o_replies)),]
-		dx_$reply = ifelse(is.na(dx_$o_replies), NA, ifelse(dx_$o_replies == 'y', 1, 0))
-
-# LIKELY DELETE	
-		ex = dd[dd$left_before_presence=="n",]
-		#ex_$obs_ID[is.na(ex_$push)]
-		ex_= ex[!is.na(ex$pushoff_int),]
-		ex_$push = ifelse(ex_$pushoff_int==3,'y','n')
-		ex_$push01 = ifelse(ex_$push == 'y', 1, 0)
-		ex_$both=as.numeric(difftime(ex_$dt_left,ex_$dt_arrive, 'secs')) # time when both present in the vicinity of the nest
-		eb = ex_[ex_$both>=0,] # only for cases where incubating bird left after the returning initiated the exchange
-		#eb$sex = ifelse(eb$sex == 'f', 'm','f') # sex of pushing parent
-		eb_ = eb[!is.na(eb$call_int_1),]
-
-		e= ex_[!is.na(ex_$current_bout),]
-		dx = ex_[!is.na(ex_$with_calling),]
-		dx$w_call = ifelse(dx$with_calling == 'y', 1, 0)
-		dx_ = dx[which(dx$with_calling == 'y'),]
-		dx_ = dx_[-which(is.na(dx_$o_replies)),]
-		dx_$reply = ifelse(is.na(dx_$o_replies), NA, ifelse(dx_$o_replies == 'y', 1, 0))
-
 # distributions
 	# calling while initiating nest exchange
 		# overall
@@ -2109,5 +2067,3 @@
 									plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 
 					dev.off()
-
-

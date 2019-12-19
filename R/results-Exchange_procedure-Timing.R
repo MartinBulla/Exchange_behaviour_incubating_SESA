@@ -1,8 +1,4 @@
-##### TO DO
-##### check descriptive part - calling correlations
-##### check and likely delete ex, and ex_ datasets
-
-# RESULTS section Exchange procedure - time components
+### RESULTS section Exchange procedure - time components ###
 
 # SETTINGS & DATA
     # do you want plots in R (PNG=FALSE) or as PNG (PNG = TRUE)?
