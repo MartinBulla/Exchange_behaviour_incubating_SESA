@@ -154,3 +154,39 @@
 		   dd$left_before_presence = as.factor(dd$left_before_presence)
 		   dd$both=as.numeric(difftime(dd$dt_left,dd$dt_arrive, 'secs')) 
 		   dd$sex_returning = ifelse(dd$sex == 'f','m','f')
+
+# call intensity dataset
+    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+		d1 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_1'))
+			colnames(d1)[7] = 'call_int'
+			d1$type = '1 both present'
+			d1$who = 'both'
+			#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+			#d1[is.na(d1$call_int), ]
+		d01 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_c_int'))
+			colnames(d01)[7] = 'call_int'
+			d01$type = '1 both present'
+			d01$who = 'returning'
+			#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+			#d1[is.na(d1$call_int), ]
+		d02 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_o_int'))
+			colnames(d02)[7] = 'call_int'
+			d02$type = '1 both present'
+			d02$who = 'incubating'
+			#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+			#d1[is.na(d1$call_int), ]
+		d2 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c2'))
+			colnames(d2)[7] = 'call_int'
+			d2$type = '2 exchange gap'
+			d2$who = 'returning'
+			#d2$obs_ID[is.na(d2$call_int) & d2$sound_ok == 'y']
+			#d2[is.na(d2$call_int), ]
+
+		d3 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c3'))
+			colnames(d3)[7] = 'call_int'
+			d3$type = '3 after on nest'
+			d3$who = 'returning'
+			#d3$obs_ID[is.na(d3$call_int) & d3$sound_ok == 'y']
+			#d3[is.na(d2$call_int), ]
+		di = rbind(d1,d01,d02,d2,d3)
+		di = di[!is.na(di$call_int),]
