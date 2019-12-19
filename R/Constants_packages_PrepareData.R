@@ -152,4 +152,5 @@
 								ifelse(dd$dt_left < dd$dt_arrive, '2 while around','3 during exchange'))))
 
 		   dd$left_before_presence = as.factor(dd$left_before_presence)
+		   dd$both=as.numeric(difftime(dd$dt_left,dd$dt_arrive, 'secs')) 
 		   dd$sex_returning = ifelse(dd$sex == 'f','m','f')
