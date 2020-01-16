@@ -130,6 +130,7 @@
 		sname = 'Table_S8'
 		tmp = write_xlsx(o1, paste0(ta,sname,'.xlsx'))
 		openFile(tmp)
+
 # model assumptions
 			dc = dd[!is.na(dd$call_left),]
 			dc$c_left = ifelse(dc$call_left=='y', 1,0)
