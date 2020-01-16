@@ -1,3 +1,5 @@
+### RESULTS section Behaviour prior to exchange ###
+
 # SETTINGS & DATA
     # do you want plots in R (PNG=FALSE) or as PNG (PNG = TRUE)?
 		PNG=FALSE #PNG = TRUE
@@ -25,7 +27,6 @@
 		bb_$ob_sl = scale(log(bb_$obs_time))
 
 # Calls and fly-offs prior to exchange and during regular incubation
-
   # distributions
 		summary(factor(bb_$call_i))
 		ggplot(bb_,aes(x=call_i, fill = type))+geom_density(alpha=0.5)
@@ -489,8 +490,7 @@
 			summary(factor(x$type))
 			length(unique(x$nest[x$type == "ex"]))
 			length(unique(x$nest[x$type == "non"]))
-			length(unique(x$nest))
-						
+			length(unique(x$nest))					
 	# distributions
 		# calling	
 			ggplot(bo_, aes(y = deltaT, x = obs_time))+geom_point()
@@ -524,7 +524,7 @@
 			
 			ggplot(bf, aes(y = deltaT/obs_time, x = who))+geom_boxplot()
 			ggplot(bf, aes(y = deltaT/obs_time, x = nest_ID))+geom_boxplot()
-			
+	
 	# Figure 1cd
 		agg = FALSE
 		# run first 
@@ -815,7 +815,7 @@
 				  openFile(tmp)		
 	# model assumptions
 		# calling simple
-		    if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2a.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)
+		    if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2a.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}
 		    par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
 
 			m = lmer(deltaT ~ type+(1|nest_ID/obs_ID) , boo)
@@ -850,7 +850,7 @@
 		
 			if(PNG == TRUE){dev.off()}		
 		# calling sex
-			if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2b.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)
+			if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2b.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}
 		    par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )		
 
 			m = lmer(deltaT ~ type*sex+(1|nest_ID/obs_ID) , boo)
@@ -885,7 +885,7 @@
 		
 			if(PNG == TRUE){dev.off()}
 		# calling simple
-			if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2c.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)
+			if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2c.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}
 		    par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )		
 
 			m = lmer(deltaT ~ type+(1|nest_ID/obs_ID) , bff)
@@ -920,7 +920,7 @@
 		
 			if(PNG == TRUE){dev.off()}	
 		# calling sex
-			if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2d.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)
+			if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2d.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}
 		    par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )		
 
 			m = lmer(deltaT ~ type*sex+(1|nest_ID/obs_ID) , bff)
@@ -955,3 +955,5 @@
 					plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 		
 			if(PNG == TRUE){dev.off()}
+
+# END

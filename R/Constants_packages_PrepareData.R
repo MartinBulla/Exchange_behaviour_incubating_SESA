@@ -6,6 +6,8 @@
 		sapply(c('alluvial','arm','blmeco','effects', 'data.table','ggplot2','grid', 'lattice','magrittr','matrixStats','multcomp','pastecs', 'PBSmodelling','plyr','raster','readxl','stringr', 'writexl'), #XLConnect
     		function(x) suppressPackageStartupMessages(require(x , character.only = TRUE, quietly = TRUE) ))
 	
+	# writeLines(capture.output(sessionInfo()), paste0(wd2,"sessionInfo.txt"))
+	
 	# define constants
 		varnames = c("tag", "datetime_", "x", "y","z", "temp", "batt")
 		
