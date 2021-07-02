@@ -142,7 +142,7 @@
 		   dd$push = ifelse(is.na(dd$pushoff_int), NA, ifelse(dd$pushoff_int==3,'y','n'))
 		   dd$push01 = ifelse(is.na(dd$push), NA, ifelse(dd$push == 'y', 1, 0))
 		   dd$presence=as.numeric(difftime(dd$dt_on, dd$dt_1st_presence,'secs'))  # how long before the bird sits down on nest is he present)
-		   dd$arrival=as.numeric(difftime(dd$dt_on,dd$dt_arrive,'secs'))  # how long before the bird sits down on nest is he close by / anters the picutre (i.e. start the exchange))
+		   dd$arrival=as.numeric(difftime(dd$dt_on,dd$dt_arrive,'secs'))  # how long before the bird sits down on nest is he close by / enters the picture (i.e. start the exchange))
 		    ### dd$presence2=as.numeric(dd$dt_left-dd$dt_1st_presence)
 
 		   dd$pa=dd$presence-dd$arrival
