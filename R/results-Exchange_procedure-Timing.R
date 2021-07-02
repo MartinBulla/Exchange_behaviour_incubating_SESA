@@ -28,28 +28,95 @@
 		dd = dd[!is.na(dd$arrival),]
 	
 # description
-  # presence before exchange
+  # for how long present before initiation of nest relief
 		summary(dd$pa/60)
 		summary(dd$pa)
 		length(dd$pa) # number of exchanges
 		length(unique(dd$nest_ID)) # number of nests
 
-		densityplot(dd$pa/60)
-		densityplot(log(dd$pa/60))
-		densityplot(asin(dd$pa/60))
-		dd$obs_ID[dd$pa/60 > 2]
-		ggplot(dd, aes(x = sex, y = log(pa), fill = sex)) + geom_boxplot()
-		ggplot(dd, aes(x = day_j, y = log(pa), fill = sex)) + geom_point() + stat_smooth()
-		ggplot(dd, aes(x = day_j, y = (pa), fill = sex)) + geom_point() + stat_smooth()
-		table(dd$pa)
-		m = lmer(log(pa)~ sex*day_j+(day_j|nest_ID), dd)
-		plot(allEffects(m))
-		summary(glht(m))
-  # arrival
-		summary(dd$arrival)
-		length(dd$arrival[!is.na(dd$arrival)]) # number of exchanges
-		length(unique(dd$nest_ID[!is.na(dd$arrival)])) # number of nests
+		# exploration of the variable
+			densityplot(dd$pa/60)
+			densityplot(log(dd$pa/60))
+			densityplot(asin(dd$pa/60))
+			dd$obs_ID[dd$pa/60 > 2]
+			ggplot(dd, aes(x = sex, y = log(pa), fill = sex, col = sex)) + geom_boxplot()
+			ggplot(dd, aes(x = day_j, y = log(pa), fill = sex, col = sex)) + geom_point() + stat_smooth()
+			ggplot(dd, aes(x = day_j, y = (pa), fill = sex, col = sex)) + geom_point() + stat_smooth()
+			table(dd$pa)
+			m = lmer(log(pa)~ sex*day_j+(day_j|nest_ID), dd) # seems ok, given the simple model
+			m = lmer(log(pa)~ sex*day_j+(1|nest_ID), dd)
+			plot(allEffects(m))
+			summary(glht(m))
+  
+  # initiation to incubation start
+		summary(dd$arrival) # interval between initiation and incubation start in s
+		summary(dd$arrival/60) # interval between initiation and incubation start in m
+		nrow(dd) # number of exchanges
+		length(unique(dd$nest_ID))  # number of nests
+  
+  # when incubating left
+	  summary(factor(dd$left_type))
+	  # leaving before arrival
+			lbp = dd[dd$left_before_presence=="y",]
+			nrow(lbp)/nrow(dd)*100 # % of cases
+			nrow(lbp) # number of cases
 
+			length(unique(lbp$nest_ID)) 
+			xx = as.numeric(difftime(lbp$dt_1st_presence,  lbp$dt_left, units="secs")) # time difference between leaving and arrival in s
+			length(xx[xx>60]) # N of cases where difference is > 1 min
+			summary(xx[xx>60]/60) 
+			length(xx[xx>60*10]/60) # N of cases where difference is > 10 min
+	  
+	  # leaving after return, but before initiation
+	   		lwa = dd[left_type=="2 while around",]
+			nrow(lwa)/nrow(dd)*100 # % of cases
+			nrow(lwa) # number of cases
+			length(unique(lwa$nest_ID)) 
+
+	  # leaving after initiation
+	   		lai = dd[left_type=="3 during exchange",]
+	   		nrow(lai)/nrow(dd)*100 # % of cases
+			nrow(lai) # number of cases
+			length(unique(lai$nest_ID)) 
+			
+			# see Table S3b for 15 s (95%CI: 14 – 16 s) difference from nest relief initiation to incubation start in 123 cases vs the 40 cases (25 + 15) where the incubating parent left before the returning partner initiated the nest relief 
+  
+  # exchange gap 
+		lai = dd[left_type=="3 during exchange",]
+		summary(lai$gap) 
+		summary(lai$gap/60) 
+
+  		lbi = dd[left_type!="3 during exchange",]
+  		summary(lbi$gap) 
+		summary(lbi$gap/60) 
+
+
+		both = dd[left_type=="2 while around",]
+  		summary(both$gap) 
+		summary(both$gap/60) 
+
+		lba = dd[left_type=="1 before presence",]
+  		summary(lba$gap) 
+		summary(lba$gap/60) 
+
+        # difference due to please leave
+          summary(lai$gap[lai$push == 'y'])
+  		  summary(lai$gap[lai$push == 'n'])
+
+  		  densityplot(lai$gap)
+  		  densityplot(log(lai$gap))
+  		  ggplot(lai, aes(x = push, y = gap)) + geom_boxplot() + geom_dotplot(binaxis= 'y', stackdir='center', dotsize = 0.5)
+  		  m = lmer(log(gap)~ push+(1|nest_ID), lai)
+  		  m = lmer(gap~ push+(1|nest_ID), lai)
+	 	  plot(allEffects(m))
+	 	  summary(glht(m))
+
+	 	  nsim <- 5000
+		  bsim <- sim(m, n.sim=nsim)
+		  v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+		  ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
+			
+ 	#  likely of no use
 		ex = dd[dd$left_before_presence=="n",]
 		densityplot((ex$arrival-ex$gap)/60)
 		densityplot(dd$arrival/60)
@@ -89,9 +156,7 @@
 			m = lmer(log(pa+0.01)~ left_before_presence +(1|nest_ID), dd)
 			plot(allEffects(m))
 			summary(glht(m))
-  # when incubating left
-  	 summary(factor(dd$left_type))
-  	 table(dd$sex, dd$left_type)
+
   # exchange gap
 	 summary(dd$gap)
 	 summary(dd$gap/60)
@@ -162,6 +227,13 @@
 			nrow(e)
 			length(unique(e$bird_ID))
 			length(unique(e$nest_ID))
+
+			#m=glmer(push01 ~ sex + (1|bird_ID)+(1|nest_ID), family='binomial',e)
+			#	nsim <- 5000
+			#	bsim <- sim(m, n.sim=nsim)
+		
+			#apply(bsim@fixef, 2, quantile, prob=c(0.5))
+			#apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
 
 			m=glmer(push01 ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)
 			#m=glmer(push_ ~ sex_returning*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)
@@ -310,6 +382,88 @@
 
 	
 			 if(PNG == TRUE) {dev.off()}
+# Figure pleaseLeave	- gaussian
+	# raw data
+		e = dd[dd$left_type %in%c('3 during exchange') & !is.na(dd$current_bout),]
+		e$n = 1
+				#x = ddply(f,.(nest_ID, sex_returning_returning),summarise, mo=median(call_o_int), q1o=quantile(call_o_int,0.25), q2o= quantile(call_o_int,0.75), mc=median(call_c_int), q1c=quantile(call_c_int,0.25), q2c= quantile(call_c_int,0.75), n = sum(n))
+
+		e$col_=ifelse(e$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
+
+		x = ddply(e,.(sex_returning,day_j),summarise, push = mean(push01), n = sum(n))
+				#x$call_o_int = ifelse(x$sex_returning == 'f', x$call_o_int-0.2, x$call_o_int+0.2)
+				# call based on x-axis - incubating parent
+				x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
+	# predict
+		e = dd[dd$left_type %in%c('3 during exchange') & !is.na(dd$current_bout),]
+		m=lmer(push01 ~ sex_returning*day_j+ (day_j|bird_ID),e) 
+		nsim <- 5000
+		bsim <- sim(m, n.sim=nsim)
+		v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+	  	# values to predict for
+			l = list()
+			for(i in c('m','f')){
+				ei = e[e$sex_returning == i]
+				l[[i]]=data.frame(	sex_returning = i,
+									day_j = seq(min(ei$day_j), max(ei$day_j), length.out = 100)
+									)
+					}
+			newD = do.call(rbind,l)
+
+		# exactly the model which was used has to be specified here
+			X <- model.matrix(~ sex_returning*day_j,data=newD)
+
+			# calculate predicted values and creditability intervals
+				newD$pred <-(X%*%v)
+						predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+						for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
+						newD$lwr <- (apply(predmatrix, 1, quantile, prob=0.025))
+						newD$upr <- (apply(predmatrix, 1, quantile, prob=0.975))
+				pp=newD
+				ppf = pp[pp$sex_returning == 'f',]
+				ppm = pp[pp$sex_returning == 'm',]
+	# plot
+		if(PNG == TRUE){
+			png(paste(outdir,"Figure_plsLeave_gaus.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+				}else{ dev.new(width=1.85+0.3,height=1.5)}
+		par(mar=c(0.4,0.1,0.6,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+
+		plot(pred ~ day_j, data = pp,
+									#ylab =NULL,
+									xaxt='n',
+									yaxt='n',
+									#xaxs = 'i',
+									#yaxs = 'i',
+									ylim = c(0,1),
+									xlim = c(0,30),
+									type='n'
+									) # col=z_g$cols, border=z_g$cols
+
+			
+			#points(e$push) ~ jitter(dd$day_j), col = adjustcolor(dd$colr, alpha.f = 0.8), bg = adjustcolor(dd$colr, alpha.f = 0.4), pch =21, cex = 0.4)
+
+			# predictions
+				polygon(c(ppf$day_j, rev(ppf$day_j)), c(ppf$lwr,
+								rev(ppf$upr)), border=NA, col=adjustcolor(col_f,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+				lines(ppf$day_j, ppf$pred, col=col_f,lwd=1)
+
+				polygon(c(ppm$day_j, rev(ppm$day_j)), c(ppm$lwr,
+								rev(ppm$upr)), border=NA, col=adjustcolor(col_m,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+				lines(ppm$day_j, ppm$pred, col=col_m,lwd=1)
+
+				#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
+						#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
+
+			symbols(x$day_j, x$push, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
+			axis(1, at=seq(0,30,by = 10), label=seq(0,30,by = 10), mgp=c(0,-0.20,0), lwd = 0.35)
+			axis(2, at=seq(0,1,by = 0.2), label=c('0%', '20%', '40%', '60%', '80%','100%'), lwd = 0.35)
+
+			mtext("Incubation day",side=1,line=0.4, cex=0.55, las=1, col='black')
+			mtext("Please-leave display",side=2,line=1.1, cex=0.55, las=3, col='black')
+
+	
+			 if(PNG == TRUE) {dev.off()}
+
 # Table S3 + text data for S3d
   # prepare table data
 	 # a. presence before exchange
@@ -341,7 +495,7 @@
 				ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
 				ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 			o1=rbind(oii,ri)
-	 # b. arrival
+	 # b. from initiation to incubation start
 		 	m = lmer(log(arrival) ~ left_type + sex_returning*scale(day_j)+(scale(day_j)|nest_ID), dd)
 		 	#'plot(allEffects(m))
 			pred=c('Intercept (f & before)','Left between', 'Left after', 'sex_returning(m)', 'Day', 'Day:sex') # note that sex of returning bird is oposite of this
@@ -368,7 +522,11 @@
 			o2=rbind(oii,ri)
 	 # c. gap
 		  m = lmer(log(gap)~ sex_returning*scale(day_j)+(day_j|nest_ID), dd)
-		  #'plot(allEffects(m))
+		  #m = lmer(log(gap)~ left_type*scale(day_j)+(day_j|nest_ID), dd)
+		  densityplot(dd$gap[dd$left_type == '3 during exchange'])
+		  m = lmer(log(gap)~ scale(day_j)+(day_j|nest_ID), dd[dd$left_type == '3 during exchange',])
+		  m = lmer(gap~ scale(day_j)+(day_j|nest_ID), dd[dd$left_type == '3 during exchange',])
+		  #plot(allEffects(m))
 		  #dd$capture=as.factor(dd$capture)
 		  #dd$cap=as.factor(ifelse(dd$capture%in%c(1,2,3,4), 'y','n'))
 		  #ggplot(dd,aes(x=capture, y=log(gap))) + geom_point()
@@ -459,6 +617,7 @@
 			lines(pp$day_j, pp$pred, col=col_m,lwd=1)
 # Figure Temp
   # prepare data
+	  #m = lmer(log(arrival) ~ day_j+(scale(day_j)|nest_ID), dd)
 	  m = lmer(log(arrival) ~ left_type*day_j+(scale(day_j)|nest_ID), dd)
 		nsim <- 5000
 		bsim <- sim(m, n.sim=nsim)
@@ -630,7 +789,7 @@
 
 				text(x=1*0.6,y=log(max(dd$arrival))*0.97, labels='\u2640', col='#FCB42C', cex=0.6)
 				text(x=1,y=log(max(dd$arrival)), labels='\u2642', col='#535F7C', cex=0.6)
-				mtext("Predictions\n95%CrI",side=3,line=-1.5, cex=0.5, las=1, col='red')
+				mtext("Predictions\n95%CI",side=3,line=-1.5, cex=0.5, las=1, col='red')
 				#axis(1, at=c(1.5,4.2, 6.9), labels=FALSE)
 
 				#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels
@@ -749,7 +908,7 @@
 				#text(x=0.3+0.2,y=100, labels='\u2642', col='#535F7C', cex=0.6, pos=4)
 				#text(x=0.3+0.6,y=100, labels='incubating', col='grey30', cex=0.6, pos=4)
 				text(x=0.3,y=100*0.88, labels="Predictions &\n95%CI", col='red', cex=0.5, pos=4)
-				#mtext("Prediction\n95%CrI",side=3,line=-1.5, cex=0.5, las=1, col='red')
+				#mtext("Prediction\n95%CI",side=3,line=-1.5, cex=0.5, las=1, col='red')
 				#axis(1, at=c(1.5,4.2, 6.9), labels=FALSE)
 
 				#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels
