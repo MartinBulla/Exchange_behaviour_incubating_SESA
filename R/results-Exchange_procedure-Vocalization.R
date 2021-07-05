@@ -21,11 +21,12 @@
 # distributions
 	# calling while initiating nest exchange
 		# overall
-		summary(factor(dd$with_calling))
 		ddn = dd[!is.na(dd$with_calling),]
-		length(ddn$with_calling[ddn$with_calling=='y'])/length(ddn$with_calling)
-
-		# only for cases where incubating bird left the nest only after returning one appeared
+		length(ddn$with_calling[ddn$with_calling=='y'])/length(ddn$with_calling) # % of observations
+		summary(factor(dd$with_calling))
+		nrow(ddn)
+		
+		# NOT USED only for cases where incubating bird left the nest only after returning one appeared
 		summary(factor(dd$with_calling[dd$left_type %in% c('2 while around', '3 during exchange')]))
 		ddn2 = ddn[ddn$left_type %in% c('2 while around', '3 during exchange')]
 		length(ddn2$with_calling[ddn2$with_calling=='y'])/length(ddn2$with_calling)
@@ -143,14 +144,116 @@
                 `2 exchange gap` = "b",
                 `3 after on nest` = "c"
                 )
+    # prepare data
+ 	    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+ 	    	#dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_type%in%c('1 before presence','2 while around')),]
+ 	    	#dp = dd[-which(dd$left_type%in%c('1 before presence','2 while around')),]
+ 			d1 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_1'))
+ 				colnames(d1)[7] = 'call_int'
+ 				d1$type = '1 both present'
+ 				d1$who = 'both'
+ 				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+ 				#d1[is.na(d1$call_int), ]
+ 			d01 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_c_int'))
+ 				colnames(d01)[7] = 'call_int'
+ 				d01$type = '1 both present'
+ 				d01$who = 'returning'
+ 				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+ 				#d1[is.na(d1$call_int), ]
+ 			d02 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_o_int'))
+ 				colnames(d02)[7] = 'call_int'
+ 				d02$type = '1 both present'
+ 				d02$who = 'incubating'
+ 				#d1$obs_ID[is.na(d1$call_int) & d1$sound_ok == 'y']
+ 				#d1[is.na(d1$call_int), ]
+ 			d2 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c2'))
+ 				colnames(d2)[7] = 'call_int'
+ 				d2$type = '2 exchange gap'
+ 				d2$who = 'returning'
+ 				#d2$obs_ID[is.na(d2$call_int) & d2$sound_ok == 'y']
+ 				#d2[is.na(d2$call_int), ]
+
+ 			d3 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_c3'))
+ 				colnames(d3)[7] = 'call_int'
+ 				d3$type = '3 after on nest'
+ 				d3$who = 'returning'
+ 				#d3$obs_ID[is.na(d3$call_int) & d3$sound_ok == 'y']
+ 				#d3[is.na(d2$call_int), ]
+ 			di = rbind(d1,d01,d02,d2,d3)
+ 			di = di[!is.na(di$call_int),]
+ 			#di$left_before = d$left_before_presence [match(di$obs_ID, d$obs_ID)]
+ 			# plot
+ 				#geom_text(aes(x, y,label=lab),	data=data.frame(x=3.5, y=100, who = c("both"), lab=c("a", "b", "c"), type=c("1 both present","2 exchange gap","3 after on nest")), size=2, colour = "grey30")
+ 			dev.new(width=1.85+1,height=1.5*2)
+ 			ggplot(di[!di$who =='both',], aes(x = call_int, fill = who)) +
+ 				geom_bar(position=position_dodge()) +
+ 				facet_wrap(~type, nrow=5, labeller = as_labeller(labels_)) +
+ 				ylab("Number of observations") +
+ 				xlab("Calling intensity") +
+ 				coord_cartesian(ylim = c(0, 100))+
+ 				guides(fill=guide_legend(title="Which parent:")) +
+ 				scale_fill_manual(values=c('#FCB42C','#535F7C')) +
+ 				theme_light()+
+ 									theme(	axis.line=element_line(colour="grey70", size=0.25),
+ 											#panel.border=element_rect(colour="white"),
+ 											panel.border=element_rect(colour="grey70", size=0.25),
+ 											panel.grid = element_blank(),
+
+ 											axis.title=element_text(size=7, colour="grey30"),
+ 											axis.title.y = element_text(vjust=1),
+ 											axis.title.x = element_text(vjust=0.2),
+ 											axis.text=element_text(size=6),# margin=units(0.5,"mm")),
+ 											axis.ticks.length=unit(0.5,"mm"),
+ 											#axis.ticks.margin,
+
+ 											strip.text.x =element_text(size = 6, color="grey30",  margin=margin(1,1,1,1,"mm")), #grey50
+ 											strip.background=element_rect(fill="grey99",colour="grey70", size=0.25),
+ 											#strip.background = element_blank(),
+ 											#strip.text = element_blank(),
+ 											panel.margin = unit(0, "mm"),
+ 											#legend.position="none"
+ 											legend.background=element_rect(colour="white"),
+ 											legend.key=element_rect(fill="grey99", colour="white"),
+ 											legend.text=element_text(size=7, colour="grey30"),
+ 											legend.title=element_text(size=7, colour="grey30")
+ 											)
+ 			if(PNG==TRUE){ggsave(paste(outdir,"Figure_3abc.png", sep=""),width=1.85+1,height=1.5*2, units = "in")}
+ 				#ggsave(paste(outdir,"Figure_4.eps", sep=""),width=1.85+1,height=1.5*2, units = "in")
+
     # legend
     	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+    	#dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_type%in%c('1 before presence','2 while around')),]
     	nrow(dp)
     	length(unique(dp$nest))
+
 # Figure 3d
 	ex = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
 	ex$nn=1
 	a = ddply(xx,.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
+	a$sex = ifelse(a$sex == 'f', 'Male', 'Female') # to make sex of returning bird
+
+	if(PNG == TRUE) {
+			png(paste(outdir,"Alluvial_sex.png", sep=""), width=5,height=2.5,units="in",res=600)
+			}else{
+			dev.new(width=5,height=2.5)
+			#dev.new(width=3.55,height=1.75)
+			}
+
+	alluvial(a[,1:3], freq=a$n,
+		axis_labels = c('Initiation\nto leaving','Exchange\ngap', 'After\nexchange'),
+		col = ifelse(a$sex == "Female", col_f, col_m), alpha = 0.7, #change alpha to 1 if printing to esp
+		border="white",
+		#border = ifelse(tit$Survived == "Yes", "orange", "grey"),
+		#hide = tit$Freq == 0,
+		cex = 0.5, cex.axis = 0.7
+		)
+	 if(PNG == TRUE) {dev.off()}
+# Figure 3d - only nest reliefs where all intensities present
+	ex = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+	#ex = dd[which(!is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & dd$left_before_presence=="n"),]
+	ex = dd[which(!is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & dd$left_type=="3 during exchange"),]
+	ex$nn=1
+	a = ddply(ex,.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
 	a$sex = ifelse(a$sex == 'f', 'Male', 'Female') # to make sex of returning bird
 
 	if(PNG == TRUE) {
@@ -938,6 +1041,7 @@
 			length(unique(f$bird_ID))
 			length(unique(f$nest_ID))
 		
+			#m = lmer(next_bout ~call_left*sex+(1|bird_ID)+(1|nest_ID),dd)
 			m = lmer(next_bout ~as.factor(w_call)*sex_returning+(1|bird_ID)+(1|nest_ID),f)
 
 			pred=c('Intercept (f, no)','return call','sex_returning(m)', 'Call:sex')
