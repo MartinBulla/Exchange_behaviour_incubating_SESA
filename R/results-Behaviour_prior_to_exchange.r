@@ -42,7 +42,7 @@
 		
 		ggplot(bb_,aes(x=log(obs_time), y=call_i, fill = type))+geom_point()
 		ggplot(bb_,aes(x=log(obs_time), y=fly_i, fill = type))+geom_point()
-  # Figure 1ab - distribution of calls and fly-offs RATEs including predictions 
+  # Figure 1ab and within text info 
 	  # run first 
 	     # model predictions
 	     	# calls
@@ -93,14 +93,18 @@
 							newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
 					pp=newD	
 					pe=pp[pp$type=='ex',]
-					pn=pp[pp$type=='non',]
-
+					pn=pp[pp$type=='non',]			
 		 # raw data
 			 u=ddply(bb_,.(nest_ID, type), summarise,m=median(10*call_i/obs_time), q1=quantile(10*call_i/obs_time,0.25), q2= quantile(10*call_i/obs_time,0.75), n = sum(n))
 			 u$type_j=jitter(ifelse(u$type=='ex',2,6)) 
 		
 			 x=ddply(bb_,.(nest_ID, type), summarise,m=median(fly_bin), q1=quantile(fly_bin,0.25), q2= quantile(fly_bin,0.75), n = sum(n))
 			 x$type_j=jitter(ifelse(x$type=='ex',2,6))
+	  # within text info
+			pt_ # prediction for calling rate before arrival
+			pc_ # prediction for calling rate control
+			pe # prediction for fly-off probability before arrival
+			pn # prediction for fly-off probability control
 	  # plot
 		 if(PNG == TRUE) {png(paste(outdir,"Figure_1ab.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
 			}else{dev.new(width=1.85+0.6,height=1.5*2)}	
@@ -130,8 +134,8 @@
 					arrows(x0=2, y0=pt_$lwr,x1=2, y1=pt_$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
 					arrows(x0=6, y0=pc_$lwr,x1=6, y1=pc_$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
 					
-					points(y=pt_$pred,x=2, pch=19, cex=0.9,col="red")
-					points(y=pc_$pred,x=6, pch=19, cex=0.9,col="red")
+					points(y=pt_$pred,x=2, pch=20, cex=0.9,col="red")
+					points(y=pc_$pred,x=6, pch=20, cex=0.9,col="red")
 				
 				# legend
 					mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='black', xpd=TRUE) # for printing into device use padj=-7.5
@@ -183,8 +187,8 @@
 					arrows(x0=2, y0=pe$lwr,x1=2, y1=pe$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
 					arrows(x0=6, y0=pn$lwr,x1=6, y1=pn$upr, code = 0, col="red", angle = 90, length = .025, lwd=1.5, lty=1)
 					
-					points(y=pe$pred,x=2, pch=19, cex=0.9,col="red")
-					points(y=pn$pred,x=6, pch=19, cex=0.9,col="red")
+					points(y=pe$pred,x=2, pch=20, cex=0.9,col="red")
+					points(y=pn$pred,x=6, pch=20, cex=0.9,col="red")
 	  
 	 	 if(PNG == TRUE) {dev.off()}
   # Table S1 - if you keep only one random slope - do not report it - just state it in the Table notes
@@ -392,7 +396,7 @@
 						w=rbind(w,w2)
 		# plot
 			if(PNG == TRUE) {
-				png(paste(outdir,"Figure_1cd.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+				png(paste(outdir,"Figure_1cd_new.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
 				}else{
 				dev.new(width=1.85+0.6,height=1.5*2)
 				}	
@@ -418,9 +422,8 @@
 							
 						}else{
 						x = boo
-						}
-				
-				
+						}				
+				# plot
 					boxplot(deltaT ~ type_sex, data = boo, 
 									#ylab =NULL, 
 									xaxt='n',
@@ -477,8 +480,8 @@
 					x$col_=ifelse(x$sex=='f','#FCB42C', '#535F7C')	
 					x$at=ifelse(x$type=='ex',ifelse(x$sex=='f', 1-kkk,2+kkk),
 									ifelse(x$sex=='f', 3.7-kkk,4.7+kkk))	
-		
-				boxplot(deltaT ~ type_sex, data = bff, 
+				# plot
+				  boxplot(deltaT ~ type_sex, data = bff, 
 									#ylab =NULL, 
 									xaxt='n',
 									yaxt='n',
@@ -493,7 +496,7 @@
 									) # col=z_g$cols, border=z_g$cols
 									
 							
-				for (i in 1:nrow(x)){stripchart(x$deltaT[i]~ factor(x$type_sex[i]), at = x$at[i],
+				  for (i in 1:nrow(x)){stripchart(x$deltaT[i]~ factor(x$type_sex[i]), at = x$at[i],
 										#bg = x$col_[i],
 										col="gray63",
 										#col = x$col_[i],
@@ -502,7 +505,7 @@
 										vertical = TRUE, add = TRUE, method = "jitter") 
 										}
 				
-				boxplot(deltaT ~ type_sex, data = bff, 
+				  boxplot(deltaT ~ type_sex, data = bff, 
 									ylab = NULL,xaxt='n', yaxt='n',
 									#at=c(1,2,3.5,4.5),
 									at=c(1+kk,2-kk,3.7+kk,4.7-kk),
@@ -516,7 +519,8 @@
 									add=TRUE
 									)					
 				
-				axis(1, at=c(1.5,4.2), label=c('Before nest relief', 'Control'), cex = 0.5, mgp=c(0,-0.20,0), lwd= 0, col =NA) #text(c(1.5,4.2), par("usr")[3]-2, labels = c('Before nest relief','Control'),  xpd = TRUE, cex=0.5, col="grey30")
+				axis(1, at=c(1.5,4.2), label=c('Before arrival', 'Regular'), cex = 0.5, mgp=c(0,-0.20,0), lwd= 0, col =NA) #text(c(1.5,4.2), par("usr")[3]-2, labels = c('Before nest relief','Control'),  xpd = TRUE, cex=0.5, col="grey30")
+				axis(1, at=mean(c(1.5,4.2)), label=c('Part of incubation'), cex = 0.5, mgp=c(0,0.20,0), lwd= 0, col =NA)
 				axis(2, at=seq(0,30,by=5), lwd = 0.35)		
 				mtext("Fly-off\n[min to observation end]",side=2,line=1, cex=0.55, las=3)
 				text(0.5,30, expression(bold('d')),cex=0.6, col = 'black')
@@ -526,14 +530,13 @@
 					text(c(1,2,3.7,4.7), par("usr")[3]+0.4, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") 
 
 							
-				
 				# predictions	+ 95%CI 
 					points(y=pp$pred,x=c(1.5,4.2), pch=20, cex=0.9,col="red")
 					arrows(x0=c(1.5,4.2), y0=pp$lwr,x1=c(1.5,4.2), y1=pp$upr,
 					code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
 						
 			if(PNG == TRUE) {dev.off()}
-	# Table S2
+	# Table S2 and within text info
 		# prepare table data	
 			# calling simple
 				m = lmer(deltaT ~ type+(1|nest_ID/obs_ID) , boo)
@@ -625,7 +628,10 @@
 				  sname = 'Table_S2'
 				  tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 				  openFile(tmp)		
-
+		# within text info
+			o1[2,] # difference between timing of calls in control and before arrival
+			o3[2,] # difference between timing of calls in control and before arrival			  
+			  
 # model assumptions
 	# Table S1a - calling - type
 		  if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S1a.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
