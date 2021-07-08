@@ -146,8 +146,10 @@
                 )
     # prepare data
  	    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
- 	    	#dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_type%in%c('1 before presence','2 while around')),]
- 	    	#dp = dd[-which(dd$left_type%in%c('1 before presence','2 while around')),]
+ 	    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_type%in%c('1 before presence','2 while around')),]
+ 	    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | is.na(dd$call_o_int) | dd$left_type%in%c('1 before presence','2 while around')),]
+ 	    	call_o_int
+ 	    	dp = dd[-which(dd$left_type%in%c('1 before presence','2 while around')),]
  			d1 = subset(dp,select = c('obs_ID','sound_ok','nest_ID','bird_ID', 'sex', 'day_j', 'call_int_1'))
  				colnames(d1)[7] = 'call_int'
  				d1$type = '1 both present'
