@@ -64,13 +64,13 @@
 			round(100*length(dc$call_left[dc$call_left%in%c('y')])/length(dc$call_left[])) # % called
 			summary(factor(dc$call_left)) # N called
 			nrow(dc) # N
+			length(unique(dc$bird_ID)) # N
+			length(unique(dc$nest_ID)) # N
 			
 
 			round(100*length(dc$call_left[dc$call_left%in%c('y') & dc$sex == 'm'])/length(dc$call_left[ dc$sex == 'm'])) # % call for males
 			round(100*length(dc$call_left[dc$call_left%in%c('y') & dc$sex == 'f'])/length(dc$call_left[ dc$sex == 'f'])) # % call for females
 			table(dc$call_left, dc$sex)  # N
-			
-	
 		# cases without enclosure
 			dn=dd[dd$cage=='n',]
 			dnc = dn[!is.na(dn$call_left),]
@@ -634,6 +634,45 @@
 
 		 if(PNG == TRUE) {dev.off()}
 
+# Table SS6 former S 8
+	# prepare table data
+		dc = dd[!is.na(dd$call_left),]
+		dc$c_left = ifelse(dc$call_left=='y', 1,0)
+		nrow(dc)
+		length(unique(dc$bird_ID))
+		length(unique(dc$nest_ID))
+		m = glmer(c_left ~ sex*scale(day_j) + (scale(day_j)|bird_ID) + (1|nest_ID), dc, family = 'binomial')
+		#m = glmer(c_left ~ sex + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')
+		#plot(allEffects(m))
+		#summary(glht(m))
+		#ggplot(dc, aes(y = c_left, x = sex))+geom_boxplot()
+	
+		pred=c('Intercept (f)','Sex(m)', 'Day', 'Day:sex')
+			dep = 'call_left'
+			mod = 1
+				nsim <- 5000
+				bsim <- sim(m, n.sim=nsim)
+		 # Fixed effects
+			v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+			ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
+			oi=data.frame(model=mod,dependent = dep, type='fixed',effect=pred,estimate=v, lwr=ci[1,], upr=ci[2,])
+			rownames(oi) = NULL
+				oi$estimate_r=round(oi$estimate,2)
+				oi$lwr_r=round(oi$lwr,2)
+				oi$upr_r=round(oi$upr,2)
+				#oi$CI=paste("(", oi$lwr_r, "-", oi$upr_r, ")", sep = "", collapse = NULL)
+			oii=oi[c('model','dependent','type',"effect", "estimate_r","lwr_r",'upr_r')]
+		# Random effects var*100
+			l=data.frame(summary(m)$varcor)
+			l=l[is.na(l$var2),]
+				ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
+				ri$estimate_r = paste(ri$estimate_r,"%",sep='')
+			o1=rbind(oii,ri)
+	# create xlsx table
+		sname = 'Table_SS6_former_S8'
+		tmp = write_xlsx(o1, paste0(ta,sname,'.xlsx'))
+		openFile(tmp)
+
 # Table SSs7 former S5
 	# prepare table data
 		# a. calling while arriving
@@ -1023,7 +1062,7 @@
 			tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 			openFile(tmp)
 
-# model assumptions
+# model assumptions - former names
 	# Table S4
 		# a. calling while arriving
 			dx = dd[dd$left_before_presence=="n" & !is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange'),]
@@ -1648,7 +1687,54 @@
 									plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 
 				if(PNG == TRUE){dev.off()}
+	# Table S8
+		dc = dd[!is.na(dd$call_left),]
+		dc$c_left = ifelse(dc$call_left=='y', 1,0)
 
+		m = glmer(c_left ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')
+		if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S8.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
+		  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+		  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+		  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+		  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red')
+		  qqline(resid(m))
+
+		  plot(fitted(m), jitter(dc$c_left, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+		  abline(0,1, lty=3)
+		  t.breaks <- cut(fitted(m), quantile(fitted(m)))
+		  means <- tapply(dc$c_left, t.breaks, mean)
+		  semean <- function(x) sd(x)/sqrt(length(x))
+		  means.se <- tapply(dc$c_left, t.breaks, semean)
+		  points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
+		  segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
+
+		  qqnorm(unlist(ranef(m)$nest_ID [1]), main = "ran intercept",col='red')
+		  qqline(unlist(ranef(m)$nest_ID [1]))
+
+		  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = "ran slope",col='red')
+		  #qqline(unlist(ranef(m)$nest_ID[2]))
+
+		  scatter.smooth(resid(m)~dc$day);abline(h=0, lty=2, col='red')
+		  #scatter.smooth(resid(m)~dc$sex);abline(h=0, lty=2, col='red')
+		  boxplot(resid(m)~dc$sex);abline(h=0, lty=2, col='red')
+
+		  mtext("glmer(c_left ~ sex*scale(day_j) + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+
+		    acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+		  # spatial autocorrelations - nest location
+			spdata=data.frame(resid=resid(m), x=dc$lon, y=dc$lat)
+				spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+				#cex_=c(1,2,3,3.5,4)
+				cex_=c(1,1.5,2,2.5,3)
+				spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+				plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+				legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+
+				plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+				plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+
+			if(PNG == TRUE){dev.off()}
+			
 # LATER DELET
 	# IF TABLE XX USED - needs fixing of data subseting 
 	# Table XX - complex models including S4 and S5, not used in the manuscript, but gives similar results
