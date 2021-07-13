@@ -106,7 +106,7 @@
 			pe # prediction for fly-off probability before arrival
 			pn # prediction for fly-off probability control
 	  # plot
-		 if(PNG == TRUE) {png(paste(outdir,"Figure_1ab.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+		 if(PNG == TRUE) {png(paste(outdir,"Figure_1ab_new.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
 			}else{dev.new(width=1.85+0.6,height=1.5*2)}	
 		
 		 par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 2.2, 0.2, 2.4),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5) #col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7,
@@ -435,7 +435,7 @@
 									outcex=0.5, outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1, 
 									lwd = 0.25, 
 									#ylim=c(0,1),
-									outcol="white",boxcol='white',whiskcol='white',staplecol='white',medcol='white'
+									outcol="white",boxcol='white',whiskcol='white',staplecol='white',medcol='white', col = 'white'
 									) # col=z_g$cols, border=z_g$cols			
 					# TRY IT WITH SYMBOL
 					for (i in 1:nrow(x)){stripchart(x$deltaT[i]~ factor(x$type_sex[i]), at = x$at[i],
@@ -492,7 +492,7 @@
 									outcex=0.5, outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1, 
 									lwd = 0.25, 
 									#ylim=c(0,1),
-									outcol="white",boxcol='white',whiskcol='white',staplecol='white',medcol='white'
+									outcol="white",boxcol='white',whiskcol='white',staplecol='white',medcol='white', col = 'white'
 									) # col=z_g$cols, border=z_g$cols
 									
 							
@@ -520,7 +520,7 @@
 									)					
 				
 				axis(1, at=c(1.5,4.2), label=c('Before arrival', 'Regular'), cex = 0.5, mgp=c(0,-0.20,0), lwd= 0, col =NA) #text(c(1.5,4.2), par("usr")[3]-2, labels = c('Before nest relief','Control'),  xpd = TRUE, cex=0.5, col="grey30")
-				axis(1, at=mean(c(1.5,4.2)), label=c('Part of incubation'), cex = 0.5, mgp=c(0,0.20,0), lwd= 0, col =NA)
+				axis(1, at=mean(c(1.5,4.2)), label=c('Part of incubation'), cex = 0.5, mgp=c(0,0.40,0), lwd= 0, col =NA)
 				axis(2, at=seq(0,30,by=5), lwd = 0.35)		
 				mtext("Fly-off\n[min to observation end]",side=2,line=1, cex=0.55, las=3)
 				text(0.5,30, expression(bold('d')),cex=0.6, col = 'black')
