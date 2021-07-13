@@ -18,7 +18,7 @@
 		source(paste0(wd2, 'Constants_packages_PrepareData.R'))
 		dd = dd[!is.na(dd$arrival),]
 	
-# within the text	
+# within the text
 	# calling while initiating nest exchange
 		# overall
 		ddn = dd[!is.na(dd$with_calling),]
@@ -54,42 +54,64 @@
 		nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
 		
 		# cases were incubating left only after the returning arrived
-		x = dd[-which(is.na(dd$with_calling) | is.na(dd$call_c_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
+		x = dd[!is.na(dd$with_calling) & !is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & dd$left_type %in% c('2 while around','3 during exchange'),]
 		x = x[x$left_before_presence=="n",]
 		nrow(x)
 		nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
 	# called while leaving?
+		# all cases
+			dc = dd[!is.na(dd$call_left),]
+			round(100*length(dc$call_left[dc$call_left%in%c('y')])/length(dc$call_left[])) # % called
+			summary(factor(dc$call_left)) # N called
+			nrow(dc) # N
+			
+
+			round(100*length(dc$call_left[dc$call_left%in%c('y') & dc$sex == 'm'])/length(dc$call_left[ dc$sex == 'm'])) # % call for males
+			round(100*length(dc$call_left[dc$call_left%in%c('y') & dc$sex == 'f'])/length(dc$call_left[ dc$sex == 'f'])) # % call for females
+			table(dc$call_left, dc$sex)  # N
+			
+	
 		# cases without enclosure
 			dn=dd[dd$cage=='n',]
 			dnc = dn[!is.na(dn$call_left),]
-			summary(factor(dnc$call_left))
-			length(dnc$call_left[dnc$call_left%in%c('y')])/length(dnc$call_left[])
 
-			table(dnc$call_left, dnc$sex)
-			length(dnc$call_left[dnc$call_left%in%c('y') & dnc$sex == 'm'])/length(dnc$call_left[ dnc$sex == 'm'])
-			length(dnc$call_left[dnc$call_left%in%c('y') & dnc$sex == 'f'])/length(dnc$call_left[ dnc$sex == 'f'])
-		# all cases
-			dc = dd[!is.na(dd$call_left),]
-			summary(factor(dc$call_left))
-			length(dc$call_left[dc$call_left%in%c('y')])/length(dc$call_left[])
-
-			table(dc$call_left, dc$sex)
-			length(dc$call_left[dc$call_left%in%c('y') & dc$sex == 'm'])/length(dc$call_left[ dc$sex == 'm'])
-			length(dc$call_left[dc$call_left%in%c('y') & dc$sex == 'f'])/length(dc$call_left[ dc$sex == 'f'])
-
-			dc = dd[-which(is.na(dd$call_left)),]
-			table(dc$call_left,dc$sex)
+			round(100*length(dnc$call_left[dnc$call_left%in%c('y')])/length(dnc$call_left[]))# % called
+			summary(factor(dnc$call_left))# N called
+			nrow(dnc) # N
+			
+			round(100*length(dnc$call_left[dnc$call_left%in%c('y') & dnc$sex == 'm'])/length(dnc$call_left[ dnc$sex == 'm'])) # % call for males
+			round(100*length(dnc$call_left[dnc$call_left%in%c('y') & dnc$sex == 'f'])/length(dnc$call_left[ dnc$sex == 'f'])) # % call for females
+			table(dnc$call_left, dnc$sex) # N			
 	# incubating parent quiet
-		x = dd[!is.na(dd$call_o_int) & !is.na(dd$o_replies) & !is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
-		length(x$call_o_int[x$call_o_int==0 & x$call_left =='n'])/nrow(x)		
+		x = dd[!is.na(dd$o_replies) & !is.na(dd$call_o_int) & !is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
+		length(x$call_o_int[x$o_replies == 'n' & x$call_o_int==0 & x$call_left =='n'])/nrow(x)		
 	# both silent 
-		x = dd[!is.na(dd$with_calling) & !is.na(dd$call_o_int) & !is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & !is.na(dd$o_replies) & !is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
+		x = dd[!is.na(dd$with_calling) & !is.na(dd$o_replies)& !is.na(dd$call_o_int) & !is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3)  & !is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
 		nrow(x)
 		nrow(x[which(x$with_calling %in% c('n') & x$o_replies%in%c('n') & x$call_c_int %in% c(0) & x$call_o_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0) & x$call_left =='n'),])/nrow(x)
 	# next bout given reply - roughly 1 - 7h difference
 		f = dd[!is.na(dd$next_bout) & dd$with_calling=='y' & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
+		# interaction
+			m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),f)
+				nsim <- 5000
+				bsim <- sim(m, n.sim=nsim)
+			 	# Fixed effects
+				v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+				ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
 				
-		# no interaction
+			quantile(bsim@fixef[,2]/60,  prob=c(0.025,0.5,0.975)) # female
+			100*quantile(bsim@fixef[,2]/bsim@fixef[,1],  prob=c(0.025,0.5,0.975)) # % female
+
+			quantile((bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/60,  prob=c(0.025,0.5,0.975)) # male in hours
+			100*quantile((bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/(bsim@fixef[,1] + bsim@fixef[,2]),  prob=c(0.025,0.5,0.975)) # male in %
+
+			mfh = c(bsim@fixef[,2]/60, (bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/60)
+			quantile(mfh,  prob=c(0.025,0.5,0.975)) # average hour diff
+			
+			mfp = c(bsim@fixef[,2]/bsim@fixef[,1], (bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/(bsim@fixef[,1] + bsim@fixef[,2]))
+			quantile(mfp,  prob=c(0.025,0.5,0.975))  # average % diff	
+				
+		# no interaction - NOT IN THE MS
 			m = lmer(next_bout ~ o_replies+sex+(1|bird_ID)+(1|nest_ID),f)
 				nsim <- 5000
 				bsim <- sim(m, n.sim=nsim)
@@ -100,26 +122,6 @@
 				quantile(bsim@fixef[,2]/60,  prob=c(0.025,0.5,0.975)) # difference in hours
 				100*quantile(bsim@fixef[,2]/bsim@fixef[,1],  prob=c(0.025,0.5,0.975)) # % difference
 
-		# interaction
-			m = lmer(next_bout ~ o_replies*sex+(1|bird_ID)+(1|nest_ID),f)
-				nsim <- 5000
-				bsim <- sim(m, n.sim=nsim)
-			 	# Fixed effects
-				v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
-				ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
-				
-			quantile((bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/60,  prob=c(0.025,0.5,0.975)) # male in hours
-			100*quantile((bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/(bsim@fixef[,1] + bsim@fixef[,2]),  prob=c(0.025,0.5,0.975)) # male in %
-			
-			quantile(bsim@fixef[,2]/60,  prob=c(0.025,0.5,0.975)) # female
-			100*quantile(bsim@fixef[,2]/bsim@fixef[,1],  prob=c(0.025,0.5,0.975)) # % female
-
-			mfh = c(bsim@fixef[,2]/60, (bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/60)
-			quantile(mfh,  prob=c(0.025,0.5,0.975)) # hour diff
-			
-			mfp = c(bsim@fixef[,2]/bsim@fixef[,1], (bsim@fixef[,2] + bsim@fixef[,3] + bsim@fixef[,4])/(bsim@fixef[,1] + bsim@fixef[,2]))
-			100*quantile(bsim@fixef[,2]/bsim@fixef[,1],  prob=c(0.025,0.5,0.975)) # % diff	
-		
 # check and delete - correlations
    		ex_ = dd[dd$left_before_presence=="n",]
 		cor(subset(ex_,select = c('current_bout','next_bout')),use="pairwise.complete.obs", method="pearson")
@@ -151,7 +153,7 @@
 
 		ggplot(di, aes(y = call_int, x = as.numeric(as.factor(type)), col=factor(obs_ID))) + geom_line()
 
-# Figure 3abc
+# Figure 4abc
 	# prepare labels
 		labels_ <- c(
                 `1 both present` = "From initiation to leaving",
@@ -199,8 +201,8 @@
 
  		
  			#di$left_before = d$left_before_presence [match(di$obs_ID, d$obs_ID)]
- 			# plot
- 				#geom_text(aes(x, y,label=lab),	data=data.frame(x=3.5, y=100, who = c("both"), lab=c("a", "b", "c"), type=c("1 both present","2 exchange gap","3 after on nest")), size=2, colour = "grey30")
+ 	# plot
+ 			#geom_text(aes(x, y,label=lab),	data=data.frame(x=3.5, y=100, who = c("both"), lab=c("a", "b", "c"), type=c("1 both present","2 exchange gap","3 after on nest")), size=2, colour = "grey30")
  			dev.new(width=1.85+1,height=1.5*2)
  			ggplot(di[!di$who =='both',], aes(x = call_int, fill = who)) +
  				geom_bar(position=position_dodge()) +
@@ -234,16 +236,15 @@
  											legend.text=element_text(size=7, colour="grey30"),
  											legend.title=element_text(size=7, colour="grey30")
  											)
- 			if(PNG==TRUE){ggsave(paste(outdir,"Figure_3abc.png", sep=""),width=1.85+1,height=1.5*2, units = "in")}
- 				#ggsave(paste(outdir,"Figure_3_new.eps", sep=""),width=1.85+1,height=1.5*2, units = "in")
-
-    # legend
-    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
+ 			if(PNG==TRUE){ggsave(paste(outdir,"Figure_4abc.png", sep=""),width=1.85+1,height=1.5*2, units = "in")}
+ 			#ggsave(paste(outdir,"Figure_3_new.eps", sep=""),width=1.85+1,height=1.5*2, units = "in")
+    # text for figure legend
+    	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | is.na(dd$call_o_int) | dd$left_type%in%c('1 before presence','2 while around')),]
     	#dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_type%in%c('1 before presence','2 while around')),]
     	nrow(dp)
     	length(unique(dp$nest))
 
-# Figure 3d - for cases where bird left after return
+# Figure S1 - for cases where bird left after return
 	ex = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
 	ex$nn=1
 	nrow(ex)
@@ -267,7 +268,7 @@
 		cex = 0.5, cex.axis = 0.7
 		)
 	 if(PNG == TRUE) {dev.off()}
-# Figure 3d - only for cases where bird left after initiation
+# Figure S1 - only for cases where bird left after initiation
 	ex = dd[which(!is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & dd$left_type=="3 during exchange"),]
 	ex$nn=1
 	a = ddply(ex,.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
@@ -449,8 +450,9 @@
 		tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 		openFile(tmp)
 
-# Figure 4a
-	dxn = dd[!is.na(dd$next_bout) & dd$with_calling=='y' & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
+# Figure 5a
+	# run first 
+		dxn = dd[!is.na(dd$next_bout) & dd$with_calling=='y' & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
 		nrow(dxn)
 		length(unique(dxn$bird_ID))
 		length(unique(dxn$nest_ID))
@@ -490,7 +492,7 @@
 			pp=newD
 	# plot
 		if(PNG == TRUE) {
-			png(paste(outdir,"Figure_4a_new.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+			png(paste(outdir,"Figure_5a.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 			}else{
 			dev.new(width=1.85+0.3,height=1.5)
 			}
@@ -542,10 +544,9 @@
 
 			#text(c(1.5,4.2), par("usr")[3]-0.25, labels = c('Yes','No'),  xpd = TRUE, cex=0.5, col="black")
 
-
-			mtext("Incubating parent replied",side=1,line=0.45, cex=0.55, las=1, col='black')
+			mtext("Incubating parent replied\n ",side=1,line=0.9, cex=0.55, las=1, col='black')
 			mtext("Next incubation bout [h]",side=2,line=1.1, cex=0.55, las=3, col='black')
-			mtext(expression(bold('a')),side=3,line=-0.4, cex=0.6,  col='black')
+			text(4.95,19.5, expression(bold('a')),cex=0.6,  col='black') # mtext(expression(bold('a')),side=3,line=-0.4, cex=0.6,  col='black')
 			text(x=0.5,y=5, labels="Prediction\n& 95%CI", col='red', cex=0.5, pos=4)
 
 			#text(x=0.3,y=20*0.97, labels='\u2640', col='#FCB42C', cex=0.6, pos=4)
@@ -564,12 +565,13 @@
 				code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
 
 		 if(PNG == TRUE) {dev.off()}
-# Figure 4b
-	f = dd[!is.na(dd$next_bout) & !is.na(dd$call_int_c3) & dd$left_type %in% c('3 during exchange')]
-	f$next_bout = f$next_bout/60
-			nrow(f)
-			length(unique(f$bird_ID))
-			length(unique(f$nest_ID))
+# Figure 5b
+	# run first
+		f = dd[!is.na(dd$next_bout) & !is.na(dd$call_int_c3) & dd$left_type %in% c('3 during exchange')]
+		f$next_bout = f$next_bout/60
+		nrow(f)
+		length(unique(f$bird_ID))
+		length(unique(f$nest_ID))
 	# model predictions
 		#summary(f$call_int_c3[f$sex == 'f']) # male calling
 		#summary(f$call_int_c3[f$sex == 'm']) # female calling
@@ -614,7 +616,7 @@
 				x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
 	# plot
 		if(PNG == TRUE) {
-			png(paste(outdir,"Figure_4b_new.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+			png(paste(outdir,"Figure_5b.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 			}else{
 			dev.new(width=1.85+0.3,height=1.5)
 			}
@@ -651,7 +653,8 @@
 		axis(2, at=seq(0,20, by=5), label = TRUE,lwd = 0.35)
 		mtext("Calling of returned parent\n[after sitting down]",side=1,line=0.9, cex=0.55, las=1, col='black') #line=0.85
 		mtext("Next incubation bout [h]",side=2,line=1, cex=0.55, las=3, col='black') #line=0.8
-		mtext(expression(bold('b')),side=3,line=-0.4, cex=0.6,  col='black')
+		#mtext(expression(bold('b')),side=3,line=-0.4, cex=0.6,  col='black')
+		text(3,19.5, expression(bold('b')),cex=0.6,  col='black')
 
 		#points( jitter(f$call_int_c2), f$next_bout,pch = 21, bg=adjustcolor(f$col_, alpha.f = 0.5), col=col_p, xpd=TRUE) #
 				#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
@@ -662,7 +665,7 @@
 
 		 if(PNG == TRUE) {dev.off()}
 
-# Table SS6 former S5
+# Table SSs7 former S5
 	# prepare table data
 		# a. calling while arriving
 		 	f = dd[!is.na(dd$current_bout) & !is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange'),]# 
@@ -850,7 +853,7 @@
 		sname = 'Table_SS6'
 		tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 		openFile(tmp)
-# Table SS7 former S6
+# Table SSs8 former S6
 	# prepare table data
 		# a. calling while arriving
 			f = dd[!is.na(dd$next_bout) & !is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange')]
@@ -1049,7 +1052,6 @@
 			sname = 'Table_SS7'
 			tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 			openFile(tmp)
-
 
 # model assumptions
 	# Table S4
