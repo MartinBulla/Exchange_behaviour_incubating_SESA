@@ -86,6 +86,8 @@
 		nrow(dd) # number of exchanges
 		length(unique(dd$nest_ID))  # number of nests
 
+		summary(dd$arrival[dd$left_type == '3 during exchange'])
+
 		# difference due to type of leaving
 		    m = lmer(log(arrival) ~ left_type + sex*day_j+(scale(day_j)|nest_ID), dd)
 			nsim <- 5000
@@ -238,6 +240,7 @@
   		summary(both$gap) 
 		summary(both$gap/60) 
 
+		ggplot(dd, aes(x = left_type, y = gap)) +geom_boxplot(varwidth = TRUE) + scale_y_continuous(trans='log10')
 		ggplot(dd, aes(x = left_type, y = gap)) +geom_boxplot() + geom_dotplot(binaxis= 'y', stackdir='center', dotsize = 0.5, col = 'red') + scale_y_continuous(trans='log10')
 
         # not in the MS - difference due to please leave
