@@ -122,6 +122,26 @@
 				quantile(bsim@fixef[,2]/60,  prob=c(0.025,0.5,0.975)) # difference in hours
 				100*quantile(bsim@fixef[,2]/bsim@fixef[,1],  prob=c(0.025,0.5,0.975)) # % difference
 
+	# Discussion
+		# at least one vocalized
+			all = dd[!is.na(dd$with_calling) & !is.na(dd$o_replies) & !is.na(dd$call_o_int) & !is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3)  & !is.na(dd$call_left),]	
+
+			nrow(all)
+			nrow(all[which(all$with_calling %in% c('n') & all$o_replies%in%c('n') & all$call_c_int %in% c(0) & all$call_o_int %in% c(0) & all$call_int_c2 %in% c(0)  & all$call_int_c3 %in% c(0) & all$call_left =='n'),])/nrow(all)
+
+			x = dd[!is.na(dd$with_calling) & !is.na(dd$o_replies) & !is.na(dd$call_o_int) & !is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3)  & !is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
+			nrow(x)
+			nrow(x[which(x$with_calling %in% c('n') & x$o_replies%in%c('n') & x$call_c_int %in% c(0) & x$call_o_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0) & x$call_left =='n'),])/nrow(x)
+		
+		# 	vocalized between initiation and leaving and during exchange gap and after incubation start 
+			x = dd[!is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3)  & !is.na(dd$call_o_int) & dd$left_type%in%c('3 during exchange'),]
+			nrow(x)
+			1 - nrow(x[x$call_c_int %in% c(0),])/nrow(x)
+			1 - nrow(x[x$call_int_c2 %in% c(0),])/nrow(x)
+			nrow(x[x$call_int_c3 %in% c(0),])/nrow(x)
+
+			nrow(x[x$call_o_int %in% c(0),])/nrow(x)
+			
 # Figure 4abc
 	# prepare labels
 		labels_ <- c(
@@ -637,11 +657,12 @@
 # Table SS6 former S 8
 	# prepare table data
 		dc = dd[!is.na(dd$call_left),]
+		#dc = dd[!is.na(dd$current_bout) & !is.na(dd$call_left),]
 		dc$c_left = ifelse(dc$call_left=='y', 1,0)
 		nrow(dc)
 		length(unique(dc$bird_ID))
 		length(unique(dc$nest_ID))
-		m = glmer(c_left ~ sex*scale(day_j) + (scale(day_j)|bird_ID) + (1|nest_ID), dc, family = 'binomial')
+		m = glmer(c_left ~ sex*scale(day_j) + scale(current_bout) + (scale(day_j)|bird_ID) + (1|nest_ID), dc, family = 'binomial')
 		#m = glmer(c_left ~ sex + (1|bird_ID) + (1|nest_ID), dc, family = 'binomial')
 		#plot(allEffects(m))
 		#summary(glht(m))
