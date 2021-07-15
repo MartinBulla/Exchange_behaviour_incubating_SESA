@@ -605,7 +605,7 @@
 				x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
 	# plot
 		if(PNG == TRUE) {
-			png(paste(outdir,"Figure_5b.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+			png(paste(outdir,"Figure_5b_legend_in.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 			}else{
 			dev.new(width=1.85+0.3,height=1.5)
 			}
@@ -645,15 +645,36 @@
 		#mtext(expression(bold('b')),side=3,line=-0.4, cex=0.6,  col='black')
 		text(3,19.5, expression(bold('b')),cex=0.6,  col='black')
 
-		#points( jitter(f$call_int_c2), f$next_bout,pch = 21, bg=adjustcolor(f$col_, alpha.f = 0.5), col=col_p, xpd=TRUE) #
-				#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
-					#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
+		# legend inside
+			text(x = 1.3, y = 2.5, labels = expression(italic('N')*' observations:'),las=1,col='black', xpd=TRUE, cex = 0.5) # for printing into device use padj=-7.5
+			#mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='black', xpd=TRUE) # for printing into device use padj=-7.5
+					if(PNG == TRUE){
+					
+					symbols(x = c(2.5,2.5,2.5), y = c(16,14,11)-0.75-8,circles=sqrt(c(1,4,8)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+					text(x = c(2.5,2.5,2.5)+0.4, y = c(16,14,11)-0.75-8,labels=c(1,4,8), xpd=TRUE, cex=0.5) #
+					}else{
+					symbols(x = c(2.5,2.5,2.5), y = c(16,14,11)-0.5-8,circles=sqrt(c(1,4,8)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+					text(x = c(2.5,2.5,2.5)+0.4, y = c(16,14,11)-0.5-8,labels=c(1,4,8), xpd=TRUE, cex=0.5) #,col='grey30'
+					
+					}
 
-		#	text(x=2.3,y=6, labels='\u2640', col='#FCB42C', cex=0.6, pos=4)
-		#	text(x=2.5,y=6.2, labels='\u2642', col='#535F7C', cex=0.6, pos=4)
+		
 
 		 if(PNG == TRUE) {dev.off()}
+	# not used legend outside
+			mtext('Observations:',side = 4,line=-0, padj=-6,cex=0.5,las=1,col='black', xpd=TRUE) # for printing into device use padj=-7.5
+			#mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='black', xpd=TRUE) # for printing into device use padj=-7.5
+					if(PNG == TRUE){
 
+					symbols(x = c(3.5,3.5,3.5), y = c(16,14,11)-0.75,circles=sqrt(c(1,4,8)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+					text(x = c(3.5,3.5,3.5)+0.4, y = c(16,14,11)-0.75,labels=c(1,4,8), xpd=TRUE, cex=0.5) 
+					
+					}else{
+					symbols(x = c(3.5,3.5,3.5), y = c(16,14,11)-0.5,circles=sqrt(c(1,4,8)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+					text(x = c(3.5,3.5,3.5)+0.4, y = c(16,14,11)-0.5,labels=c(1,4,8), xpd=TRUE, cex=0.5) #,col='grey30'
+					
+					}
+					#	 
 # Table SS6 former S 8
 	# prepare table data
 		dc = dd[!is.na(dd$call_left),]
