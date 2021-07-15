@@ -13,6 +13,7 @@
 	
 	# load packages, constants and data
 		source(paste(wd2, 'Constants_packages_PrepareData.R',sep=""))
+		bb_$pair_ID = d$pair_ID[match(bb_$obs_ID,d$obs_ID)]
 
 # number of nests protected by cage (at least for some time) in a given year
 	ddply(d[d$cage == 'y'],. (year), summarise, n = length(unique(nest_ID)))
@@ -21,17 +22,24 @@
 	ddply(d,. (year), summarise, n = length(unique(nest_ID)))
 
 # N for before arrival observations
-	d$n = 1
-	nrow(d[d$type=='ex',]) # before arrival
-	nrow(d[d$type=='non',]) # control
+	sel = dd[dd$left_type %in% c('2 while around','3 during exchange'),]
+	dx = bb_[-which(bb_$type == 'ex' & !bb_$obs_ID %in% sel$obs_ID),]
+	dx = dx[dx$nest_ID %in% unique(dx$nest_ID[dx$type == 'ex']),]
+	nrow(dx)
+	dx$n = 1
+	nrow(dx[dx$type=='ex',]) # before arrival
+	nrow(dx[dx$type=='non',]) # control
 	
-	length(unique(d$nest_ID)) # N nest overall
-	length(unique(d$nest_ID[d$type=='ex'])) # N nest before arrival
-	length(unique(d$nest_ID[d$type=='non'])) # N nest control 
+	length(unique(dx$nest_ID)) # N nest overall
+	length(unique(dx$nest_ID[dx$type=='ex'])) # N nest before arrival
+	length(unique(dx$nest_ID[dx$type=='non'])) # N nest control 
 	
-	de = ddply(d[d$type=='ex',],.(nest), summarise, n = length(type)) 
+	de = ddply(dx[dx$type=='ex',],.(nest_ID), summarise, n = length(type)) 
 	summary(de$n) # N before arrival obs per nest
-	dn = ddply(d[d$type=='non',],.(nest), summarise, n = length(type))
+	dn = ddply(dx[dx$type=='non',],.(nest_ID), summarise, n = length(type))
 	summary(dn$n) # N control obs per nest
+
+	table(dx$type, dx$nest_ID) # one nest with 0 ex and 2 non
+	table(dx$type, dx$pair_ID)
 
 # END	
