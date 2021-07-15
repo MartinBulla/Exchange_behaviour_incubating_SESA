@@ -104,7 +104,7 @@
 			
 				b$end_=n$end_[match(toupper(paste(b$nest, b$year)), toupper(paste(n$nest,n$year)))]
 				b$nest_ID=paste(b$nest,b$year)
-			b$bird_ID = paste(b$year, b$nest_ID, b$sex)
+			    b$bird_ID = paste(b$year, b$nest_ID, b$sex)
 				b$type = as.factor(b$type)
 				
 				b$inc_start=n$inc_start[match(paste(b$nest, b$year), paste(n$nest,n$year))]
@@ -122,7 +122,7 @@
 		   
 		   # only observations before a coming bird was present
 			b1 = b[dt_behaviour<=end_pr]
-			b2 = b[is.na(b$dt_behaviour),]
+			b2 = b[is.na(dt_behaviour)]
 			b_ = rbind(b1,b2) # obs_ID 1, 7, 50, 182 not in (50 shall be included, and 1 perhaps too)
 				# check
 					#length(unique(b_$obs_ID[order(b_$obs_ID)]))
@@ -131,7 +131,7 @@
 			
 			# number of calls and fly-offs per observation
 				# 111 not in YET as it is unclear what is going on
-				bb_=ddply(b_[!is.na(b_$who) & b_$who == 'o',],.(obs_ID, nest_ID,bird_ID, type, day_j, obs_time, lat, lon), summarise, call_i=length(behaviour[which(behaviour=='c' &  !is.na(dt_behaviour) & dt_behaviour<=end_pr)]),fly_i=length(behaviour[which(behaviour=='f' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]))
+				bb_=ddply(b_[!is.na(who) & who == 'o'],.(obs_ID, nest_ID,bird_ID, type, day_j, obs_time, lat, lon), summarise, call_i=length(behaviour[which(behaviour=='c' &  !is.na(dt_behaviour) & dt_behaviour<=end_pr)]),fly_i=length(behaviour[which(behaviour=='f' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]))
 				bb_$sex = d$sex[match(bb_$obs_ID, d$obs_ID)]
 				#bb_[bb_$obs_ID %in% bb_$obs_ID[duplicated(bb_$obs_ID)],]
 				#length(unique(bb_$obs_ID))
