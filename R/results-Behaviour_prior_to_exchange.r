@@ -25,9 +25,25 @@
 		bb_$n=1
 		bb_$fly_bin=ifelse(bb_$fly_i==0,0,1)
 		bb_$ob_sl = scale(log(bb_$obs_time))
+		bb_$pair_ID = d$pair_ID[match(bb_$obs_ID,d$obs_ID)]
 
+		# include only cases where incubating bird left after its partner arrived
+			sel = dd[dd$left_type %in% c('2 while around','3 during exchange'),]
+			bb_ = bb_[-which(bb_$type == 'ex' & !bb_$obs_ID %in% sel$obs_ID),]
+			#table(bb_$type, bb_$nest_ID)
+			bb_ = bb_[bb_$nest_ID %in% unique(bb_$nest_ID[bb_$type == 'ex']),] # keep only nests for which we have nest relief observation with leaving after arrival
+			
+			b_ = b_[-which(type == 'ex' & !obs_ID %in% sel$obs_ID)]
+			b_ = b_[who == 'o']
+			b_ = b_[nest_ID %in% unique(b_$nest_ID[b_$type == 'ex']),] # keep only nests for which we have nest relief observation with leaving after arrival
+			length(unique(b_$nest_ID))
+  			length(unique(b_$nest_ID[b_$type == 'ex']))
+  			length(unique(b_$nest_ID[b_$type == 'non']))
+  	
 # Calls and fly-offs prior to exchange and during regular incubation
   # distributions
+	 # all data
+		summary(bb_$type)
 		summary(factor(bb_$call_i))
 		ggplot(bb_,aes(x=call_i, fill = type))+geom_density(alpha=0.5)
 		ggplot(bb_,aes(x=call_i, fill = type))+geom_histogram(alpha=0.5, position = 'dodge')
@@ -42,11 +58,34 @@
 		
 		ggplot(bb_,aes(x=log(obs_time), y=call_i, fill = type))+geom_point()
 		ggplot(bb_,aes(x=log(obs_time), y=fly_i, fill = type))+geom_point()
+     # not in the MS - for pairs only - results are the same
+		pair = bb_[is.na(bb_$pair_ID),]
+		pair=pair[order(pair$pair_ID),]
+		sel = dd[dd$left_type %in% c('2 while around','3 during exchange'),]
+		pair = pair[-which(pair$type == 'ex' & !pair$pair_ID %in% sel$pair_ID),]
+		summary(pair$type)
+		table(pair$type, pair$pair_ID)
+
+		pex = pair$pair_ID[pair$type =='ex']
+		pair = pair[pair$pair_ID %in% pex,]
+		pnon = pair$pair_ID[pair$type =='non']
+		pair = pair[pair$pair_ID %in% pnon,]
+		nrow(pair)
+		summary(pair$type)
+
+		pair$obs_time[pair$type =='ex']
+		plot(pair$obs_time[pair$type =='ex']~pair$obs_time[pair$type =='non'])
+
+		ggplot(pair,aes(y=jitter(call_i/obs_time), x = type))+geom_point(alpha=0.5) + geom_line(aes(group = pair_ID))
+
+		ggplot(pair,aes(y=jitter(fly_i/obs_time), x = type))+geom_point(alpha=0.5) + geom_line(aes(group = pair_ID))
+
   # Figure 1ab and within text info 
 	  # run first 
 	     # model predictions
 	     	# calls
-				m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)# rate per 10 minute
+				m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  dx)# rate per 10 minute
+				#m= glmer(call_i ~ type + (1|nest_ID/pair_ID), offset = log(obs_time/10),family = poisson,  pair)# rate per 10 minute
 					pred=c('Intercept (exchange)','Type (non-exchange)')
 					nsim <- 5000
 					bsim <- sim(m, n.sim=nsim)  
@@ -71,6 +110,7 @@
 					pc_=pp[pp$type=='non',]
 			# fly-offs
 				m= glmer(fly_bin ~ ob_sl+type + (1|nest_ID), family = binomial,  bb_)
+				#m= glmer(fly_bin ~ ob_sl+type + (1|nest_ID/pair_ID), family = binomial,  pair)
 						pred=c('Intercept (exchange)','Type (non-exchange)')
 						nsim <- 5000
 						bsim <- sim(m, n.sim=nsim)  
@@ -106,7 +146,7 @@
 			pe # prediction for fly-off probability before arrival
 			pn # prediction for fly-off probability control
 	  # plot
-		 if(PNG == TRUE) {png(paste(outdir,"Figure_1ab_new.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+		 if(PNG == TRUE) {png(paste(outdir,"Figure_1ab_left-after-arrival.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
 			}else{dev.new(width=1.85+0.6,height=1.5*2)}	
 		
 		 par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 2.2, 0.2, 2.4),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5) #col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7,
@@ -282,34 +322,21 @@
 
 # Cases where calling/flying occurred - was it closer to the exchange start? and if so is this sex specific
 	# run first	  
-		# time difference of each call/fly occurance to the end of observations session (only for those observatins sessions where calling occured)
-			ba = b[, deltaT := difftime(end_pr, dt_behaviour, units = 'mins')%>% as.integer]
-			bo = b_[, deltaT := difftime(end_pr, dt_behaviour, units = 'mins')%>% as.integer] # contains only cases where incubating bird left after its partner was present
-  			
-		bo$hour= as.numeric(difftime(bo$dt_behaviour, trunc(bo$dt_behaviour,"day"), units = "hours"))
-		bo$rad=as.numeric(bo$hour)*pi/12
-		bo$sex = as.factor(bo$sex)
-			#h$sin_=sin(h$rad)
-			#h$cos_=cos(h$rad)
-		bo_ = bo[bo$behaviour == 'c' & bo$who == 'o' & bo$type == 'ex',]
-		boo = bo[bo$behaviour == 'c' & bo$who == 'o',]
-		length(unique(bo_$obs_ID))
-			summary(factor(boo$type))
-			x = ddply(boo,.(nest, obs_ID,type), summarise, n = length(type))
-			summary(factor(x$type))
-			length(unique(x$nest[x$type == "ex"]))
-			length(unique(x$nest[x$type == "non"]))
-			length(unique(x$nest))
-		bf = bo[bo$behaviour == 'f' & bo$who == 'o' & bo$type == 'ex',]
-		bff = bo[bo$behaviour == 'f' & bo$who == 'o',]
-		length(unique(bf$obs_ID))
-			summary(factor(bff$type))
-			x = ddply(bff,.(nest, obs_ID,type), summarise, n = length(type))
-			summary(factor(x$type))
-			length(unique(x$nest[x$type == "ex"]))
-			length(unique(x$nest[x$type == "non"]))
-			length(unique(x$nest))					
-	# distributions
+		# time difference of each call/fly occurrence to the end of observations session (only for those observation sessions where calling occurred)
+		  bo = b_[, deltaT := difftime(end_pr, dt_behaviour, units = 'mins')%>% as.integer] # contains only cases where incubating bird left after its partner was present
+  			length(unique(bo$nest_ID))
+  			length(unique(bo$nest_ID[bo$type == 'ex']))
+  			length(unique(bo$nest_ID[bo$type == 'non']))
+			
+			bo$hour= as.numeric(difftime(bo$dt_behaviour, trunc(bo$dt_behaviour,"day"), units = "hours"))
+			bo$rad=as.numeric(bo$hour)*pi/12
+			bo$sex = as.factor(bo$sex)
+		
+		  boo = bo[bo$behaviour == 'c' & bo$who == 'o',]
+			
+		  bff = bo[bo$behaviour == 'f' & bo$who == 'o',]
+					
+		# distributions
 		# calling	
 			ggplot(bo_, aes(y = deltaT, x = obs_time))+geom_point()
 			ggplot(boo, aes(x = deltaT,col = type))+geom_density()
@@ -396,7 +423,7 @@
 						w=rbind(w,w2)
 		# plot
 			if(PNG == TRUE) {
-				png(paste(outdir,"Figure_1cd_new.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+				png(paste(outdir,"Figure_1cd_left_after_arrival.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
 				}else{
 				dev.new(width=1.85+0.6,height=1.5*2)
 				}	
@@ -628,10 +655,27 @@
 				  sname = 'Table_S2'
 				  tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 				  openFile(tmp)		
+		# legend info
+		    nrow(boo)
+			summary(factor(boo$type))
+			x = ddply(boo,.(nest_ID, obs_ID,type), summarise, n = length(type))
+			length(unique(x$obs_ID[x$type == "ex"]))
+			length(unique(x$nest_ID[x$type == "ex"]))
+			length(unique(x$obs_ID[x$type == "non"]))
+			length(unique(x$nest_ID[x$type == "non"]))
+			length(unique(x$nest_ID))
+
+			nrow(bff)
+			summary(factor(bff$type))
+			xf = ddply(bff,.(nest_ID, obs_ID,type), summarise, n = length(type))
+			length(unique(xf$obs_ID[xf$type == "ex"]))
+			length(unique(xf$nest_ID[xf$type == "ex"]))
+			length(unique(xf$obs_ID[xf$type == "non"]))
+			length(unique(xf$nest_ID[xf$type == "non"]))
+			length(unique(xf$nest_ID))			
 		# within text info
 			o1[2,] # difference between timing of calls in control and before arrival
-			o3[2,] # difference between timing of calls in control and before arrival			  
-			  
+			o3[2,] # difference between timing of calls in control and before arrival			  		  
 # model assumptions
 	# Table S1a - calling - type
 		  if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S1a.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
