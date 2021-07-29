@@ -1101,7 +1101,7 @@
 			o6=rbind(oii,ri)
 	# create xlsx table
 			o=rbind(o1,o2,o3,o4,o5,o6)
-			sname = 'Table_A'
+			sname = 'Table_A7'
 			tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 			openFile(tmp)
 
