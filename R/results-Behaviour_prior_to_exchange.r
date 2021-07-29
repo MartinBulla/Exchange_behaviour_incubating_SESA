@@ -316,9 +316,194 @@
 				o4=rbind(oii,ri)	
 	 # create xlsx table		
 			o=rbind(o1,o2,o3,o4)
-			sname = 'Table_S1'
+			sname = 'Table_A1'
 			tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 			openFile(tmp)	
+
+# model assumptions
+	# Table A1a - calling - type
+		  if(PNG == TRUE){png(paste(outdir,"model_ass/Table_A1a.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
+		  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+		  m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
+							 								  
+		  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+		  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+		  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+		  qqline(resid(m))
+		  
+		  qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
+		  qqline(unlist(ranef(m)$nest_ID [1]))
+		  
+		  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
+		  #qqline(unlist(ranef(m)$nest_ID[2]))
+		  
+		  #scatter.smooth(resid(m)~x2$date[x2$sum>720]);abline(h=0, lty=2, col='red')
+		  scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+		  boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+		  
+		  mtext("glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+		   
+		  mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
+										  
+		  acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+		  
+		  # spatial autocorrelations - nest location
+			spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
+				spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+				#cex_=c(1,2,3,3.5,4)
+				cex_=c(1,1.5,2,2.5,3)
+				spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+				plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+				legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+				
+				plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+				plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+
+			
+			if(PNG == TRUE){dev.off()}
+	# Table A1b - calling type * incubation period, type * sex
+			  if(PNG == TRUE){png(paste(outdir,"model_ass/Table_A1b.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
+		  	  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+			  m= glmer(call_i ~ type*sex +  type*scale(day_j) + (1|nest_ID),offset = log(obs_time/10), family = poisson,  bb_) 
+			
+			  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+			  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+			  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+			  qqline(resid(m))
+			  
+			  qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
+			  qqline(unlist(ranef(m)$nest_ID [1]))
+			  
+			  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
+			  #qqline(unlist(ranef(m)$nest_ID[2]))
+			  
+			  scatter.smooth(resid(m)~bb_$day_j);abline(h=0, lty=2, col='red')
+			  scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+			  boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+			  
+			  scatter.smooth(resid(m)~factor(bb_$sex));abline(h=0, lty=2, col='red')
+			  boxplot(resid(m)~bb_$sex);abline(h=0, lty=2, col='red')
+			  
+			  mtext("glmer(call_i ~ type*sex +  type*scale(day_j) + (1|nest_ID),offset = log(obs_time/10), family = poisson) ", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+			   
+			  mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
+											  
+			  acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+			  
+			  # spatial autocorrelations - nest location
+				spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
+					spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+					#cex_=c(1,2,3,3.5,4)
+					cex_=c(1,1.5,2,2.5,3)
+					spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+					plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+					legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+					
+					plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+					plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+					
+				if(PNG == TRUE){dev.off()}
+	# Table A1c - fly-off - type
+			if(PNG == TRUE){png(paste(outdir,"model_ass/Table_A1c.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
+		  	par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+			m= glmer(fly_bin ~ scale(log(obs_time))+type + (1|nest_ID), family = binomial,  bb_)
+			    
+			scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+			scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+					  
+			plot(fitted(m), jitter(bb_$fly_bin, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+			abline(0,1, lty=3)
+			t.breaks <- cut(fitted(m), quantile(fitted(m)))
+			means <- tapply(bb_$fly_bin, t.breaks, mean)
+			semean <- function(x) sd(x)/sqrt(length(x))
+			means.se <- tapply(bb_$fly_bin, t.breaks, semean)
+			points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
+			segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
+			
+			qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+			qqline(resid(m))
+					  
+			qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
+			qqline(unlist(ranef(m)$nest_ID [1]))
+					  
+					  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
+					  #qqline(unlist(ranef(m)$nest_ID[2]))
+					  
+			scatter.smooth(resid(m)~log(bb_$obs_time));abline(h=0, lty=2, col='red')
+			scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+			boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+					  
+			mtext("glmer(fly_bin ~ scale(log(obs_time))+type + (1|nest_ID), family = binomial", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+					   
+			#mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
+													  
+			acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+					  # spatial autocorrelations - nest location
+						spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
+							spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+							#cex_=c(1,2,3,3.5,4)
+							cex_=c(1,1.5,2,2.5,3)
+							spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+							plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+							legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+							
+							plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+							plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+				
+			if(PNG == TRUE){dev.off()}	
+	# Table A1d - fly-off type * incubation period	
+			if(PNG == TRUE){png(paste(outdir,"model_ass/Table_A1d.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
+		  	par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
+		
+			m= glmer(fly_bin ~ scale(log(obs_time)) + type*sex +  type*scale(day_j) +  (1|nest_ID),family = binomial,  bb_)
+			
+			scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
+			scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
+						  
+			plot(fitted(m), jitter(bb_$fly_bin, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
+				abline(0,1, lty=3)
+				t.breaks <- cut(fitted(m), quantile(fitted(m)))
+				means <- tapply(bb_$fly_bin, t.breaks, mean)
+				semean <- function(x) sd(x)/sqrt(length(x))
+				means.se <- tapply(bb_$fly_bin, t.breaks, semean)
+				points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
+				segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
+				
+			  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
+			  qqline(resid(m))
+			  
+			  qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
+			  qqline(unlist(ranef(m)$nest_ID [1]))
+			  
+			  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
+			  #qqline(unlist(ranef(m)$nest_ID[2]))
+			  
+			  scatter.smooth(resid(m)~log(bb_$obs_time));abline(h=0, lty=2, col='red')
+			  scatter.smooth(resid(m)~bb_$day_j);abline(h=0, lty=2, col='red')
+			  scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+			  boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
+			  
+			  scatter.smooth(resid(m)~factor(bb_$sex));abline(h=0, lty=2, col='red')
+			  boxplot(resid(m)~bb_$sex);abline(h=0, lty=2, col='red')
+			  
+			   mtext("glmer(fly_bin ~ scale(log(obs_time)) + type*sex +  type*scale(day_j) +  (1|nest_ID),family = binomial) ", side = 3, line = 0.5, cex=0.8,outer = TRUE)
+			   
+			   #mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
+											  
+			  acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
+			  # spatial autocorrelations - nest location
+				spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
+					spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
+					#cex_=c(1,2,3,3.5,4)
+					cex_=c(1,1.5,2,2.5,3)
+					spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
+					plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+					legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
+					
+					plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+					plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
+		
+			if(PNG == TRUE){dev.off()}
 
 # NOT IN THE MS Cases where calling/flying occurred - was it closer to the exchange start? and if so is this sex specific
 	# run first	  
@@ -676,193 +861,7 @@
 		# within text info
 			o1[2,] # difference between timing of calls in control and before arrival
 			o3[2,] # difference between timing of calls in control and before arrival			  		  
-
-# model assumptions
-	# Table A1a - calling - type
-		  if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S1a.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
-		  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-		  m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
-							 								  
-		  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-		  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-		  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
-		  qqline(resid(m))
-		  
-		  qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
-		  qqline(unlist(ranef(m)$nest_ID [1]))
-		  
-		  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
-		  #qqline(unlist(ranef(m)$nest_ID[2]))
-		  
-		  #scatter.smooth(resid(m)~x2$date[x2$sum>720]);abline(h=0, lty=2, col='red')
-		  scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
-		  boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
-		  
-		  mtext("glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-		   
-		  mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
-										  
-		  acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-		  
-		  # spatial autocorrelations - nest location
-			spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
-				spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-				#cex_=c(1,2,3,3.5,4)
-				cex_=c(1,1.5,2,2.5,3)
-				spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-				plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-				legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-				
-				plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-				plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-
-			
-			if(PNG == TRUE){dev.off()}
-	# Table S1b - calling type * incubation period, type * sex
-			  if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S1b.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
-		  	  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-			  m= glmer(call_i ~ type*sex +  type*scale(day_j) + (1|nest_ID),offset = log(obs_time/10), family = poisson,  bb_) 
-			
-			  scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-			  scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-			  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
-			  qqline(resid(m))
-			  
-			  qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
-			  qqline(unlist(ranef(m)$nest_ID [1]))
-			  
-			  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
-			  #qqline(unlist(ranef(m)$nest_ID[2]))
-			  
-			  scatter.smooth(resid(m)~bb_$day_j);abline(h=0, lty=2, col='red')
-			  scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
-			  boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
-			  
-			  scatter.smooth(resid(m)~factor(bb_$sex));abline(h=0, lty=2, col='red')
-			  boxplot(resid(m)~bb_$sex);abline(h=0, lty=2, col='red')
-			  
-			  mtext("glmer(call_i ~ type*sex +  type*scale(day_j) + (1|nest_ID),offset = log(obs_time/10), family = poisson) ", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-			   
-			  mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
-											  
-			  acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-			  
-			  # spatial autocorrelations - nest location
-				spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
-					spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-					#cex_=c(1,2,3,3.5,4)
-					cex_=c(1,1.5,2,2.5,3)
-					spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-					plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-					legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-					
-					plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-					plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-					
-				if(PNG == TRUE){dev.off()}
-	# Table S1c - fly-off - type
-			if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S1c.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
-		  	par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-			m= glmer(fly_bin ~ scale(log(obs_time))+type + (1|nest_ID), family = binomial,  bb_)
-			    
-			scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-			scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-					  
-			plot(fitted(m), jitter(bb_$fly_bin, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
-			abline(0,1, lty=3)
-			t.breaks <- cut(fitted(m), quantile(fitted(m)))
-			means <- tapply(bb_$fly_bin, t.breaks, mean)
-			semean <- function(x) sd(x)/sqrt(length(x))
-			means.se <- tapply(bb_$fly_bin, t.breaks, semean)
-			points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
-			segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
-			
-			qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
-			qqline(resid(m))
-					  
-			qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
-			qqline(unlist(ranef(m)$nest_ID [1]))
-					  
-					  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
-					  #qqline(unlist(ranef(m)$nest_ID[2]))
-					  
-			scatter.smooth(resid(m)~log(bb_$obs_time));abline(h=0, lty=2, col='red')
-			scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
-			boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
-					  
-			mtext("glmer(fly_bin ~ scale(log(obs_time))+type + (1|nest_ID), family = binomial", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-					   
-			#mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
-													  
-			acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-					  # spatial autocorrelations - nest location
-						spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
-							spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-							#cex_=c(1,2,3,3.5,4)
-							cex_=c(1,1.5,2,2.5,3)
-							spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-							plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-							legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-							
-							plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-							plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-				
-			if(PNG == TRUE){dev.off()}	
-	# Table S1d - fly-off type * incubation period	
-			if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S1d.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
-		  	par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
-		
-			m= glmer(fly_bin ~ scale(log(obs_time)) + type*sex +  type*scale(day_j) +  (1|nest_ID),family = binomial,  bb_)
-			
-			scatter.smooth(fitted(m),resid(m),col='red');abline(h=0, lty=2)
-			scatter.smooth(fitted(m),sqrt(abs(resid(m))), col='red')
-						  
-			plot(fitted(m), jitter(bb_$fly_bin, amount=0.05), xlab="Fitted values", ylab="Probability of left", las=1, cex.lab=1.2, cex=0.8)
-				abline(0,1, lty=3)
-				t.breaks <- cut(fitted(m), quantile(fitted(m)))
-				means <- tapply(bb_$fly_bin, t.breaks, mean)
-				semean <- function(x) sd(x)/sqrt(length(x))
-				means.se <- tapply(bb_$fly_bin, t.breaks, semean)
-				points(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means, pch=16, col="orange")
-				segments(quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means-2*means.se, quantile(fitted(m),c(0.125,0.375,0.625,0.875)), means+2*means.se,lwd=2, col="orange")
-				
-			  qqnorm(resid(m), main=list("Normal Q-Q Plot: residuals", cex=0.8),col='red') 
-			  qqline(resid(m))
-			  
-			  qqnorm(unlist(ranef(m)$nest_ID [1]), main = " intercept",col='red')
-			  qqline(unlist(ranef(m)$nest_ID [1]))
-			  
-			  #qqnorm(unlist(ranef(m)$nest_ID[2]), main = " slope",col='red')
-			  #qqline(unlist(ranef(m)$nest_ID[2]))
-			  
-			  scatter.smooth(resid(m)~log(bb_$obs_time));abline(h=0, lty=2, col='red')
-			  scatter.smooth(resid(m)~bb_$day_j);abline(h=0, lty=2, col='red')
-			  scatter.smooth(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
-			  boxplot(resid(m)~bb_$type);abline(h=0, lty=2, col='red')
-			  
-			  scatter.smooth(resid(m)~factor(bb_$sex));abline(h=0, lty=2, col='red')
-			  boxplot(resid(m)~bb_$sex);abline(h=0, lty=2, col='red')
-			  
-			   mtext("glmer(fly_bin ~ scale(log(obs_time)) + type*sex +  type*scale(day_j) +  (1|nest_ID),family = binomial) ", side = 3, line = 0.5, cex=0.8,outer = TRUE)
-			   
-			   #mtext(paste("overdispersion:", round(dispersion_glmer(m),3)), side = 3, line = -2, cex=0.8,outer = TRUE)
-											  
-			  acf(resid(m), type="p", main=list("Temporal autocorrelation:\npartial series residual",cex=0.8))
-			  # spatial autocorrelations - nest location
-				spdata=data.frame(resid=resid(m), x=bb_$lon, y=bb_$lat)
-					spdata$col=ifelse(spdata$resid<0,rgb(83,95,124,100, maxColorValue = 255),ifelse(spdata$resid>0,rgb(253,184,19,100, maxColorValue = 255), 'red'))
-					#cex_=c(1,2,3,3.5,4)
-					cex_=c(1,1.5,2,2.5,3)
-					spdata$cex=as.character(cut(abs(spdata$resid), 5, labels=cex_))
-					plot(spdata$x, spdata$y,col=spdata$col, cex=as.numeric(spdata$cex), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-					legend("topleft", pch=16, legend=c('>0','<0'), ,col=c(rgb(83,95,124,100, maxColorValue = 255),rgb(253,184,19,100, maxColorValue = 255)), cex=0.8)
-					
-					plot(spdata$x[spdata$resid<0], spdata$y[spdata$resid<0],col=spdata$col[spdata$resid<0], cex=as.numeric(spdata$cex[spdata$resid<0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-					plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
-		
-			if(PNG == TRUE){dev.off()}
-
-	# Table S2a - calling simple
+	# model ass - Table S2a - calling simple
 	    if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2a.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}
 	    par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
 
@@ -897,7 +896,7 @@
 				plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 	
 		if(PNG == TRUE){dev.off()}		
-	# Table S2b - calling sex
+	# model ass - Table S2b - calling sex
 		if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2b.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}
 	    par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )		
 
@@ -932,7 +931,7 @@
 				plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 	
 		if(PNG == TRUE){dev.off()}
-	# Table S2c - calling simple
+	# model ass - Table S2c - calling simple
 		if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2c.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}
 	    par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )		
 
@@ -967,7 +966,7 @@
 				plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 	
 		if(PNG == TRUE){dev.off()}	
-	# Table S2d - calling sex
+	# model ass - Table S2d - calling sex
 		if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S2d.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}
 	    par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )		
 
