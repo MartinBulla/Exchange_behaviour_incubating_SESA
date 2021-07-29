@@ -84,7 +84,7 @@
 	  # run first 
 	     # model predictions
 	     	# calls
-				m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  dx)# rate per 10 minute
+				m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)# rate per 10 minute
 				#m= glmer(call_i ~ type + (1|nest_ID/pair_ID), offset = log(obs_time/10),family = poisson,  pair)# rate per 10 minute
 					pred=c('Intercept (exchange)','Type (non-exchange)')
 					nsim <- 5000
@@ -146,7 +146,7 @@
 			pe # prediction for fly-off probability before arrival
 			pn # prediction for fly-off probability control
 	  # plot
-		 if(PNG == TRUE) {png(paste(outdir,"Figure_1ab_left-after-arrival.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
+		 if(PNG == TRUE) {png(paste(outdir,"Figure_1AB.png", sep=""), width=1.85+0.6,height=1.5*2,units="in",res=600) 
 			}else{dev.new(width=1.85+0.6,height=1.5*2)}	
 		
 		 par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 2.2, 0.2, 2.4),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5) #col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey70", cex.lab=0.6,cex.main=0.7,
@@ -156,7 +156,7 @@
 				
 				axis(2, at=seq(0,3,by=0.5), lwd = 0.35)
 				mtext("Calling rate [calls/10min]",side=2,line=1, cex=0.55, las=3)
-				text(0.1,3, expression(bold('a')),cex=0.6)
+				text(7.1,3, expression(bold('A')),cex=0.6)
 				
 				for(i in 1:length(unique(u$nest_ID))){
 							ui=u[u$nest_ID==unique(u$nest_ID)[i],]
@@ -184,12 +184,12 @@
 					symbols(c(8.5,8.5,8.5),c(3.2,2.8,2.3)-0.75,circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
 					text(c(8.5,8.5,8.5)+1,c(3.2,2.8,2.3)-0.75,labels=c(1,10,20), xpd=TRUE, cex=0.5)#,col='grey30') 
 					
-					text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5, srt=90, xpd=FALSE,col='grey30') #,col='grey30'
+					text(c(6.3),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5, srt=90, xpd=FALSE,col='grey30') #,col='grey30'
 					}else{
 					symbols(c(8.5,8.5,8.5),c(3.2,2.8,2.3)-0.5,circles=sqrt(c(1,10,20)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
 					text(c(8.5,8.5,8.5)+1,c(3.2,2.8,2.3)-0.5,labels=c(1,10,20), xpd=TRUE, cex=0.5) #,col='grey30'
 					
-					text(c(7.1),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5, srt=90, xpd=FALSE,col='grey30') #
+					text(c(6.3),c(2.05),labels=c('Median & IQR'), xpd=TRUE, cex=0.5, srt=90, xpd=FALSE,col='grey30') #
 					}
 					#arrows(x0=8.5,x1=8.5, y0=1-0.1, y1=1+0.1,  code = 0, col=col_p, angle = 90, length = .025, lwd=1.5, lty=1)
 					#symbols(c(8.5),c(1),circles=sqrt(c(1)/pi),inches=0.03,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) 
@@ -205,9 +205,9 @@
 		 # fly-offs
 				plot(x$m~x$type_j, xlim=c(0,8), ylim=c(0,1),xaxt='n', yaxt='n',  ylab = "Number of calls",xlab = NULL,type='n')
 				
-				text(0.1,1, expression(bold('b')),cex=0.6)						
+				text(7.1,1, expression(bold('B')),cex=0.6)						
 				axis(1, at=c(2,6), label=c('Before nest relief', 'Control'), mgp=c(0,-0.20,0), lwd= 0, col =NA)
-				#mtext("Incubation",side=1,line=0.4, cex=0.5, las=1)#, col='grey30')
+				mtext("Incubation",side=1,line=0.4, cex=0.6, las=1)#, col='grey30')
 									
 				axis(2, at=seq(0,1,by=0.2), lwd = 0.35)
 				mtext("Fly-off probability",side=2,line=1, cex=0.55, las=3)#, col='grey30')
@@ -231,7 +231,7 @@
 					points(y=pn$pred,x=6, pch=20, cex=0.9,col="red")
 	  
 	 	 if(PNG == TRUE) {dev.off()}
-  # Table S1 - if you keep only one random slope - do not report it - just state it in the Table notes
+  # Table A1 - if you keep only one random slope - do not report it - just state it in the Table notes
 	 # prepare table data
 		# calling - type
 			m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
@@ -320,7 +320,7 @@
 			tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 			openFile(tmp)	
 
-# Cases where calling/flying occurred - was it closer to the exchange start? and if so is this sex specific
+# NOT IN THE MS Cases where calling/flying occurred - was it closer to the exchange start? and if so is this sex specific
 	# run first	  
 		# time difference of each call/fly occurrence to the end of observations session (only for those observation sessions where calling occurred)
 		  bo = b_[, deltaT := difftime(end_pr, dt_behaviour, units = 'mins')%>% as.integer] # contains only cases where incubating bird left after its partner was present
@@ -676,8 +676,9 @@
 		# within text info
 			o1[2,] # difference between timing of calls in control and before arrival
 			o3[2,] # difference between timing of calls in control and before arrival			  		  
+
 # model assumptions
-	# Table S1a - calling - type
+	# Table A1a - calling - type
 		  if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S1a.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}	
 		  par(mfrow=c(5,3),oma = c(0, 0, 1.5, 0) )
 		  m= glmer(call_i ~ type + (1|nest_ID), offset = log(obs_time/10),family = poisson,  bb_)
