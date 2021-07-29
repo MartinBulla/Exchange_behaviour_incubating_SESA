@@ -142,7 +142,7 @@
 
 			nrow(x[x$call_o_int %in% c(0),])/nrow(x)
 			
-# Figure 4abc
+# Figure #abc
 	# prepare labels
 		labels_ <- c(
                 `1 both present` = "From initiation to leaving",
@@ -233,7 +233,7 @@
     	nrow(dp)
     	length(unique(dp$nest))
 
-# Figure S1 - for cases where bird left after return
+# Figure A1 - for cases where bird left after return
 	ex = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
 	ex$nn=1
 	nrow(ex)
@@ -257,7 +257,7 @@
 		cex = 0.5, cex.axis = 0.7
 		)
 	 if(PNG == TRUE) {dev.off()}
-# Figure S1 - only for cases where bird left after initiation
+# Figure A1 - only for cases where bird left after initiation
 	ex = dd[which(!is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & dd$left_type=="3 during exchange"),]
 	ex$nn=1
 	a = ddply(ex,.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
@@ -280,7 +280,7 @@
 		)
 	 if(PNG == TRUE) {dev.off()}
 
-# Table SS5 was S4
+# Table A4
 	# prepare table data
 		# a. calling while arriving
 			dx = dd[!is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange'),]# & dd$left_type %in% c('2 while around','3 during exchange'),]#'2 while around',
@@ -439,7 +439,7 @@
 		tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 		openFile(tmp)
 
-# Figure 5a
+# Figure 5A
 	# run first 
 		dxn = dd[!is.na(dd$next_bout) & dd$with_calling=='y' & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
 		nrow(dxn)
@@ -481,7 +481,7 @@
 			pp=newD
 	# plot
 		if(PNG == TRUE) {
-			png(paste(outdir,"Figure_5a.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+			png(paste(outdir,"Figure_5A_.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 			}else{
 			dev.new(width=1.85+0.3,height=1.5)
 			}
@@ -535,7 +535,7 @@
 
 			mtext("Incubating parent replied\n ",side=1,line=0.9, cex=0.55, las=1, col='black')
 			mtext("Next incubation bout [h]",side=2,line=1.1, cex=0.55, las=3, col='black')
-			text(4.95,19.5, expression(bold('a')),cex=0.6,  col='black') # mtext(expression(bold('a')),side=3,line=-0.4, cex=0.6,  col='black')
+			text(4.95,19.5, expression(bold('A')),cex=0.6,  col='black') # mtext(expression(bold('a')),side=3,line=-0.4, cex=0.6,  col='black')
 			text(x=0.5,y=5, labels="Prediction\n& 95%CI", col='red', cex=0.5, pos=4)
 
 			#text(x=0.3,y=20*0.97, labels='\u2640', col='#FCB42C', cex=0.6, pos=4)
@@ -554,7 +554,7 @@
 				code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
 
 		 if(PNG == TRUE) {dev.off()}
-# Figure 5b
+# Figure 5B
 	# run first
 		f = dd[!is.na(dd$next_bout) & !is.na(dd$call_int_c3) & dd$left_type %in% c('3 during exchange')]
 		f$next_bout = f$next_bout/60
@@ -605,7 +605,7 @@
 				x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
 	# plot
 		if(PNG == TRUE) {
-			png(paste(outdir,"Figure_5b_legend_in.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+			png(paste(outdir,"Figure_5B_.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
 			}else{
 			dev.new(width=1.85+0.3,height=1.5)
 			}
@@ -643,7 +643,7 @@
 		mtext("Calling of returned parent\n[after sitting down]",side=1,line=0.9, cex=0.55, las=1, col='black') #line=0.85
 		mtext("Next incubation bout [h]",side=2,line=1, cex=0.55, las=3, col='black') #line=0.8
 		#mtext(expression(bold('b')),side=3,line=-0.4, cex=0.6,  col='black')
-		text(3,19.5, expression(bold('b')),cex=0.6,  col='black')
+		text(3,19.5, expression(bold('B')),cex=0.6,  col='black')
 
 		# legend inside
 			text(x = 1.3, y = 2.5, labels = expression(italic('N')*' observations:'),las=1,col='black', xpd=TRUE, cex = 0.5) # for printing into device use padj=-7.5
@@ -675,7 +675,7 @@
 					
 					}
 					#	 
-# Table SS6 former S 8
+# Table A5
 	# prepare table data
 		dc = dd[!is.na(dd$call_left),]
 		#dc = dd[!is.na(dd$current_bout) & !is.na(dd$call_left),]
@@ -715,7 +715,7 @@
 		tmp = write_xlsx(o1, paste0(ta,sname,'.xlsx'))
 		openFile(tmp)
 
-# Table SSs7 former S5
+# Table A6
 	# prepare table data
 		# a. calling while arriving
 		 	f = dd[!is.na(dd$current_bout) & !is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange'),]# 
@@ -903,7 +903,7 @@
 		sname = 'Table_SS6'
 		tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 		openFile(tmp)
-# Table SSs8 former S6
+# Table A7
 	# prepare table data
 		# a. calling while arriving
 			f = dd[!is.na(dd$next_bout) & !is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange')]
