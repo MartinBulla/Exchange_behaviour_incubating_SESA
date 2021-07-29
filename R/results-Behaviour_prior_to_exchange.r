@@ -1,4 +1,4 @@
-### RESULTS section Behaviour prior to exchange ###
+### RESULTS section Behavior prior to exchange ###
 
 # SETTINGS & DATA
     # do you want plots in R (PNG=FALSE) or as PNG (PNG = TRUE)?
