@@ -10,6 +10,7 @@
 ._.DS_Store
 csv/
 freeze/
+plots/freeze/
 .git/
 .gitattributes
 .here
@@ -17,9 +18,7 @@ freeze/
 .owncloudsync.log
 .Rhistory
 .Rproj.user
-._unip_inc.sublime-project
 .sublime-workspace
-unip_inc.sublime-workspace
 MSR/
 .=.swp
 .=.swo
