@@ -134,6 +134,7 @@
 			nrow(pl[pl$push == 'y']) # number of cases
 			summary(factor(pl$push)) 
 
+			table(pl$sex, pl$nest_ID)
 			nrow(pl) # n cases
 			length(unique(pl$nest_ID[pl$push=='y'])) # number of nests with please leave
 			length(unique(pl$nest_ID)) # n nests
@@ -142,7 +143,8 @@
 
 		# do both sexes please leave display at a given nest
 			ee = pl[pl$push == 'y',]
-			table(ee$sex_returning, ee$nest)	 # 5 nest with male only, 8 nests with female only
+			nrow(ee)
+			table(ee$sex_returning, ee$nest_ID)	 # 5 nest with male only, 8 nests with female only
 			
 		# distribution across incubating sex
 			table(pl$push, pl$sex) 	
@@ -263,7 +265,7 @@
 		  v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
 		  ci=apply(bsim@fixef, 2, quantile, prob=c(0.025,0.975))
 
-# Table S3
+# Table A3
   # prepare table data
 	 # a. presence before exchange
 		    m = lmer(pa ~ sex_returning*scale(day_j)+(day_j|nest_ID), dd)
@@ -438,7 +440,7 @@
 				pp$upr_back[3]- pp$upr_back[1]
 	# plot
 		if(PNG == TRUE) {
-				png(paste(outdir,"Figure_2_former_X.png", sep=""), width=1.85+0.6,height=1.5,units="in",res=600)
+				png(paste(outdir,"Figure_2_.png", sep=""), width=1.85+0.6,height=1.5,units="in",res=600)
 				}else{
 				dev.new(width=1.85+0.6,height=1.5)
 				}
@@ -496,7 +498,7 @@
 			at_=c(5,15,30,60,120)
 			for(i in 1:4){axis(2, at=log(seq(at_[i],at_[i+1],length.out=10)), labels=FALSE,tcl=-0.055, lwd=0.35)}
 			axis(2, at=log(at_), lwd = 0.35,labels=c('5 s','15 s','30 s','1 min','2 min'))
-			mtext("Nest relief",side=2,line=1.3, cex=0.55, las=3, col='grey30')
+			mtext("From initiation to leaving",side=2,line=1.4, cex=0.55, las=3, col='grey30')
 			#mtext("Duration",side=2,line=1, cex=0.6, las=3, col='grey30')
 
 			# predictions
@@ -507,7 +509,7 @@
 
 			if(PNG == TRUE) {dev.off()}
 
-# Figure 3a
+# Figure 3A
 	# prepare data
 	 	ebb = dd[dd$left_type %in%c('3 during exchange'),]
 		ebb$col_sex_returning=ifelse(ebb$sex_returning=='f', col_f, col_m) # female color = #FCB42C)	
@@ -546,7 +548,7 @@
 	# plot
 		if(PNG == TRUE) {
 				#png(paste(outdir,"Figure_2_new_mac.png", sep=""), width=1.85+0.6,height=1.5,units="in",res=600)
-				quartz(file = paste(outdir,"Figure_3a.png", sep=""), type = "png", width=1.85+0.3,height=1.5, dpi = 600)
+				quartz(file = paste(outdir,"Figure_3A_.png", sep=""), type = "png", width=1.85+0.3,height=1.5, dpi = 600)
 				}else{
 				dev.new(width=1.85+0.3,height=1.5)
 				}
@@ -588,7 +590,7 @@
 			text(x=25,y=max(ebb$both)*0.97, labels='\u2640', col='#FCB42C', cex=0.6)
 			text(x=27,y=max(ebb$both), labels='\u2642', col='#535F7C', cex=0.6)
 
-			text(29,99, expression(bold('a')),cex=0.6)
+			text(29,99, expression(bold('A')),cex=0.6)
 
 			if(PNG == TRUE) {dev.off()}
 # Figure 3a - log
@@ -674,7 +676,7 @@
 
 
 			if(PNG == TRUE) {dev.off()}
-# Figure 3b
+# Figure 3B
 	# prepare data
 	 	ebb = dd[dd$left_type %in%c('3 during exchange'),]
 
@@ -717,7 +719,7 @@
 	# plot
 		 if(PNG == TRUE) {
 				#png(paste(outdir,"Figure_2_new_mac.png", sep=""), width=1.85+0.6,height=1.5,units="in",res=600)
-				quartz(file = paste(outdir,"Figure_3b.png", sep=""), type = "png", width=1.85+0.3,height=1.5, dpi = 600)
+				quartz(file = paste(outdir,"Figure_3B_.png", sep=""), type = "png", width=1.85+0.3,height=1.5, dpi = 600)
 				}else{
 				dev.new(width=1.85+0.3,height=1.5)
 				}
@@ -789,10 +791,10 @@
 				#text(c(1.5,4.2), par("usr")[3]-0.45, labels = c('yes','no'),  xpd = TRUE, cex=0.5, col="black")
 				#text(c(1,2,3.7,4.7), par("usr")[3]-0.8, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))
 				mtext("Please-leave display\n[returning parent]",side=1,line=0.9,cex=0.55, las=1, col='black')
-				text(4.95,99, expression(bold('b')),cex=0.6)
+				text(4.95,99, expression(bold('B')),cex=0.6)
 			 if(PNG == TRUE) {dev.off()}
 
-# Table SS4 - CHANGE NAME
+# Table A2
 	# prepare table data
 		# current bout
 			e = dd[dd$left_type %in%c('3 during exchange') & !is.na(dd$current_bout),]
@@ -883,171 +885,9 @@
 		sname = 'Table_S7'
 		tmp = write_xlsx(o, paste0(ta,sname,'.xlsx'))
 		openFile(tmp)
-# Figure pleaseLeave	
-	# raw data
-		e = dd[dd$left_type %in%c('3 during exchange'),]
-		e$n = 1
-				#x = ddply(f,.(nest_ID, sex_returning_returning),summarise, mo=median(call_o_int), q1o=quantile(call_o_int,0.25), q2o= quantile(call_o_int,0.75), mc=median(call_c_int), q1c=quantile(call_c_int,0.25), q2c= quantile(call_c_int,0.75), n = sum(n))
-
-		e$col_=ifelse(e$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
-
-		x = ddply(e,.(sex_returning,day_j),summarise, push = mean(push01), n = sum(n))
-				#x$call_o_int = ifelse(x$sex_returning == 'f', x$call_o_int-0.2, x$call_o_int+0.2)
-				# call based on x-axis - incubating parent
-				x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
-	# predict
-		e = dd[dd$left_type %in%c('3 during exchange'),]
-		m=glmer(push01 ~ sex_returning*day_j+ (day_j|bird_ID)+(1|nest_ID), family='binomial',e) 
-		nsim <- 5000
-		bsim <- sim(m, n.sim=nsim)
-		v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
-	  	# values to predict for
-			l = list()
-			for(i in c('m','f')){
-				ei = e[e$sex_returning == i]
-				l[[i]]=data.frame(	sex_returning = i,
-									day_j = seq(min(ei$day_j), max(ei$day_j), length.out = 100)
-									)
-					}
-			newD = do.call(rbind,l)
-
-		# exactly the model which was used has to be specified here
-			X <- model.matrix(~ sex_returning*day_j,data=newD)
-
-			# calculate predicted values and creditability intervals
-				newD$pred <-plogis(X%*%v)
-						predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
-						for(i in 1:nsim) predmatrix[,i] <- plogis(X%*%bsim@fixef[i,])
-						newD$lwr <- (apply(predmatrix, 1, quantile, prob=0.025))
-						newD$upr <- (apply(predmatrix, 1, quantile, prob=0.975))
-				pp=newD
-				ppf = pp[pp$sex_returning == 'f',]
-				ppm = pp[pp$sex_returning == 'm',]
-	# plot
-		if(PNG == TRUE){
-			png(paste(outdir,"Figure_plsLeave.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
-				}else{ dev.new(width=1.85+0.3,height=1.5)}
-		par(mar=c(0.4,0.1,0.6,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
-
-		plot(pred ~ day_j, data = pp,
-									#ylab =NULL,
-									xaxt='n',
-									yaxt='n',
-									#xaxs = 'i',
-									#yaxs = 'i',
-									ylim = c(0,1),
-									xlim = c(0,30),
-									type='n'
-									) # col=z_g$cols, border=z_g$cols
-
-			
-			#points(e$push) ~ jitter(dd$day_j), col = adjustcolor(dd$colr, alpha.f = 0.8), bg = adjustcolor(dd$colr, alpha.f = 0.4), pch =21, cex = 0.4)
-
-			# predictions
-				polygon(c(ppf$day_j, rev(ppf$day_j)), c(ppf$lwr,
-								rev(ppf$upr)), border=NA, col=adjustcolor(col_f,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
-				lines(ppf$day_j, ppf$pred, col=col_f,lwd=1)
-
-				polygon(c(ppm$day_j, rev(ppm$day_j)), c(ppm$lwr,
-								rev(ppm$upr)), border=NA, col=adjustcolor(col_m,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
-				lines(ppm$day_j, ppm$pred, col=col_m,lwd=1)
-
-				#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
-						#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
-
-			symbols(x$day_j, x$push, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
-			axis(1, at=seq(0,30,by = 10), label=seq(0,30,by = 10), mgp=c(0,-0.20,0), lwd = 0.35)
-			axis(2, at=seq(0,1,by = 0.2), label=c('0%', '20%', '40%', '60%', '80%','100%'), lwd = 0.35)
-
-			mtext("Incubation day",side=1,line=0.4, cex=0.55, las=1, col='black')
-			mtext("Please-leave display",side=2,line=1.1, cex=0.55, las=3, col='black')
-
-	
-			 if(PNG == TRUE) {dev.off()}
-# Figure pleaseLeave- gaussian
-	# raw data
-		e = dd[dd$left_type %in%c('3 during exchange'),]
-		e$n = 1
-				#x = ddply(f,.(nest_ID, sex_returning_returning),summarise, mo=median(call_o_int), q1o=quantile(call_o_int,0.25), q2o= quantile(call_o_int,0.75), mc=median(call_c_int), q1c=quantile(call_c_int,0.25), q2c= quantile(call_c_int,0.75), n = sum(n))
-
-		e$col_=ifelse(e$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
-
-		x = ddply(e,.(sex_returning,day_j),summarise, push = mean(push01), n = sum(n))
-				#x$call_o_int = ifelse(x$sex_returning == 'f', x$call_o_int-0.2, x$call_o_int+0.2)
-				# call based on x-axis - incubating parent
-				x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
-	# predict
-		e = dd[dd$left_type %in%c('3 during exchange'),]
-		m=lmer(push01 ~ sex_returning*day_j+ (day_j|bird_ID) +(1|nest_ID),e) 
-		nsim <- 5000
-		bsim <- sim(m, n.sim=nsim)
-		v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
-	  	# values to predict for
-			l = list()
-			for(i in c('m','f')){
-				ei = e[e$sex_returning == i]
-				l[[i]]=data.frame(	sex_returning = i,
-									day_j = seq(min(ei$day_j), max(ei$day_j), length.out = 100)
-									)
-					}
-			newD = do.call(rbind,l)
-
-		# exactly the model which was used has to be specified here
-			X <- model.matrix(~ sex_returning*day_j,data=newD)
-
-			# calculate predicted values and creditability intervals
-				newD$pred <-(X%*%v)
-						predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
-						for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
-						newD$lwr <- (apply(predmatrix, 1, quantile, prob=0.025))
-						newD$upr <- (apply(predmatrix, 1, quantile, prob=0.975))
-				pp=newD
-				ppf = pp[pp$sex_returning == 'f',]
-				ppm = pp[pp$sex_returning == 'm',]
-	# plot
-		if(PNG == TRUE){
-			png(paste(outdir,"Figure_plsLeave_gaus.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
-				}else{ dev.new(width=1.85+0.3,height=1.5)}
-		par(mar=c(0.4,0.1,0.6,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
-
-		plot(pred ~ day_j, data = pp,
-									#ylab =NULL,
-									xaxt='n',
-									yaxt='n',
-									#xaxs = 'i',
-									#yaxs = 'i',
-									ylim = c(0,1),
-									xlim = c(0,30),
-									type='n'
-									) # col=z_g$cols, border=z_g$cols
-
-			
-			#points(e$push) ~ jitter(dd$day_j), col = adjustcolor(dd$colr, alpha.f = 0.8), bg = adjustcolor(dd$colr, alpha.f = 0.4), pch =21, cex = 0.4)
-
-			# predictions
-				polygon(c(ppf$day_j, rev(ppf$day_j)), c(ppf$lwr,
-								rev(ppf$upr)), border=NA, col=adjustcolor(col_f,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
-				lines(ppf$day_j, ppf$pred, col=col_f,lwd=1)
-
-				polygon(c(ppm$day_j, rev(ppm$day_j)), c(ppm$lwr,
-								rev(ppm$upr)), border=NA, col=adjustcolor(col_m,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
-				lines(ppm$day_j, ppm$pred, col=col_m,lwd=1)
-
-				#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
-						#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
-
-			symbols(x$day_j, x$push, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
-			axis(1, at=seq(0,30,by = 10), label=seq(0,30,by = 10), mgp=c(0,-0.20,0), lwd = 0.35)
-			axis(2, at=seq(0,1,by = 0.2), label=c('0%', '20%', '40%', '60%', '80%','100%'), lwd = 0.35)
-
-			mtext("Incubation day",side=1,line=0.4, cex=0.55, las=1, col='black')
-			mtext("Please-leave display",side=2,line=1.1, cex=0.55, las=3, col='black')
-
-	
-			 if(PNG == TRUE) {dev.off()}
 
 # model assumptions
-	# TABLE S7
+	# TABLE A3
 		# a. current bout
 			e = dd[dd$left_type %in%c('3 during exchange') & !is.na(dd$current_bout),]
 			m=glmer(push01 ~ sex*scale(current_bout)+ (scale(current_bout)|bird_ID)+(1|nest_ID), family='binomial',e)
@@ -1152,7 +992,7 @@
 							plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 
 			if(PNG == TRUE){dev.off()}			 
-	# TABLE S3 
+	# TABLE A2 
 		# a. presence before exchange
 			 m = lmer(pa ~ sex_returning*scale(day_j)+(day_j|nest_ID), dd)
 			 if(PNG == TRUE){png(paste(outdir,"model_ass/Table_S3a.png", sep=""), width=6,height=9,units="in",res=600)}else{dev.new(width=6,height=9)}
@@ -1311,5 +1151,171 @@
 					plot(spdata$x[spdata$resid>=0], spdata$y[spdata$resid>=0],col=spdata$col[spdata$resid>=0], cex=as.numeric(spdata$cex[spdata$resid>=0]), pch= 16, main=list('Spatial distribution of residuals', cex=0.8))
 
 			   if(PNG == TRUE){dev.off()}
+
+
+# LATER DELETE
+	# Figure pleaseLeave	
+		# raw data
+			e = dd[dd$left_type %in%c('3 during exchange'),]
+			e$n = 1
+					#x = ddply(f,.(nest_ID, sex_returning_returning),summarise, mo=median(call_o_int), q1o=quantile(call_o_int,0.25), q2o= quantile(call_o_int,0.75), mc=median(call_c_int), q1c=quantile(call_c_int,0.25), q2c= quantile(call_c_int,0.75), n = sum(n))
+
+			e$col_=ifelse(e$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
+
+			x = ddply(e,.(sex_returning,day_j),summarise, push = mean(push01), n = sum(n))
+					#x$call_o_int = ifelse(x$sex_returning == 'f', x$call_o_int-0.2, x$call_o_int+0.2)
+					# call based on x-axis - incubating parent
+					x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
+		# predict
+			e = dd[dd$left_type %in%c('3 during exchange'),]
+			m=glmer(push01 ~ sex_returning*day_j+ (day_j|bird_ID)+(1|nest_ID), family='binomial',e) 
+			nsim <- 5000
+			bsim <- sim(m, n.sim=nsim)
+			v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+		  	# values to predict for
+				l = list()
+				for(i in c('m','f')){
+					ei = e[e$sex_returning == i]
+					l[[i]]=data.frame(	sex_returning = i,
+										day_j = seq(min(ei$day_j), max(ei$day_j), length.out = 100)
+										)
+						}
+				newD = do.call(rbind,l)
+
+			# exactly the model which was used has to be specified here
+				X <- model.matrix(~ sex_returning*day_j,data=newD)
+
+				# calculate predicted values and creditability intervals
+					newD$pred <-plogis(X%*%v)
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- plogis(X%*%bsim@fixef[i,])
+							newD$lwr <- (apply(predmatrix, 1, quantile, prob=0.025))
+							newD$upr <- (apply(predmatrix, 1, quantile, prob=0.975))
+					pp=newD
+					ppf = pp[pp$sex_returning == 'f',]
+					ppm = pp[pp$sex_returning == 'm',]
+		# plot
+			if(PNG == TRUE){
+				png(paste(outdir,"Figure_plsLeave.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+					}else{ dev.new(width=1.85+0.3,height=1.5)}
+			par(mar=c(0.4,0.1,0.6,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+
+			plot(pred ~ day_j, data = pp,
+										#ylab =NULL,
+										xaxt='n',
+										yaxt='n',
+										#xaxs = 'i',
+										#yaxs = 'i',
+										ylim = c(0,1),
+										xlim = c(0,30),
+										type='n'
+										) # col=z_g$cols, border=z_g$cols
+
+				
+				#points(e$push) ~ jitter(dd$day_j), col = adjustcolor(dd$colr, alpha.f = 0.8), bg = adjustcolor(dd$colr, alpha.f = 0.4), pch =21, cex = 0.4)
+
+				# predictions
+					polygon(c(ppf$day_j, rev(ppf$day_j)), c(ppf$lwr,
+									rev(ppf$upr)), border=NA, col=adjustcolor(col_f,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+					lines(ppf$day_j, ppf$pred, col=col_f,lwd=1)
+
+					polygon(c(ppm$day_j, rev(ppm$day_j)), c(ppm$lwr,
+									rev(ppm$upr)), border=NA, col=adjustcolor(col_m,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+					lines(ppm$day_j, ppm$pred, col=col_m,lwd=1)
+
+					#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
+							#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
+
+				symbols(x$day_j, x$push, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
+				axis(1, at=seq(0,30,by = 10), label=seq(0,30,by = 10), mgp=c(0,-0.20,0), lwd = 0.35)
+				axis(2, at=seq(0,1,by = 0.2), label=c('0%', '20%', '40%', '60%', '80%','100%'), lwd = 0.35)
+
+				mtext("Incubation day",side=1,line=0.4, cex=0.55, las=1, col='black')
+				mtext("Please-leave display",side=2,line=1.1, cex=0.55, las=3, col='black')
+
+		
+				 if(PNG == TRUE) {dev.off()}
+	# Figure pleaseLeave- gaussian
+		# raw data
+			e = dd[dd$left_type %in%c('3 during exchange'),]
+			e$n = 1
+					#x = ddply(f,.(nest_ID, sex_returning_returning),summarise, mo=median(call_o_int), q1o=quantile(call_o_int,0.25), q2o= quantile(call_o_int,0.75), mc=median(call_c_int), q1c=quantile(call_c_int,0.25), q2c= quantile(call_c_int,0.75), n = sum(n))
+
+			e$col_=ifelse(e$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
+
+			x = ddply(e,.(sex_returning,day_j),summarise, push = mean(push01), n = sum(n))
+					#x$call_o_int = ifelse(x$sex_returning == 'f', x$call_o_int-0.2, x$call_o_int+0.2)
+					# call based on x-axis - incubating parent
+					x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
+		# predict
+			e = dd[dd$left_type %in%c('3 during exchange'),]
+			m=lmer(push01 ~ sex_returning*day_j+ (day_j|bird_ID) +(1|nest_ID),e) 
+			nsim <- 5000
+			bsim <- sim(m, n.sim=nsim)
+			v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
+		  	# values to predict for
+				l = list()
+				for(i in c('m','f')){
+					ei = e[e$sex_returning == i]
+					l[[i]]=data.frame(	sex_returning = i,
+										day_j = seq(min(ei$day_j), max(ei$day_j), length.out = 100)
+										)
+						}
+				newD = do.call(rbind,l)
+
+			# exactly the model which was used has to be specified here
+				X <- model.matrix(~ sex_returning*day_j,data=newD)
+
+				# calculate predicted values and creditability intervals
+					newD$pred <-(X%*%v)
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
+							newD$lwr <- (apply(predmatrix, 1, quantile, prob=0.025))
+							newD$upr <- (apply(predmatrix, 1, quantile, prob=0.975))
+					pp=newD
+					ppf = pp[pp$sex_returning == 'f',]
+					ppm = pp[pp$sex_returning == 'm',]
+		# plot
+			if(PNG == TRUE){
+				png(paste(outdir,"Figure_plsLeave_gaus.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
+					}else{ dev.new(width=1.85+0.3,height=1.5)}
+			par(mar=c(0.4,0.1,0.6,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+
+			plot(pred ~ day_j, data = pp,
+										#ylab =NULL,
+										xaxt='n',
+										yaxt='n',
+										#xaxs = 'i',
+										#yaxs = 'i',
+										ylim = c(0,1),
+										xlim = c(0,30),
+										type='n'
+										) # col=z_g$cols, border=z_g$cols
+
+				
+				#points(e$push) ~ jitter(dd$day_j), col = adjustcolor(dd$colr, alpha.f = 0.8), bg = adjustcolor(dd$colr, alpha.f = 0.4), pch =21, cex = 0.4)
+
+				# predictions
+					polygon(c(ppf$day_j, rev(ppf$day_j)), c(ppf$lwr,
+									rev(ppf$upr)), border=NA, col=adjustcolor(col_f,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+					lines(ppf$day_j, ppf$pred, col=col_f,lwd=1)
+
+					polygon(c(ppm$day_j, rev(ppm$day_j)), c(ppm$lwr,
+									rev(ppm$upr)), border=NA, col=adjustcolor(col_m,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+					lines(ppm$day_j, ppm$pred, col=col_m,lwd=1)
+
+					#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
+							#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
+
+				symbols(x$day_j, x$push, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
+				axis(1, at=seq(0,30,by = 10), label=seq(0,30,by = 10), mgp=c(0,-0.20,0), lwd = 0.35)
+				axis(2, at=seq(0,1,by = 0.2), label=c('0%', '20%', '40%', '60%', '80%','100%'), lwd = 0.35)
+
+				mtext("Incubation day",side=1,line=0.4, cex=0.55, las=1, col='black')
+				mtext("Please-leave display",side=2,line=1.1, cex=0.55, las=3, col='black')
+
+		
+				 if(PNG == TRUE) {dev.off()}
+
 
 #END
