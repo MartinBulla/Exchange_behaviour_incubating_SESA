@@ -11,6 +11,7 @@
 csv/
 freeze/
 plots/freeze/
+Tables/freeze/
 .git/
 .gitattributes
 .here
