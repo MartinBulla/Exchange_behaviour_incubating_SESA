@@ -640,7 +640,7 @@
 
 		axis(1, at=c(0,1,2,3), label=c(0,1,2,3), mgp=c(0,-0.20,0), lwd = 0.35)
 		axis(2, at=seq(0,20, by=5), label = TRUE,lwd = 0.35)
-		mtext("Calling of returned parent\n[after sitting down]",side=1,line=0.9, cex=0.55, las=1, col='black') #line=0.85
+		mtext("Calling intensity score of returned parent\nafter incubation start",side=1,line=0.9, cex=0.55, las=1, col='black') #line=0.85
 		mtext("Next incubation bout [h]",side=2,line=1, cex=0.55, las=3, col='black') #line=0.8
 		#mtext(expression(bold('b')),side=3,line=-0.4, cex=0.6,  col='black')
 		text(3,19.5, expression(bold('B')),cex=0.6,  col='black')
@@ -658,9 +658,8 @@
 					
 					}
 
-		
-
 		 if(PNG == TRUE) {dev.off()}
+	
 	# not used legend outside
 			mtext('Observations:',side = 4,line=-0, padj=-6,cex=0.5,las=1,col='black', xpd=TRUE) # for printing into device use padj=-7.5
 			#mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='black', xpd=TRUE) # for printing into device use padj=-7.5
