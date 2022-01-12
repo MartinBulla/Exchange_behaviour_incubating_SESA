@@ -144,13 +144,47 @@
 		# do both sexes please leave display at a given nest
 			ee = pl[pl$push == 'y',]
 			nrow(ee)
-			table(ee$sex_returning, ee$nest_ID)	 # 5 nest with male only, 8 nests with female only
+			table(ee$nest_ID, ee$sex_returning)	 # 5 nest with male only, 8 nests with female only
 			
 		# distribution across incubating sex
 			table(pl$push, pl$sex) 	
-			length(pl$push[pl$push=='y' & pl$sex=='f'])/length(pl$push[pl$sex=='f']) # female incubates
-			length(pl$push[pl$push=='y' & pl$sex=='m'])/length(pl$push[pl$sex=='m'])
-   
+			length(pl$push[pl$push=='y' & pl$sex_returning=='f'])/length(pl$push[pl$sex=='f']) # female incubates
+			length(pl$push[pl$push=='y' & pl$sex=='m'])/length(pl$push[pl$sex=='m']) # male incubates
+   			# controlled for pseudoreplication
+   				m=glmer(push01 ~ sex + (1|bird_ID)+(1|nest_ID), family='binomial',pl)
+   				summary(glht(m))
+   				
+   				exp(cbind(OR = coef(m), confint(m)))
+
+   				nsim <- 5000
+				bsim <- sim(m, n.sim=nsim)
+   				apply(bsim@fixef, 2, quantile, prob=c(0.025, 0.5, 0.975))
+   				exp(apply(bsim@fixef, 2, quantile, prob=c(0.025, 0.5, 0.975))) # gives odds ration
+		  	
+		  	# values to predict for
+				v = apply(bsim@fixef, 2, quantile, prob=0.5)
+				newD = data.frame(sex = c('f','m'))
+
+			# exactly the model which was used has to be specified here
+				X <- model.matrix(~ sex,data=newD)
+
+				# calculate predicted values and creditability intervals
+					newD$pred <-plogis(X%*%v)
+							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+							for(i in 1:nsim) predmatrix[,i] <- plogis(X%*%bsim@fixef[i,])
+							newD$lwr <- (apply(predmatrix, 1, quantile, prob=0.025))
+							newD$upr <- (apply(predmatrix, 1, quantile, prob=0.975))
+					pp=newD
+
+		# is the sex distribution due to artifact of only a single sex being recorded at the given nest?
+			xpl = pl[pl$nest_ID %in% unique(pl$nest_ID[pl$push=='y']), c('obs_ID','nest_ID','sex_returning','push01')]
+			table(xpl$nest_ID,xpl$sex_returning) 	
+
+			length(unique(pl$bird_ID)) # 51 unique birds
+			length(unique(pl$bird_ID[pl$push=='y'])) # 13 unique birds pushing
+			13/51 # 0.254901 probability of bird pushing
+
+
   # initiation to leaving for 123 where leaving after initiation	
   		# change over incubation period
 	  		eb = dd[dd$left_type %in%c('3 during exchange'),]
@@ -1153,7 +1187,26 @@
 
 			if(PNG == TRUE){dev.off()}			 
 
+# for reviewers
+  # does length of exchange (from initiation to leaving) predict next incubation bout?
+	eb = dd[dd$left_type %in%c('3 during exchange'),]
+	m = lmer(next_bout ~  day_j+sex_returning*scale(both) +(scale(both)|bird_ID) + (1|nest_ID), eb)
+	m = lmer(next_bout ~  day_j+sex_returning+scale(both) +(scale(both)|bird_ID) + (1|nest_ID), eb)
+	
+  # does length of exchange (from initiation to sitting down) predict next incubation bout?
+	eb = dd[dd$left_type %in%c('3 during exchange'),]
+	m = lmer(next_bout ~  day_j+sex_returning*scale(arrival) +(scale(arrival)|bird_ID) + (1|nest_ID), eb)
+	m = lmer(next_bout ~  day_j+sex_returning+scale(arrival) +(scale(arrival)|bird_ID) + (1|nest_ID), eb)
+	summary(m)
+	summary(glht(m))	
 
+  # does length of current bout predict length of the exchange?
+    eb = dd[dd$left_type %in%c('3 during exchange'),]
+    m = lmer(both ~  day_j+sex_returning*scale(current_bout) +(scale(current_bout)|bird_ID) + (1|nest_ID), eb)
+	m = lmer(both ~  day_j+sex_returning+scale(current_bout) +(scale(current_bout)|bird_ID) + (1|nest_ID), eb)
+	summary(m)
+	summary(glht(m))	
+	
 # LATER DELETE
 	# Figure pleaseLeave	
 		# raw data
