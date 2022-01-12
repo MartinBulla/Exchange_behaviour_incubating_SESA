@@ -161,14 +161,14 @@
    				apply(bsim@fixef, 2, quantile, prob=c(0.025, 0.5, 0.975))
    				exp(apply(bsim@fixef, 2, quantile, prob=c(0.025, 0.5, 0.975))) # gives odds ration
 		  	
-		  	# values to predict for
+		  	  # values to predict for
 				v = apply(bsim@fixef, 2, quantile, prob=0.5)
 				newD = data.frame(sex = c('f','m'))
 
-			# exactly the model which was used has to be specified here
+			  # exactly the model which was used has to be specified here
 				X <- model.matrix(~ sex,data=newD)
 
-				# calculate predicted values and creditability intervals
+			  # calculate predicted values and creditability intervals
 					newD$pred <-plogis(X%*%v)
 							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
 							for(i in 1:nsim) predmatrix[,i] <- plogis(X%*%bsim@fixef[i,])
@@ -474,12 +474,12 @@
 				pp$upr_back[3]- pp$upr_back[1]
 	# plot
 		if(PNG == TRUE) {
-				png(paste(outdir,"Figure_2_.png", sep=""), width=1.85+0.6,height=1.5,units="in",res=600)
+				png(paste(outdir,"Figure_2_.png", sep=""), width=3,height=1.5*1.22449,units="in",res=600)
 				}else{
-				dev.new(width=1.85+0.6,height=1.5)
+				dev.new(width=3,height=1.5*1.22449)
 				}
 		#par(mar=c(0.8,0,0,2.5),oma = c(0.7, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="grey30",font.main = 1, col.lab="grey30", col.main="grey30", fg="grey40", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
-		par(mar=c(0.8,0.1,0.2,0.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5) 
+		par(mar=c(0.8,0.1,0.2,0.2),oma = c(1, 2.5, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5) 
 
 		boxplot(log(arrival) ~ left_sex, data = dd,
 									#ylab =NULL,
@@ -523,7 +523,7 @@
 			#axis(1, at=c(1.5,4.2, 6.9), labels=FALSE)
 
 			#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels
-			text(c(1.5,4.2, 6.9), par("usr")[3]-0.25, labels = c('Before\narrival','Before\nrelief initiated', 'After\nrelief initiated'),  xpd = TRUE, cex=0.5, col="grey30")
+			text(c(1.5,4.2, 6.9), par("usr")[3]-0.15, labels = c('Before\narrival','Before\nrelief initiated', 'After\nrelief initiated'),  xpd = TRUE, cex=0.5, col="grey30")
 			mtext("Incubating parent left",side=1,line=0.6, cex=0.5, las=1, col='grey30')
 			#text(c(2.85), par("usr")[3]-0.18, labels = c('Period'),  xpd = TRUE, cex=0.6, col="grey30")
 			
@@ -532,7 +532,7 @@
 			at_=c(5,15,30,60,120)
 			for(i in 1:4){axis(2, at=log(seq(at_[i],at_[i+1],length.out=10)), labels=FALSE,tcl=-0.055, lwd=0.35)}
 			axis(2, at=log(at_), lwd = 0.35,labels=c('5 s','15 s','30 s','1 min','2 min'))
-			mtext("From initiation to leaving",side=2,line=1.4, cex=0.55, las=3, col='grey30')
+			mtext("From initiation\nto incubation start",side=2,line=1.4, cex=0.55, las=3, col='grey30')
 			#mtext("Duration",side=2,line=1, cex=0.6, las=3, col='grey30')
 
 			# predictions
@@ -1187,7 +1187,7 @@
 
 			if(PNG == TRUE){dev.off()}			 
 
-# for reviewers
+# for reviewers 
   # does length of exchange (from initiation to leaving) predict next incubation bout?
 	eb = dd[dd$left_type %in%c('3 during exchange'),]
 	m = lmer(next_bout ~  day_j+sex_returning*scale(both) +(scale(both)|bird_ID) + (1|nest_ID), eb)
@@ -1206,6 +1206,16 @@
 	m = lmer(both ~  day_j+sex_returning+scale(current_bout) +(scale(current_bout)|bird_ID) + (1|nest_ID), eb)
 	summary(m)
 	summary(glht(m))	
+  
+  # does push predict next bout
+	eb = dd[dd$left_type %in%c('3 during exchange'),]
+	m = lmer(next_bout ~  push +(push01|bird_ID) + (1|nest_ID), eb)
+	summary(m)
+	summary(glht(m))	
+	nsim <- 5000
+	bsim <- sim(m, n.sim=nsim)
+   	apply(bsim@fixef, 2, quantile, prob=c(0.025, 0.5, 0.975))
+  
 	
 # LATER DELETE
 	# Figure pleaseLeave	
