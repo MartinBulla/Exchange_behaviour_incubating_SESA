@@ -41,5 +41,9 @@
 
 	table(dx$type, dx$nest_ID) # one nest with 0 ex and 2 non
 	table(dx$type, dx$pair_ID)
+	
+# number of resampled individuals - none
+	b<-read.csv(file=paste(wd, "birds.csv", sep=''),header=T,sep=",", fill=T, stringsAsFactors=FALSE)
+	b[duplicated(b$bird_ID),]
 
 # END	
