@@ -49,10 +49,10 @@
 	 round(100*summary(factor(dn$type_l))/nrow(dn)) # %
 	 summary(factor(dn$type_l)) # N cases
 	 nrow(dn) # N without enclosure
-	 length(unique(dn$nest)) # number of nests without enclosure
-	 length(unique(dn$nest[dn$type_l=='f'])) # number of nests
-	 length(unique(dn$nest[dn$type_l=='wf'])) # number of nests
-	 length(unique(dn$nest[dn$type_l=='w'])) # number of nests
+	 length(unique(dn$nest_ID)) # number of nests without enclosure
+	 length(unique(dn$nest_ID[dn$type_l=='f'])) # number of nests
+	 length(unique(dn$nest_ID[dn$type_l=='wf'])) # number of nests
+	 length(unique(dn$nest_ID[dn$type_l=='w'])) # number of nests
 	
   # when incubating left
 	  summary(factor(dd$left_type))
