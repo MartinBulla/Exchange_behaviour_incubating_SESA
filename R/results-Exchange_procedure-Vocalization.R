@@ -25,6 +25,7 @@
 		length(ddn$with_calling[ddn$with_calling=='y'])/length(ddn$with_calling) # % of observations
 		summary(factor(dd$with_calling))
 		nrow(ddn)
+		length(unique(ddn$nest_ID))
 		
 		# NOT USED only for cases where incubating bird left the nest only after returning one appeared
 		summary(factor(dd$with_calling[dd$left_type %in% c('2 while around', '3 during exchange')]))
@@ -40,16 +41,18 @@
 		dr= dd[dd$with_calling %in% c('y') & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
 		nrow(dr)
 		summary(factor(dr$o_replies))
+		length(unique(dr$nest_ID))
 
 		dry = dr[dr$o_replies %in% c('y')]
 		nrow(dry)/nrow(dr) # % of cases with reply
 		summary(factor(dry$sex))
-		length(unique(dry$nest[dry$sex == 'f']))
-		length(unique(dry$nest[dry$sex == 'm'])) 
+		length(unique(dry$nest_ID[dry$sex == 'f']))
+		length(unique(dry$nest_ID[dry$sex == 'm'])) 
 	# returning parent quiet
     	# all cases
     	x = dd[-which(is.na(dd$with_calling) | is.na(dd$call_c_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
-		nrow(x)
+		nrow(x) # N observations
+		length(unique(x$nest_ID)) # N nests
 			
 		nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
 		
@@ -84,11 +87,22 @@
 			table(dnc$call_left, dnc$sex) # N			
 	# incubating parent quiet
 		x = dd[!is.na(dd$o_replies) & !is.na(dd$call_o_int) & !is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
-		length(x$call_o_int[x$o_replies == 'n' & x$call_o_int==0 & x$call_left =='n'])/nrow(x)		
+		length(x$call_o_int[x$o_replies == 'n' & x$call_o_int==0 & x$call_left =='n'])/nrow(x)	
+		nrow(x) # N nests	
+		length(unique(x$nest_ID)) # N nests	
+
 	# both silent 
 		x = dd[!is.na(dd$with_calling) & !is.na(dd$o_replies)& !is.na(dd$call_o_int) & !is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3)  & !is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
 		nrow(x)
 		nrow(x[which(x$with_calling %in% c('n') & x$o_replies%in%c('n') & x$call_c_int %in% c(0) & x$call_o_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0) & x$call_left =='n'),])/nrow(x)
+		length(unique(x$nest_ID)) # N nests
+
+		xx_ = unique(xx$nest_ID)
+		x_ = unique(x$nest_ID)
+
+		xx_[!xx_%in%x_]
+		x_[!x_%in%xx_]
+
 	# next bout given reply - roughly 1 - 7h difference
 		f = dd[!is.na(dd$next_bout) & dd$with_calling=='y' & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
 		# interaction
