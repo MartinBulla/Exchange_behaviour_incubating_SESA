@@ -20,7 +20,8 @@
 
 # number of observed nests in a given year	
 	ddply(d,. (year), summarise, n = length(unique(nest_ID)))
-
+	#unique(d$nest[d$year==2013])[order(unique(d$nest[d$year==2013]))]
+	#length(unique(d$nest[d$year==2013]))
 # N for before arrival observations
 	sel = dd[dd$left_type %in% c('2 while around','3 during exchange'),]
 	dx = bb_[-which(bb_$type == 'ex' & !bb_$obs_ID %in% sel$obs_ID),]
