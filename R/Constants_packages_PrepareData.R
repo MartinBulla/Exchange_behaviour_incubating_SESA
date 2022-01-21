@@ -136,7 +136,7 @@
 				#bb_[bb_$obs_ID %in% bb_$obs_ID[duplicated(bb_$obs_ID)],]
 				#length(unique(bb_$obs_ID))
 			
-		   # only exchange observations
+		 # only exchange observations
 		   dd=d[d$type=='ex',]
 		   dd$left_bin=ifelse(dd$left_before_presence=='y',1,0)	
 		   dd$push = ifelse(is.na(dd$pushoff_int), NA, ifelse(dd$pushoff_int==3,'y','n'))
