@@ -37,6 +37,7 @@
 		ddn3 = ddn[ddn$left_type %in% c('3 during exchange')]
 		nrow(ddn3)
 		length(ddn3$with_calling[ddn3$with_calling=='y'])/length(ddn3$with_calling)
+		length(unique(ddn3$nest_ID))
 	# reply (has 1 observation less, as reply was NA)
 		dr= dd[dd$with_calling %in% c('y') & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
 		nrow(dr)
@@ -61,6 +62,12 @@
 		x = x[x$left_before_presence=="n",]
 		nrow(x)
 		nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
+
+		# cases were incubating left only after relief initiation
+		x = dd[!is.na(dd$with_calling) & !is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & dd$left_type %in% c('3 during exchange'),]
+		nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
+		nrow(x)
+		length(unique(x$nest_ID))
 	# called while leaving?
 		# all cases
 			dc = dd[!is.na(dd$call_left),]
@@ -74,6 +81,15 @@
 			round(100*length(dc$call_left[dc$call_left%in%c('y') & dc$sex == 'm'])/length(dc$call_left[ dc$sex == 'm'])) # % call for males
 			round(100*length(dc$call_left[dc$call_left%in%c('y') & dc$sex == 'f'])/length(dc$call_left[ dc$sex == 'f'])) # % call for females
 			table(dc$call_left, dc$sex)  # N
+		
+		# nest relief cases only
+			dci = dd[!is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
+			round(100*length(dci$call_left[dci$call_left%in%c('y')])/length(dci$call_left[])) # % called
+			summary(factor(dci$call_left)) # N called
+			nrow(dci) # N
+			length(unique(dci$nest_ID))
+			table(dci$call_left, dci$sex)
+
 		# cases without enclosure
 			dn=dd[dd$cage=='n',]
 			dnc = dn[!is.na(dn$call_left),]
@@ -85,6 +101,26 @@
 			round(100*length(dnc$call_left[dnc$call_left%in%c('y') & dnc$sex == 'm'])/length(dnc$call_left[ dnc$sex == 'm'])) # % call for males
 			round(100*length(dnc$call_left[dnc$call_left%in%c('y') & dnc$sex == 'f'])/length(dnc$call_left[ dnc$sex == 'f'])) # % call for females
 			table(dnc$call_left, dnc$sex) # N			
+	# calling between initiation and leaving - returning
+		x = dd[!is.na(call_c_int) & left_type %in% c('3 during exchange')]
+		nrow(x) # N observations
+		length(unique(x$nest_ID)) # N nests
+		nrow(x[!call_c_int %in% c(0)])/nrow(x)
+	# calling between initiation and leaving - incubating
+		x = dd[!is.na(call_o_int) & left_type %in% c('3 during exchange')]
+		nrow(x) # N observations
+		length(unique(x$nest_ID)) # N nests
+		nrow(x[!call_o_int %in% c(0)])/nrow(x)
+	# calling during exchange gap
+		x = dd[!is.na(call_int_c2) & left_type %in% c('3 during exchange')]
+		nrow(x) # N observations
+		length(unique(x$nest_ID)) # N nests
+		nrow(x[!call_int_c2 %in% c(0)])/nrow(x)	
+	# calling after incubation start
+		x = dd[!is.na(call_int_c3) & left_type %in% c('3 during exchange')]
+		nrow(x) # N observations
+		length(unique(x$nest_ID)) # N nests
+		nrow(x[!call_int_c3 %in% c(0)])/nrow(x)	
 	# incubating parent quiet
 		x = dd[!is.na(dd$o_replies) & !is.na(dd$call_o_int) & !is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
 		length(x$call_o_int[x$o_replies == 'n' & x$call_o_int==0 & x$call_left =='n'])/nrow(x)	
@@ -247,6 +283,112 @@
     	nrow(dp)
     	length(unique(dp$nest))
 
+# Table 2
+    # leaving before arrival 
+	   lbp = dd[dd$left_before_presence=="y",]
+	   round(nrow(lbp)/nrow(dd)*100) # % of cases
+	   nrow(dd) # N of observations 
+	   length(unique(dd$nest_ID)) # N of observations 
+	   nrow(lbp) # number of cases
+	   length(unique(lbp$nest_ID)) # number of nests
+
+    # leaving after initiation
+   		lai = dd[left_type=="3 during exchange"]
+   		nrow(lai)/nrow(dd[left_type%in%c("2 while around","3 during exchange")])*100 # % of cases
+   		length(dd[left_type%in%c("2 while around","3 during exchange"), unique(nest_ID)]) # N nests
+		nrow(dd[left_type%in%c("2 while around","3 during exchange")]) # N observations
+		nrow(lai) # number of cases with leaving after initiation
+		length(unique(lai$nest_ID)) 
+		
+ 	# called while leaving?
+		# all cases
+			dc = dd[!is.na(dd$call_left),]
+			round(100*length(dc$call_left[dc$call_left%in%c('y')])/length(dc$call_left[])) # % called
+			summary(factor(dc$call_left)) # N called
+			nrow(dc) # N
+			length(unique(dc$bird_ID)) # N
+			length(unique(dc$nest_ID)) # N
+		
+	   # nest relief cases only
+			dci = dd[!is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
+			round(100*length(dci$call_left[dci$call_left%in%c('y')])/length(dci$call_left[])) # % called
+			summary(factor(dci$call_left)) # N called
+			nrow(dci) # N
+			length(unique(dci$nest_ID))
+			table(dci$call_left, dci$sex)
+	# how left
+	 dn=dd[dd$cage=='n',]
+	 # all cases
+		 round(100*summary(factor(dn$type_l))/nrow(dn)) # %
+		 summary(factor(dn$type_l)) # N cases
+		 nrow(dn) # N without encl[osure
+		 length(unique(dn$nest_ID)) # number of nests without enclosure
+	 # nest reliefs only
+	  dnn = dn[left_type%in%c("3 during exchange")]	 
+	  100*summary(factor(dnn$type_l))/nrow(dnn) # %
+	 summary(factor(dnn$type_l)) # N cases for nest reliefs only
+	 nrow(dnn)
+	 length(unique(dnn$nest_ID)) # number of nests
+	
+    # calling while initiating nest exchange
+		ddn3 = dd[!is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange')]
+		100*length(ddn3$with_calling[ddn3$with_calling=='y'])/length(ddn3$with_calling)
+		nrow(ddn3) # N
+		length(unique(ddn3$nest_ID))
+
+	# reply (has 1 observation less, as reply was NA)
+		dr= dd[dd$with_calling %in% c('y') & !is.na(dd$o_replies) & dd$left_type %in% c('3 during exchange')]
+		100*summary(factor(dr$o_replies))/nrow(dr) # %
+		nrow(dr)
+		length(unique(dr$nest_ID))
+	
+	# calling between initiation and leaving - returning
+		x = dd[!is.na(call_c_int) & left_type %in% c('3 during exchange')]
+		100*nrow(x[!call_c_int %in% c(0)])/nrow(x) #%
+		nrow(x) # N observations
+		length(unique(x$nest_ID)) # N nests
+
+	# calling between initiation and leaving - incubating
+		x = dd[!is.na(call_o_int) & left_type %in% c('3 during exchange')]
+		100*nrow(x[!call_o_int %in% c(0)])/nrow(x) #%
+		nrow(x) # N observations
+		length(unique(x$nest_ID)) # N nests
+
+	# calling during exchange gap
+		x = dd[!is.na(call_int_c2) & left_type %in% c('3 during exchange')]
+		100*nrow(x[!call_int_c2 %in% c(0)])/nrow(x)	
+		nrow(x) # N observations
+		length(unique(x$nest_ID)) # N nests
+	# calling after incubation start
+		x = dd[!is.na(call_int_c3) & left_type %in% c('3 during exchange')]
+		100*nrow(x[!call_int_c3 %in% c(0)])/nrow(x)	
+		nrow(x) # N observations
+		length(unique(x$nest_ID)) # N nests
+	# returning parent quiet
+    	# all cases
+    	x = dd[-which(is.na(dd$with_calling) | is.na(dd$call_c_int) | is.na(dd$call_int_c2) | is.na(dd$call_int_c3)),]
+		nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
+		nrow(x) # N observations
+		length(unique(x$nest_ID)) # N nests
+			
+		# cases were incubating left only after relief initiation
+		x = dd[!is.na(dd$with_calling) & !is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & dd$left_type %in% c('3 during exchange'),]
+		nrow(x[which(x$with_calling %in% c('n') & x$call_c_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0)),])/nrow(x)
+		nrow(x)
+		length(unique(x$nest_ID))
+	
+	# incubating parent quiet
+		x = dd[!is.na(dd$o_replies) & !is.na(dd$call_o_int) & !is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
+		length(x$call_o_int[x$o_replies == 'n' & x$call_o_int==0 & x$call_left =='n'])/nrow(x)	
+		nrow(x) # N nests	
+		length(unique(x$nest_ID)) # N nests	
+
+	# both silent 
+		x = dd[!is.na(dd$with_calling) & !is.na(dd$o_replies)& !is.na(dd$call_o_int) & !is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3)  & !is.na(dd$call_left) & dd$left_type %in% c('3 during exchange'),]
+		nrow(x[which(x$with_calling %in% c('n') & x$o_replies%in%c('n') & x$call_c_int %in% c(0) & x$call_o_int %in% c(0) & x$call_int_c2 %in% c(0)  & x$call_int_c3 %in% c(0) & x$call_left =='n'),])/nrow(x)
+		nrow(x)
+		length(unique(x$nest_ID)) # N nests
+
 # Figure A1 - for cases where bird left after return
 	ex = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
 	ex$nn=1
@@ -296,7 +438,7 @@
 
 # Table A4
 	# prepare table data
-		# a. calling while arriving
+		# a. calling while initiating
 			dx = dd[!is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange'),]# & dd$left_type %in% c('2 while around','3 during exchange'),]#'2 while around',
 			#dx = dd[ !is.na(dd$with_calling) ,]# & dd$left_type %in% c('2 while around','3 during exchange'),]#'2 while around',
 			dx$w_call = ifelse(dx$with_calling == 'y', 1, 0)
@@ -309,7 +451,7 @@
 				#m = glmer(w_call~ sex_returning*scale(day_j)+(day_j|nest_ID),family='binomial', dx)
 			
 			pred=c('Intercept (f)','sex_returning(m)', 'Day', 'Day:sex')
-			dep = 'calling while arriving (bin)'
+			dep = 'calling while initiating (bin)'
 			mod = 1
 				nsim <- 5000
 				bsim <- sim(m, n.sim=nsim)
@@ -361,7 +503,7 @@
 				ri=data.frame(model=mod,dependent = dep, type='random (var)',effect=l$var1, estimate_r=round(100*l$vcov/sum(l$vcov)), lwr_r=NA, upr_r=NA)
 				ri$estimate_r = paste(ri$estimate_r,"%",sep='')
 			o2=rbind(oii, ri)
-		# c. calling coming ~ calling incubating
+		# c. calling returning ~ calling incubating
 			f = dd[!is.na(dd$call_c_int) & !is.na(dd$call_o_int)  & left_type %in% c('3 during exchange'),]
 			nrow(f)
 			length(unique(f$bird_ID))
@@ -731,7 +873,7 @@
 
 # Table A6
 	# prepare table data
-		# a. calling while arriving
+		# a. calling while initiating
 		 	f = dd[!is.na(dd$current_bout) & !is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange'),]# 
 			f = f[f$left_type %in% c('3 during exchange'),]
 			f$w_call = ifelse(f$with_calling == 'y', 1, 0)
@@ -919,7 +1061,7 @@
 		openFile(tmp)
 # Table A7
 	# prepare table data
-		# a. calling while arriving
+		# a. calling while initiating
 			f = dd[!is.na(dd$next_bout) & !is.na(dd$with_calling) & dd$left_type %in% c('3 during exchange')]
 			f$w_call = ifelse(f$with_calling == 'y', 1, 0)
 			nrow(f)
