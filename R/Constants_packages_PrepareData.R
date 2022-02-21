@@ -77,6 +77,7 @@
 			d$presence=as.numeric(d$dt_left-d$dt_1st_presence)
 			d$lat = n$lat[match(tolower(paste(d$year, d$nest)),tolower(paste(n$year, n$nest)))] 
 			d$lon = n$lon[match(tolower(paste(d$year, d$nest)),tolower(paste(n$year, n$nest)))] 
+			d$view = n$view_at_nest[match(tolower(paste(d$year, d$nest)),tolower(paste(n$year, n$nest)))] 
 	  # time_series
 			b<-read.csv(file=paste(wd, "time_series.csv", sep=''),header=T,sep=",", fill=T, stringsAsFactors=FALSE)
 				b=b[!is.na(b$obs_ID),]
