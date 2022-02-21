@@ -4,16 +4,65 @@
     # do you want plots in R (PNG=FALSE) or as PNG (PNG = TRUE)?
 		PNG=FALSE #PNG = TRUE
 	
-	# define working directory
-	     wd = "C:/Users/mbulla/Documents/Dropbox/Science/MS/Exchanges_SESA/Database/"
-		 wd2 = "C:/Users/mbulla/Documents/Dropbox/Science/MS/Exchanges_SESA/Analyses/"		 
-	     outdir = "C:/Users/mbulla/Documents/Dropbox/Science/MS/Exchanges_SESA/Analyses/plots/" 
-		#wd = "C:/Users/OWNER/Dropbox/exchanges_SESA/Database/"	
-	    #wd = paste0(getwd(), '/DATA/')
-	
 	# load packages, constants and data
-		source(paste(wd2, 'Constants_packages_PrepareData.R',sep=""))
+	    require(here)
+		source(here::here('R/Constants_packages_PrepareData.R'))
+		require(pracma)
 		bb_$pair_ID = d$pair_ID[match(bb_$obs_ID,d$obs_ID)]
+
+# field of view at nest distance
+	summary(n$view_at_nest)
+	summary(n$view_at_nest/2/tan(60*pi/180)) # approximate distance of a camera to the nest
+
+	ggplot(n, aes(x = dist, y = view_at_nest)) +
+			geom_point()
+			abline(1)
+	ggplot(n, aes(x = dist, y = view_at_nest/2/tan(60*pi/180))) +
+			geom_point() +
+			geom_abline(slope = 1)
+
+# field of view and nest parameters
+	ggplot(dd, aes(x = view, y = pa/60))+
+		stat_smooth() + 
+		geom_point()	
+
+	ggplot(dd, aes(x = view, y = pa/60))+
+		stat_smooth(method = 'lm') + 
+		geom_point()
+
+	ggplot(dd, aes(x = view, y = pa/60))+
+		stat_smooth() + 
+		geom_point()	+
+		scale_y_continuous(trans='log10')
+
+	ggplot(dd, aes(x = view, y = pa/60))+
+		stat_smooth(method = 'lm') + 
+		geom_point()	+
+		scale_y_continuous(trans='log10')	
+
+	dd$arrival[dd$left_type == '3 during exchange']	
+
+	ggplot(dd[left_type == '3 during exchange'], aes(x = view, y = arrival))+
+		stat_smooth() + 
+		geom_point()
+
+	ggplot(dd[left_type == '3 during exchange'], aes(x = view, y = arrival))+
+		stat_smooth() + 
+		geom_point() + 	scale_y_continuous(trans='log10')	
+
+	ggplot(dd[left_type == '3 during exchange'], aes(x = view, y = arrival))+
+		stat_smooth(method = 'lm') + 
+		geom_point()
+
+	ggplot(dd[left_type == '3 during exchange'], aes(x = view, y = arrival))+
+		stat_smooth(method = 'lm') + 
+		geom_point()	+
+		scale_y_continuous(trans='log10')	
+
+	ddx = dd[left_type == '3 during exchange']
+	m = lmer(arrival~view +(1|nest_ID), ddx)
+	summary(glht(m))	
+	plot(allEffects(m))	
 
 # number of nests protected by cage (at least for some time) in a given year
 	ddply(d[d$cage == 'y'],. (year), summarise, n = length(unique(nest_ID)))
