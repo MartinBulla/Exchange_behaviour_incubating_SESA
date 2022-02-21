@@ -24,9 +24,6 @@
 		  xx = data.frame(left_type = c('1 before presence','2 while around','3 during exchange'), colr = c(col_bef,col_aro,col_dur), stringsAsFactors = FALSE)
 		  dd = merge(dd,xx, by = 'left_type')
 	
-	# adjust variable and prepare datasets
-		dd = dd[!is.na(dd$arrival),]
-	
 # presented within the main text 
   # for how long present before initiation of nest relief
 		summary(dd$pa/60) # in min
@@ -48,11 +45,20 @@
 	 dn=dd[dd$cage=='n',]
 	 round(100*summary(factor(dn$type_l))/nrow(dn)) # %
 	 summary(factor(dn$type_l)) # N cases
-	 nrow(dn) # N without enclosure
+	  nrow(dn) # N without encl[osure
 	 length(unique(dn$nest_ID)) # number of nests without enclosure
 	 length(unique(dn$nest_ID[dn$type_l=='f'])) # number of nests
 	 length(unique(dn$nest_ID[dn$type_l=='wf'])) # number of nests
 	 length(unique(dn$nest_ID[dn$type_l=='w'])) # number of nests
+
+	 summary(factor(dn$type_l[dn$left_type%in%c("2 while around","3 during exchange")])) # N cases for after arrival
+	 summary(factor(dn$type_l[dn$left_type%in%c("3 during exchange")])) # N cases for nest reliefs only
+	 100*summary(factor(dn$type_l[dn$left_type%in%c("3 during exchange")]))/nrow(dn[left_type%in%c("3 during exchange")]) # %
+	 length(unique(dn$nest_ID[dn$left_type%in%c("3 during exchange")])) # number of nests
+	
+	 length(unique(dn$nest_ID[dn$left_type%in%c("2 while around","3 during exchange")])) # number of nests
+	 nrow(dn[left_type%in%c("2 while around","3 during exchange")]) # number of nests
+	 
 	
   # when incubating left
 	  summary(factor(dd$left_type))
@@ -69,16 +75,20 @@
 			length(xx[xx>60*10]/60) # N of cases where difference is > 10 min
 
 	  # leaving after return, but before initiation
-	   		lwa = dd[left_type=="2 while around",]
-			nrow(lwa)/nrow(dd)*100 # % of cases
+	   		lwa = dd[left_type=="2 while around"]
+			nrow(lwa)/nrow(dd[left_type%in%c("2 while around","3 during exchange")])*100 # % of cases
 			nrow(lwa) # number of cases
 			length(unique(lwa$nest_ID)) 
+			nrow(dd[left_type%in%c("2 while around","3 during exchange")]) # N
+			length(dd[left_type%in%c("2 while around","3 during exchange"), unique(nest_ID)]) # N nests
 
 	  # leaving after initiation
-	   		lai = dd[dd$left_type=="3 during exchange",]
-	   		nrow(lai)/nrow(dd)*100 # % of cases
+	   		lai = dd[left_type=="3 during exchange"]
+	   		nrow(lai)/nrow(dd[left_type%in%c("2 while around","3 during exchange")])*100 # % of cases
 			nrow(lai) # number of cases
 			length(unique(lai$nest_ID)) 
+			nrow(dd[left_type%in%c("2 while around","3 during exchange")]) # N
+			length(dd[left_type%in%c("2 while around","3 during exchange"), unique(nest_ID)]) # N nests
   
   # initiation to incubation start
 		summary(dd$arrival) # in s
@@ -183,7 +193,6 @@
 			length(unique(pl$bird_ID)) # 51 unique birds
 			length(unique(pl$bird_ID[pl$push=='y'])) # 13 unique birds pushing
 			13/51 # 0.254901 probability of bird pushing
-
 
   # initiation to leaving for 123 where leaving after initiation	
   		# change over incubation period
@@ -1188,6 +1197,8 @@
 			if(PNG == TRUE){dev.off()}			 
 
 # for reviewers 
+  # how first detected
+	summary(factor(dd$type_p))		
   # does length of exchange (from initiation to leaving) predict next incubation bout?
 	eb = dd[dd$left_type %in%c('3 during exchange'),]
 	m = lmer(next_bout ~  day_j+sex_returning*scale(both) +(scale(both)|bird_ID) + (1|nest_ID), eb)
