@@ -389,7 +389,58 @@
 		nrow(x)
 		length(unique(x$nest_ID)) # N nests
 
-# Figure A1 - for cases where bird left after return
+# Figure A1 - only for cases where bird left after initiation
+	EPS = FALSE
+	ex = dd[which(!is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & dd$left_type=="3 during exchange"),]
+	ex$nn=1
+	nrow(ex)
+	length(unique(ex$nest))
+	a = ddply(ex,.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
+	a$sex = ifelse(a$sex == 'f', 'Male', 'Female') # to make sex of returning bird
+
+	if(PNG == TRUE) {
+			png(paste(outdir,"Figure_A1_nest-reliefs-only.png", sep=""), width=5,height=2.5,res=600)
+			}else{
+			dev.new(width=5,height=2.5)
+			#dev.new(width=3.55,height=1.75)
+			}
+	if(EPS == TRUE){
+		#setEPS()
+		cairo_ps(file = paste(outdir,"Figure_A1_nest-reliefs-only.eps", sep=""), width=5,height=2.5,onefile = FALSE, fallback_resolution = 600)
+		#postscript(paste(outdir,"Figure_A1_nest-reliefs-only.eps", sep=""), width=5,height=2.5)
+	}
+
+	alluvial(a[,1:3], freq=a$n,
+		axis_labels = c('Initiation\nto leaving','Exchange\ngap', 'After\nexchange'),
+		col = ifelse(a$sex == "Female", col_f, col_m), alpha = 0.7, #change alpha to 1 if printing to esp
+		border="white",
+		#border = ifelse(tit$Survived == "Yes", "orange", "grey"),
+		#hide = tit$Freq == 0,
+		cex = 0.5, cex.axis = 0.7
+		)
+	 if(PNG == TRUE | EPS == TRUE) {dev.off()}
+# Figure A1 - only for cases where bird left after initiation - EPS- USED
+	ex = dd[which(!is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & dd$left_type=="3 during exchange"),]
+	ex$nn=1
+	nrow(ex)
+	length(unique(ex$nest))
+	a = ddply(ex,.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
+	a$sex = ifelse(a$sex == 'f', 'Male', 'Female') # to make sex of returning bird
+
+	setEPS()
+	postscript(paste(outdir,"Figure_A1_nest-reliefs-only_no-alpha.eps", sep=""), width=5,height=2.5)
+	
+
+	alluvial(a[,1:3], freq=a$n,
+		axis_labels = c('Initiation\nto leaving','Exchange\ngap', 'After\nexchange'),
+		col = ifelse(a$sex == "Female", col_f, col_m), alpha = 1, #change alpha to 1 if printing to esp
+		border="white",
+		#border = ifelse(tit$Survived == "Yes", "orange", "grey"),
+		#hide = tit$Freq == 0,
+		cex = 0.5, cex.axis = 0.7
+		)
+	dev.off()	 
+# NOT IN THE PAPER Figure A1 - for cases where bird left after return
 	ex = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_before_presence=="y"),]
 	ex$nn=1
 	nrow(ex)
@@ -413,28 +464,7 @@
 		cex = 0.5, cex.axis = 0.7
 		)
 	 if(PNG == TRUE) {dev.off()}
-# Figure A1 - only for cases where bird left after initiation
-	ex = dd[which(!is.na(dd$call_c_int) & !is.na(dd$call_int_c2) & !is.na(dd$call_int_c3) & dd$left_type=="3 during exchange"),]
-	ex$nn=1
-	a = ddply(ex,.(call_c_int,call_int_c2,call_int_c3, sex), summarise, n=sum(nn))
-	a$sex = ifelse(a$sex == 'f', 'Male', 'Female') # to make sex of returning bird
 
-	if(PNG == TRUE) {
-			png(paste(outdir,"Alluvial_sex.png", sep=""), width=5,height=2.5,units="in",res=600)
-			}else{
-			dev.new(width=5,height=2.5)
-			#dev.new(width=3.55,height=1.75)
-			}
-
-	alluvial(a[,1:3], freq=a$n,
-		axis_labels = c('Initiation\nto leaving','Exchange\ngap', 'After\nexchange'),
-		col = ifelse(a$sex == "Female", col_f, col_m), alpha = 0.7, #change alpha to 1 if printing to esp
-		border="white",
-		#border = ifelse(tit$Survived == "Yes", "orange", "grey"),
-		#hide = tit$Freq == 0,
-		cex = 0.5, cex.axis = 0.7
-		)
-	 if(PNG == TRUE) {dev.off()}
 
 # Table A4
 	# prepare table data
