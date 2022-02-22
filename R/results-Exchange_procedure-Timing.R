@@ -483,7 +483,7 @@
 				pp$upr_back[3]- pp$upr_back[1]
 	# plot
 		if(PNG == TRUE) {
-				png(paste(outdir,"Figure_2_.png", sep=""), width=3,height=1.5*1.22449,units="in",res=600)
+				png(paste(outdir,"Figure_2.png", sep=""), width=3,height=1.5*1.22449,units="in",res=600)
 				}else{
 				dev.new(width=3,height=1.5*1.22449)
 				}
@@ -533,7 +533,7 @@
 
 			#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels
 			text(c(1.5,4.2, 6.9), par("usr")[3]-0.15, labels = c('Before\narrival','Before\nrelief initiated', 'After\nrelief initiated'),  xpd = TRUE, cex=0.5, col="grey30")
-			mtext("Incubating parent left",side=1,line=0.6, cex=0.5, las=1, col='grey30')
+			mtext("Incubating parent left",side=1,line=0.6, cex=0.55, las=1, col='grey30')
 			#text(c(2.85), par("usr")[3]-0.18, labels = c('Period'),  xpd = TRUE, cex=0.6, col="grey30")
 			
 
@@ -541,9 +541,13 @@
 			at_=c(5,15,30,60,120)
 			for(i in 1:4){axis(2, at=log(seq(at_[i],at_[i+1],length.out=10)), labels=FALSE,tcl=-0.055, lwd=0.35)}
 			axis(2, at=log(at_), lwd = 0.35,labels=c('5 s','15 s','30 s','1 min','2 min'))
-			mtext("From initiation\nto incubation start",side=2,line=1.4, cex=0.55, las=3, col='grey30')
-			#mtext("Duration",side=2,line=1, cex=0.6, las=3, col='grey30')
+			mtext('From approach\nto incubation start',side=2,line=1.4, cex=0.55, las=3, col='grey30')
+			#mtext(expression('From '*italic(approach)*' to '*italic(incubation~start)),side=2,line=1.4, cex=0.55, las=3, col='grey30')
+			#mtext(expression(atop('From '*italic(approach), 'to '*italic(approach))),side=2,line=1.4, cex=0.55, las=3, col='grey30')
 
+			#mtext(expression('From '*italic(approach)),side=2,line=1.6, cex=0.55, las=3, col='grey30')
+			#mtext(expression('to '*italic(incubation~start)),side=2,line=1.2, cex=0.55, las=3, col='grey30')
+			
 			# predictions
 				points(y=pp$pred,x=c(1.5,4.2,6.9), pch=20, cex=0.9,col="red")
 			# 95%CI
