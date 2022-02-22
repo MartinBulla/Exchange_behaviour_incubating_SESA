@@ -87,6 +87,7 @@
 				b=b[!b$obs_ID %in% c(7, 182),] # 7 - excluded because of before presence disturbance, 182 - excluded because of poor sound quality					
 				b$nest = tolower(b$nest)
 				b$t_delta=d$t_delta[match(b$obs_ID, d$obs_ID)]
+				b$view = n$view_at_nest[match(tolower(paste(b$year, b$nest)),tolower(paste(n$year, n$nest)))] 
 				b$dt_behaviour <- as.POSIXct(b$dt_behaviour,format='%Y-%b-%d %H:%M:%S')+b$t_delta
 				b$end_dt = as.POSIXct(b$end_dt,format='%Y-%b-%d %H:%M:%S')+b$t_delta
 				b$start_time_video = as.POSIXct(b$start_time_video,format='%Y-%b-%d %H:%M:%S')+b$t_delta
@@ -132,7 +133,7 @@
 			
 			# number of calls and fly-offs per observation
 				# 111 not in YET as it is unclear what is going on
-				bb_=ddply(b_[!is.na(who) & who == 'o'],.(obs_ID, nest_ID,bird_ID, type, day_j, obs_time, lat, lon), summarise, call_i=length(behaviour[which(behaviour=='c' &  !is.na(dt_behaviour) & dt_behaviour<=end_pr)]),fly_i=length(behaviour[which(behaviour=='f' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]))
+				bb_=ddply(b_[!is.na(who) & who == 'o'],.(obs_ID, view, nest_ID,bird_ID, type, day_j, obs_time, lat, lon), summarise, call_i=length(behaviour[which(behaviour=='c' &  !is.na(dt_behaviour) & dt_behaviour<=end_pr)]),fly_i=length(behaviour[which(behaviour=='f' & !is.na(dt_behaviour) & dt_behaviour<=end_pr)]))
 				bb_$sex = d$sex[match(bb_$obs_ID, d$obs_ID)]
 				#bb_[bb_$obs_ID %in% bb_$obs_ID[duplicated(bb_$obs_ID)],]
 				#length(unique(bb_$obs_ID))
