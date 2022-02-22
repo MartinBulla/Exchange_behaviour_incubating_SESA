@@ -638,6 +638,7 @@
 		
 			if(PNG == TRUE){dev.off()}
 
+
 # NOT IN THE MS Cases where calling/flying occurred - was it closer to the exchange start? and if so is this sex specific
 	# run first	  
 		# time difference of each call/fly occurrence to the end of observations session (only for those observation sessions where calling occurred)
