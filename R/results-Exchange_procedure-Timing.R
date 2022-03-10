@@ -555,7 +555,79 @@
 				code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
 
 			if(PNG == TRUE) {dev.off()}
+	# plot EPS - transparency adjusted in illustrator
+	  if(EPS == TRUE) {
+	    setEPS()
+        postscript(paste0(outdir,"Figure_2.eps"), width=3,height=1.5*1.22449)
+    		
+	    par(mar=c(0.8,0.1,0.2,0.2),oma = c(1, 2.5, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5) 
 
+	    boxplot(log(arrival) ~ left_sex, data = dd,
+									#ylab =NULL,
+									xaxt='n',
+									yaxt='n',
+									par(bty='n'),
+									#at=c(1,2,3.5,4.5),
+									at=c(1,2,3.7,4.7,6.4,7.4), type='n',
+									outcex=0.5, outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1,
+									lwd = 0.25,
+									ylim=log(c(3.5,120)),
+									outcol="white",boxcol='white',whiskcol='white',staplecol='white',medcol='white', col = 'white'
+									) # col=z_g$cols, border=z_g$cols
+
+
+		for (i in 1:nrow(x)){stripchart(log(x$arrival[i])~ factor(x$left_sex[i]), at = x$at[i],
+										col="gray63",
+										#col = x$col_[i],
+										bg = x$col_[i], #bg = x$col_[i],
+										pch =21, cex=0.5,
+										vertical = TRUE, add = TRUE, method = "jitter")
+										}
+
+		boxplot(log(arrival) ~ left_sex, data = dd,
+									ylab = NULL,xaxt='n', yaxt='n',
+									#at=c(1,2,3.5,4.5),
+									at=c(1+kk,2-kk,3.7+kk,4.7-kk, 6.4+kk,7.4-kk),
+									type='n',
+									outcex=0.5,outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1,
+									lwd = 1,
+									border=c('#FCB42C','#535F7C','#FCB42C','#535F7C','#FCB42C','#535F7C'),
+									col = adjustcolor("white", alpha.f = 0), # trick for PNGs, to show what is underneath the boxplot else can be taken out
+									#outcol="darkgrey",boxcol='darkgrey',whiskcol='darkgrey',staplecol='darkgrey',medcol='darkgrey',
+									#par(bty='l'),
+									add=TRUE
+									)
+
+		text(x=1*0.6,y=log(max(dd$arrival))*0.97, labels='\u2640', col='#FCB42C', cex=0.6)
+		text(x=1,y=log(max(dd$arrival)), labels='\u2642', col='#535F7C', cex=0.6)
+		mtext("Predictions\n95%CI",side=3,line=-1.5, cex=0.5, las=1, col='red')
+			#axis(1, at=c(1.5,4.2, 6.9), labels=FALSE)
+
+			#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels
+		text(c(1.5,4.2, 6.9), par("usr")[3]-0.15, labels = c('Before\narrival','Before\nrelief initiated', 'After\nrelief initiated'),  xpd = TRUE, cex=0.5, col="grey30")
+		mtext("Incubating parent left",side=1,line=0.6, cex=0.55, las=1, col='grey30')
+			#text(c(2.85), par("usr")[3]-0.18, labels = c('Period'),  xpd = TRUE, cex=0.6, col="grey30")
+			
+
+			#for(i in 1:6){axis(2, at=log(seq(at_[i],at_[i+1],length.out=15)), labels=FALSE,tcl=-0.05, lwd=0.5)}
+		at_=c(5,15,30,60,120)
+		for(i in 1:4){axis(2, at=log(seq(at_[i],at_[i+1],length.out=10)), labels=FALSE,tcl=-0.055, lwd=0.35)}
+		axis(2, at=log(at_), lwd = 0.35,labels=c('5 s','15 s','30 s','1 min','2 min'))
+		mtext('From approach\nto incubation start',side=2,line=1.4, cex=0.55, las=3, col='grey30')
+		#mtext(expression('From '*italic(approach)*' to '*italic(incubation~start)),side=2,line=1.4, cex=0.55, las=3, col='grey30')
+		#mtext(expression(atop('From '*italic(approach), 'to '*italic(approach))),side=2,line=1.4, cex=0.55, las=3, col='grey30')
+
+		#mtext(expression('From '*italic(approach)),side=2,line=1.6, cex=0.55, las=3, col='grey30')
+		#mtext(expression('to '*italic(incubation~start)),side=2,line=1.2, cex=0.55, las=3, col='grey30')
+		
+		# predictions
+			points(y=pp$pred,x=c(1.5,4.2,6.9), pch=20, cex=0.9,col="red")
+		# 95%CI
+			arrows(x0=c(1.5,4.2,6.9), y0=pp$lwr,x1=c(1.5,4.2,6.9), y1=pp$upr,
+			code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
+
+		dev.off()
+	}	
 # Figure 3A
 	# prepare data
 	 	ebb = dd[dd$left_type %in%c('3 during exchange'),]
@@ -640,89 +712,52 @@
 			text(29,99, expression(bold('A')),cex=0.6)
 
 			if(PNG == TRUE) {dev.off()}
-# Figure 3a - log
-	# prepare data
-	 	ebb = dd[dd$left_type %in%c('3 during exchange'),]
-		ebb$col_sex_returning=ifelse(ebb$sex_returning=='f', col_f, col_m) # female color = #FCB42C)
-		ebbR = ebb
-		ebbR$both[ebbR$both<1] = 1 # for viz purposes assign to zero points as 1s
-	# prepare model predictions
-  		m = lmer(log(both+.001) ~ sex_returning*push + sex_returning*day_j+(push01|bird_ID) + (1|nest_ID), ebb)
-				nsim <- 5000
-				bsim <- sim(m, n.sim=nsim)
-		# coefficients
-			v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
-
-		# values to predict for
-			l = list()
-			for(i in c('f','m')){
-				ddi = ebb[ebb$sex_returning == i,]
-				l[[i]]=data.frame(
-							push = 0.5,
-							sex_returning = i,
-							day_j = seq(min(ddi$day_j), max(ddi$day_j), length.out = 100)
-							)
-			}
-			newD = do.call(rbind,l)
-
-
-		# exactly the model which was used has to be specified here
-		X <- model.matrix(~ sex_returning*push + sex_returning*day_j,data=newD)
-
-		# calculate predicted values and creditability intervals
-			newD$pred <-(X%*%v)
-					predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
-					for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
-					newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
-					newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
-			pp=newD
-			pf=pp[pp$sex=='f',]
-			pm=pp[pp$sex=='m',]
-	# plot
-		if(PNG == TRUE) {
-				#png(paste(outdir,"Figure_2_new_mac.png", sep=""), width=1.85+0.6,height=1.5,units="in",res=600)
-				quartz(file = paste(outdir,"Figure_3a_log.png", sep=""), type = "png", width=1.8,height=1.5, dpi = 600)
-				}else{
-				dev.new(width=1.8,height=1.5)
-				}
-		par(mar=c(0.4,0.1,0.6,0.3),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) 
-
+	# plot EPS - transparency adjusted in illustrator
+	  if(EPS == TRUE) {
+		setEPS()
+        postscript(paste0(outdir,"Figure_3A.eps"), width=1.85+0.3,height=1.5)	
+	
+		par(mar=c(0.8,0.1,0.2,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
 		plot((pred) ~ day_j, data = pp,
 									#ylab =NULL,
 									xaxt='n',
 									yaxt='n',
 									#xaxs = 'i',
 									#yaxs = 'i',
-									ylim = log(c(0.9, max(ebb$both))+.001),
+									ylim = c(0, 100),
 									xlim = c(0,30),
 									type='n'
 									) # col=z_g$cols, border=z_g$cols
 
-		points(log(ebbR$both) ~ jitter(ebbR$day_j), col = adjustcolor(ebbR$col_sex_returning, alpha.f = 0.8), bg = adjustcolor(ebbR$col_sex_returning, alpha.f = 0.4), pch =21, cex = 0.4)
+		points(ebb$both ~ jitter(ebb$day_j), col = "gray63", bg = ebb$col_sex_returning, pch =21, cex = 0.5)
 
 		# predictions
 			polygon(c(pf$day_j, rev(pf$day_j)), c(pf$lwr,
-					rev(pf$upr)), border=NA, col=adjustcolor(col_f ,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+					rev(pf$upr)), border=NA, col=col_f ) #0,0,0 black 0.5 is transparents RED
 			lines(pf$day_j, pf$pred, col=col_f,lwd=1)
 
 			polygon(c(pm$day_j, rev(pm$day_j)), c(pm$lwr,
-					rev(pm$upr)), border=NA, col=adjustcolor(col_m ,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+					rev(pm$upr)), border=NA, col=col_m) #0,0,0 black 0.5 is transparents RED
 			lines(pm$day_j, pm$pred, col=col_m,lwd=1)
 
-
+		# annotations
 			#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
 						#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
-			text(x=25,y=log(max(ebb$both))*0.89, labels='\u2640', col='#FCB42C', cex=0.6)
-			text(x=27,y=log(max(ebb$both)), labels='\u2642', col='#535F7C', cex=0.6)
-
 			axis(1, at=seq(0,30,by = 10), label=seq(0,30,by = 10), mgp=c(0,-0.20,0), lwd = 0.35)
-			axis(2, at=log(c(1,10,100)+0.001), label=c('1',' 10','100'), lwd = 0.35)
+			axis(2, at=seq(0,100,by=20), lwd = 0.35)
+			#axis(2, at=c(0,30,60,90), label=c('0',' 30','60','90'), lwd = 0.35)
 
-			mtext("Incubation day",side=1,line=0.4, cex=0.55, las=1, col='black')
-			mtext("From initiation to leaving [s]",side=2,line=1, cex=0.55, las=3, col='black')
+			mtext("Incubation day\n",side=1,line=0.9, cex=0.55, las=1, col='black')
+			mtext("From initiation to leaving [s]",side=2,line=1.1, cex=0.55, las=3, col='black')
 
+			text(x=25,y=max(ebb$both)*0.97, labels='\u2640', col='#FCB42C', cex=0.6)
+			text(x=27,y=max(ebb$both), labels='\u2642', col='#535F7C', cex=0.6)
 
-			if(PNG == TRUE) {dev.off()}
+			text(29,99, expression(bold('A')),cex=0.6)
+
+		dev.off()
+		}
+			
 # Figure 3B
 	# prepare data
 	 	ebb = dd[dd$left_type %in%c('3 during exchange'),]
@@ -840,6 +875,79 @@
 				mtext("Please-leave display\n[returning parent]",side=1,line=0.9,cex=0.55, las=1, col='black')
 				text(4.95,99, expression(bold('B')),cex=0.6)
 			 if(PNG == TRUE) {dev.off()}
+	# plot EPS - transparency adjusted in illustrator
+		if(EPS == TRUE) {
+		 setEPS()
+         postscript(paste0(outdir,"Figure_3B.eps"), width=1.85+0.3,height=1.5)	
+		 par(mar=c(0.8,0.1,0.2,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5) 
+		 #par(mfrow=c(2,1),mar=c(0.25,0,0,1.2),oma = c(2.1, 2.2, 0.2, 2.4),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE, lwd=0.5)
+			boxplot(both ~ push_sex, data = ebb,
+									#ylab =NULL,
+									xaxt='n',
+									yaxt='n',
+									ylim=c(0,100),
+									par(bty='n'),
+									#at=c(1,2,3.5,4.5),
+									at=c(1,2,3.7,4.7), type='n',
+									outcex=0.5, outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1,
+									lwd = 0.25,
+									#ylim=c(0,1),
+									outcol="white",boxcol='white',whiskcol='white',staplecol='white',medcol='white', col = 'white'
+									) # col=z_g$cols, border=z_g$cols
+
+
+			for (i in 1:nrow(x)){stripchart(x$both[i]~ factor(x$push_sex[i]), at = x$at[i],
+										#bg = x$col_[i],
+										col="gray63",
+										#col = x$col_[i],
+										bg = x$col_[i],
+										pch =21, cex=0.5,
+										vertical = TRUE, add = TRUE, method = "jitter")
+										}
+
+			boxplot(both ~ push_sex, data = ebb,
+									ylab = NULL,xaxt='n', yaxt='n',
+									#at=c(1,2,3.5,4.5),
+									at=c(1+kk,2-kk,3.7+kk,4.7-kk),
+									type='n',
+									outcex=0.5,outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1,
+									lwd = 1,
+									border=c('#FCB42C','#535F7C','#FCB42C','#535F7C'),
+									col = adjustcolor("white", alpha.f = 0), # trick for PNGs, to show what is underneath the boxplot else can be taken out
+									#outcol="darkgrey",boxcol='darkgrey',whiskcol='darkgrey',staplecol='darkgrey',medcol='darkgrey',
+									#par(bty='l'),
+									add=TRUE
+									)
+
+				#text(x=0.3,y=100*0.97, labels='\u2640', col='#FCB42C', cex=0.6, pos=4)
+				#text(x=0.3+0.2,y=100, labels='\u2642', col='#535F7C', cex=0.6, pos=4)
+				#text(x=0.3+0.6,y=100, labels='incubating', col='grey30', cex=0.6, pos=4)
+				text(x=0.3,y=100*0.88, labels="Predictions &\n95%CI", col='red', cex=0.5, pos=4)
+				#mtext("Prediction\n95%CI",side=3,line=-1.5, cex=0.5, las=1, col='red')
+				#axis(1, at=c(1.5,4.2, 6.9), labels=FALSE)
+
+				#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels
+
+
+				# predictions
+					points(y=pp$pred,x=c(1.5,4.2), pch=20, cex=0.9,col="red")
+				# 95%CI
+					arrows(x0=c(1.5,4.2), y0=pp$lwr,x1=c(1.5,4.2), y1=pp$upr,
+					code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
+
+								
+				# annotation
+				axis(2, at=seq(0,100,by=20), lwd = 0.35)
+				mtext("From initiation to leaving [s]",side=2,line=1.1, cex=0.55, las=3, col='black')
+
+				axis(1, at=c(1.5,4.2), label=c('yes','no'), mgp=c(0,-0.20,0),lwd = 0.35, col = 'white')
+				text(c(1,2,3.7,4.7), -12, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#text(c(1,2,3.7,4.7), par("usr")[3]-1.5, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))
+				#text(c(1.5,4.2), par("usr")[3]-0.45, labels = c('yes','no'),  xpd = TRUE, cex=0.5, col="black")
+				#text(c(1,2,3.7,4.7), par("usr")[3]-0.8, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))
+				mtext("Please-leave display\n[returning parent]",side=1,line=0.9,cex=0.55, las=1, col='black')
+				text(4.95,99, expression(bold('B')),cex=0.6)
+			 dev.off()
+			}
 
 # Table A3
 	# prepare table data
@@ -1231,170 +1339,88 @@
 	bsim <- sim(m, n.sim=nsim)
    	apply(bsim@fixef, 2, quantile, prob=c(0.025, 0.5, 0.975))
   
-	
-# LATER DELETE
-	# Figure pleaseLeave	
-		# raw data
-			e = dd[dd$left_type %in%c('3 during exchange'),]
-			e$n = 1
-					#x = ddply(f,.(nest_ID, sex_returning_returning),summarise, mo=median(call_o_int), q1o=quantile(call_o_int,0.25), q2o= quantile(call_o_int,0.75), mc=median(call_c_int), q1c=quantile(call_c_int,0.25), q2c= quantile(call_c_int,0.75), n = sum(n))
+# not in the MS - Figure 3a - log
+	# prepare data
+	 	ebb = dd[dd$left_type %in%c('3 during exchange'),]
+		ebb$col_sex_returning=ifelse(ebb$sex_returning=='f', col_f, col_m) # female color = #FCB42C)
+		ebbR = ebb
+		ebbR$both[ebbR$both<1] = 1 # for viz purposes assign to zero points as 1s
+	# prepare model predictions
+  		m = lmer(log(both+.001) ~ sex_returning*push + sex_returning*day_j+(push01|bird_ID) + (1|nest_ID), ebb)
+				nsim <- 5000
+				bsim <- sim(m, n.sim=nsim)
+		# coefficients
+			v = apply(bsim@fixef, 2, quantile, prob=c(0.5))
 
-			e$col_=ifelse(e$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
+		# values to predict for
+			l = list()
+			for(i in c('f','m')){
+				ddi = ebb[ebb$sex_returning == i,]
+				l[[i]]=data.frame(
+							push = 0.5,
+							sex_returning = i,
+							day_j = seq(min(ddi$day_j), max(ddi$day_j), length.out = 100)
+							)
+			}
+			newD = do.call(rbind,l)
 
-			x = ddply(e,.(sex_returning,day_j),summarise, push = mean(push01), n = sum(n))
-					#x$call_o_int = ifelse(x$sex_returning == 'f', x$call_o_int-0.2, x$call_o_int+0.2)
-					# call based on x-axis - incubating parent
-					x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
-		# predict
-			e = dd[dd$left_type %in%c('3 during exchange'),]
-			m=glmer(push01 ~ sex_returning*day_j+ (day_j|bird_ID)+(1|nest_ID), family='binomial',e) 
-			nsim <- 5000
-			bsim <- sim(m, n.sim=nsim)
-			v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
-		  	# values to predict for
-				l = list()
-				for(i in c('m','f')){
-					ei = e[e$sex_returning == i]
-					l[[i]]=data.frame(	sex_returning = i,
-										day_j = seq(min(ei$day_j), max(ei$day_j), length.out = 100)
-										)
-						}
-				newD = do.call(rbind,l)
 
-			# exactly the model which was used has to be specified here
-				X <- model.matrix(~ sex_returning*day_j,data=newD)
+		# exactly the model which was used has to be specified here
+		X <- model.matrix(~ sex_returning*push + sex_returning*day_j,data=newD)
 
-				# calculate predicted values and creditability intervals
-					newD$pred <-plogis(X%*%v)
-							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
-							for(i in 1:nsim) predmatrix[,i] <- plogis(X%*%bsim@fixef[i,])
-							newD$lwr <- (apply(predmatrix, 1, quantile, prob=0.025))
-							newD$upr <- (apply(predmatrix, 1, quantile, prob=0.975))
-					pp=newD
-					ppf = pp[pp$sex_returning == 'f',]
-					ppm = pp[pp$sex_returning == 'm',]
-		# plot
-			if(PNG == TRUE){
-				png(paste(outdir,"Figure_plsLeave.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
-					}else{ dev.new(width=1.85+0.3,height=1.5)}
-			par(mar=c(0.4,0.1,0.6,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+		# calculate predicted values and creditability intervals
+			newD$pred <-(X%*%v)
+					predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
+					for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
+					newD$lwr <- apply(predmatrix, 1, quantile, prob=0.025)
+					newD$upr <- apply(predmatrix, 1, quantile, prob=0.975)
+			pp=newD
+			pf=pp[pp$sex=='f',]
+			pm=pp[pp$sex=='m',]
+	# plot
+		if(PNG == TRUE) {
+				#png(paste(outdir,"Figure_2_new_mac.png", sep=""), width=1.85+0.6,height=1.5,units="in",res=600)
+				quartz(file = paste(outdir,"Figure_3a_log.png", sep=""), type = "png", width=1.8,height=1.5, dpi = 600)
+				}else{
+				dev.new(width=1.8,height=1.5)
+				}
+		par(mar=c(0.4,0.1,0.6,0.3),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) 
 
-			plot(pred ~ day_j, data = pp,
-										#ylab =NULL,
-										xaxt='n',
-										yaxt='n',
-										#xaxs = 'i',
-										#yaxs = 'i',
-										ylim = c(0,1),
-										xlim = c(0,30),
-										type='n'
-										) # col=z_g$cols, border=z_g$cols
+		plot((pred) ~ day_j, data = pp,
+									#ylab =NULL,
+									xaxt='n',
+									yaxt='n',
+									#xaxs = 'i',
+									#yaxs = 'i',
+									ylim = log(c(0.9, max(ebb$both))+.001),
+									xlim = c(0,30),
+									type='n'
+									) # col=z_g$cols, border=z_g$cols
 
-				
-				#points(e$push) ~ jitter(dd$day_j), col = adjustcolor(dd$colr, alpha.f = 0.8), bg = adjustcolor(dd$colr, alpha.f = 0.4), pch =21, cex = 0.4)
+		points(log(ebbR$both) ~ jitter(ebbR$day_j), col = adjustcolor(ebbR$col_sex_returning, alpha.f = 0.8), bg = adjustcolor(ebbR$col_sex_returning, alpha.f = 0.4), pch =21, cex = 0.4)
 
-				# predictions
-					polygon(c(ppf$day_j, rev(ppf$day_j)), c(ppf$lwr,
-									rev(ppf$upr)), border=NA, col=adjustcolor(col_f,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
-					lines(ppf$day_j, ppf$pred, col=col_f,lwd=1)
+		# predictions
+			polygon(c(pf$day_j, rev(pf$day_j)), c(pf$lwr,
+					rev(pf$upr)), border=NA, col=adjustcolor(col_f ,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+			lines(pf$day_j, pf$pred, col=col_f,lwd=1)
 
-					polygon(c(ppm$day_j, rev(ppm$day_j)), c(ppm$lwr,
-									rev(ppm$upr)), border=NA, col=adjustcolor(col_m,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
-					lines(ppm$day_j, ppm$pred, col=col_m,lwd=1)
+			polygon(c(pm$day_j, rev(pm$day_j)), c(pm$lwr,
+					rev(pm$upr)), border=NA, col=adjustcolor(col_m ,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
+			lines(pm$day_j, pm$pred, col=col_m,lwd=1)
 
-					#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
-							#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
 
-				symbols(x$day_j, x$push, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
-				axis(1, at=seq(0,30,by = 10), label=seq(0,30,by = 10), mgp=c(0,-0.20,0), lwd = 0.35)
-				axis(2, at=seq(0,1,by = 0.2), label=c('0%', '20%', '40%', '60%', '80%','100%'), lwd = 0.35)
+			#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
+						#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
+			text(x=25,y=log(max(ebb$both))*0.89, labels='\u2640', col='#FCB42C', cex=0.6)
+			text(x=27,y=log(max(ebb$both)), labels='\u2642', col='#535F7C', cex=0.6)
 
-				mtext("Incubation day",side=1,line=0.4, cex=0.55, las=1, col='black')
-				mtext("Please-leave display",side=2,line=1.1, cex=0.55, las=3, col='black')
+			axis(1, at=seq(0,30,by = 10), label=seq(0,30,by = 10), mgp=c(0,-0.20,0), lwd = 0.35)
+			axis(2, at=log(c(1,10,100)+0.001), label=c('1',' 10','100'), lwd = 0.35)
 
-		
-				 if(PNG == TRUE) {dev.off()}
-	# Figure pleaseLeave- gaussian
-		# raw data
-			e = dd[dd$left_type %in%c('3 during exchange'),]
-			e$n = 1
-					#x = ddply(f,.(nest_ID, sex_returning_returning),summarise, mo=median(call_o_int), q1o=quantile(call_o_int,0.25), q2o= quantile(call_o_int,0.75), mc=median(call_c_int), q1c=quantile(call_c_int,0.25), q2c= quantile(call_c_int,0.75), n = sum(n))
+			mtext("Incubation day",side=1,line=0.4, cex=0.55, las=1, col='black')
+			mtext("From initiation to leaving [s]",side=2,line=1, cex=0.55, las=3, col='black')
 
-			e$col_=ifelse(e$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
 
-			x = ddply(e,.(sex_returning,day_j),summarise, push = mean(push01), n = sum(n))
-					#x$call_o_int = ifelse(x$sex_returning == 'f', x$call_o_int-0.2, x$call_o_int+0.2)
-					# call based on x-axis - incubating parent
-					x$col_=ifelse(x$sex_returning=='f', '#FCB42C', '#535F7C') # female color = #FCB42C)
-		# predict
-			e = dd[dd$left_type %in%c('3 during exchange'),]
-			m=lmer(push01 ~ sex_returning*day_j+ (day_j|bird_ID) +(1|nest_ID),e) 
-			nsim <- 5000
-			bsim <- sim(m, n.sim=nsim)
-			v <- apply(bsim@fixef, 2, quantile, prob=c(0.5))
-		  	# values to predict for
-				l = list()
-				for(i in c('m','f')){
-					ei = e[e$sex_returning == i]
-					l[[i]]=data.frame(	sex_returning = i,
-										day_j = seq(min(ei$day_j), max(ei$day_j), length.out = 100)
-										)
-						}
-				newD = do.call(rbind,l)
-
-			# exactly the model which was used has to be specified here
-				X <- model.matrix(~ sex_returning*day_j,data=newD)
-
-				# calculate predicted values and creditability intervals
-					newD$pred <-(X%*%v)
-							predmatrix <- matrix(nrow=nrow(newD), ncol=nsim)
-							for(i in 1:nsim) predmatrix[,i] <- (X%*%bsim@fixef[i,])
-							newD$lwr <- (apply(predmatrix, 1, quantile, prob=0.025))
-							newD$upr <- (apply(predmatrix, 1, quantile, prob=0.975))
-					pp=newD
-					ppf = pp[pp$sex_returning == 'f',]
-					ppm = pp[pp$sex_returning == 'm',]
-		# plot
-			if(PNG == TRUE){
-				png(paste(outdir,"Figure_plsLeave_gaus.png", sep=""), width=1.85+0.3,height=1.5,units="in",res=600)
-					}else{ dev.new(width=1.85+0.3,height=1.5)}
-			par(mar=c(0.4,0.1,0.6,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
-
-			plot(pred ~ day_j, data = pp,
-										#ylab =NULL,
-										xaxt='n',
-										yaxt='n',
-										#xaxs = 'i',
-										#yaxs = 'i',
-										ylim = c(0,1),
-										xlim = c(0,30),
-										type='n'
-										) # col=z_g$cols, border=z_g$cols
-
-				
-				#points(e$push) ~ jitter(dd$day_j), col = adjustcolor(dd$colr, alpha.f = 0.8), bg = adjustcolor(dd$colr, alpha.f = 0.4), pch =21, cex = 0.4)
-
-				# predictions
-					polygon(c(ppf$day_j, rev(ppf$day_j)), c(ppf$lwr,
-									rev(ppf$upr)), border=NA, col=adjustcolor(col_f,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
-					lines(ppf$day_j, ppf$pred, col=col_f,lwd=1)
-
-					polygon(c(ppm$day_j, rev(ppm$day_j)), c(ppm$lwr,
-									rev(ppm$upr)), border=NA, col=adjustcolor(col_m,alpha.f = 0.4)) #0,0,0 black 0.5 is transparents RED
-					lines(ppm$day_j, ppm$pred, col=col_m,lwd=1)
-
-					#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
-							#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
-
-				symbols(x$day_j, x$push, circles=sqrt(x$n/pi),inches=0.14/1.75,bg=adjustcolor(x$col_, alpha.f = 0.5), fg=col_p,add=TRUE) #
-				axis(1, at=seq(0,30,by = 10), label=seq(0,30,by = 10), mgp=c(0,-0.20,0), lwd = 0.35)
-				axis(2, at=seq(0,1,by = 0.2), label=c('0%', '20%', '40%', '60%', '80%','100%'), lwd = 0.35)
-
-				mtext("Incubation day",side=1,line=0.4, cex=0.55, las=1, col='black')
-				mtext("Please-leave display",side=2,line=1.1, cex=0.55, las=3, col='black')
-
-		
-				 if(PNG == TRUE) {dev.off()}
-
+			if(PNG == TRUE) {dev.off()}
 
 #END
