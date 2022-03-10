@@ -276,7 +276,7 @@
  											legend.title=element_text(size=7, colour="grey30")
  											)
  			if(PNG==TRUE){ggsave(paste(outdir,"Figure_4abc.png", sep=""),width=1.85+1,height=1.5*2, units = "in")}
- 			#ggsave(paste(outdir,"Figure_3_new.eps", sep=""),width=1.85+1,height=1.5*2, units = "in")
+ 			#ggsave(paste(outdir,"Figure_4ABC_new.eps", sep=""),width=1.85+1,height=1.5*2, units = "in")
     # text for figure legend
     	dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | is.na(dd$call_o_int) | dd$left_type%in%c('1 before presence','2 while around')),]
     	#dp = dd[-which(is.na(dd$call_c_int)|is.na(dd$call_int_c2)|is.na(dd$call_int_c3) | dd$left_type%in%c('1 before presence','2 while around')),]
