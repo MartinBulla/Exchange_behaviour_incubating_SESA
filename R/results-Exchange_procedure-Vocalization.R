@@ -1,9 +1,9 @@
 ### RESULTS section Exchange procedure - vocalization ###
 
 # SETTINGS & DATA
-    # do you want plots in R (PNG=FALSE) or as PNG (PNG = TRUE)?
+    # do you want plots in R (PNG=FALSE) or as PNG (PNG = TRUE) or EPS?
 		PNG=FALSE #PNG = TRUE
-
+		EPS=FALSE
 	# define working directory
 	     wd = "/Users/martinbulla/Dropbox/Science/MS/Exchanges_SESA/Analyses/Data/"# "C:/Users/mbulla/Documents/Dropbox/Science/MS/Exchanges_SESA/Database/"
 		 wd2 = "/Users/martinbulla/Dropbox/Science/MS/Exchanges_SESA/Analyses/R/"
@@ -716,6 +716,80 @@
 				code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
 
 		 if(PNG == TRUE) {dev.off()}
+	# plot EPS - transparency adjusted in illustrator
+	  if(EPS == TRUE) {
+		setEPS()
+        postscript(paste0(outdir,"Figure_5A.eps"), width=1.85+0.3,height=1.5)	
+        
+        par(mar=c(0.8,0.1,0.2,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE)
+
+		boxplot(next_bout/60 ~ reply_sex, data = dxn,
+								#ylab =NULL,
+								xaxt='n',
+								yaxt='n',
+								ylim=c(0,20),
+								par(bty='n'),
+								#at=c(1,2,3.5,4.5),
+								at=c(1,2,3.7,4.7), type='n',
+								outcex=0.5, outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1,
+								lwd = 0.25,
+								#ylim=c(0,1),
+								outcol="white",boxcol='white',whiskcol='white',staplecol='white',medcol='white', col = 'white'
+								) # col=z_g$cols, border=z_g$cols
+
+
+		for (i in 1:nrow(x)){stripchart(x$next_bout[i]/60~ factor(x$reply_sex[i]), at = x$at[i],
+									#bg = x$col_[i],
+									col="gray63",
+									#col = x$col_[i],
+									bg = x$col_[i],
+									pch =21, cex=0.5,
+									vertical = TRUE, add = TRUE, method = "jitter")
+									}
+
+		boxplot(next_bout/60 ~ reply_sex, data = dxn,
+								ylab = NULL,xaxt='n', yaxt='n',
+								#at=c(1,2,3.5,4.5),
+								at=c(1+kk,2-kk,3.7+kk,4.7-kk),
+								type='n',
+								outcex=0.5,outpch=20,boxwex=0.25,whisklty=1,staplelty=0,#medlwd=1,
+								lwd = 1,
+								border=c('#FCB42C','#535F7C','#FCB42C','#535F7C'),
+								col = adjustcolor("white", alpha.f = 0), # trick for PNGs, to show what is underneath the boxplot else can be taken out
+								#outcol="darkgrey",boxcol='darkgrey',whiskcol='darkgrey',staplecol='darkgrey',medcol='darkgrey',
+								#par(bty='l'),
+								add=TRUE
+								)
+
+			axis(2, at=seq(0,20,by=5), label=TRUE, lwd = 0.35, col = 'black')
+			axis(1, at=c(1.5,4.2), label=c('yes','no'), mgp=c(0,-0.20,0),lwd = 0.35, col = 'white')
+
+			text(c(1,2,3.7,4.7), par("usr")[3]-1.5, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))
+
+			#text(c(1.5,4.2), par("usr")[3]-0.25, labels = c('Yes','No'),  xpd = TRUE, cex=0.5, col="black")
+
+			mtext("Incubating parent replied\n ",side=1,line=0.9, cex=0.55, las=1, col='black')
+			mtext("Next incubation bout [h]",side=2,line=1.1, cex=0.55, las=3, col='black')
+			text(4.95,19.5, expression(bold('A')),cex=0.6,  col='black') # mtext(expression(bold('a')),side=3,line=-0.4, cex=0.6,  col='black')
+			text(x=0.5,y=5, labels="Prediction\n& 95%CI", col='red', cex=0.5, pos=4)
+
+			#text(x=0.3,y=20*0.97, labels='\u2640', col='#FCB42C', cex=0.6, pos=4)
+			#text(x=0.3+0.2,y=20, labels='\u2642', col='#535F7C', cex=0.6, pos=4)
+
+			#mtext("Prediction\n95%CrI",side=3,line=-1.5, cex=0.5, las=1, col='red')
+			#axis(1, at=c(1.5,4.2, 6.9), labels=FALSE)
+
+			#text(c(1,2), par("usr")[3]+0.07, labels = c('\u2640','\u2642'), font=4, xpd = TRUE, cex=0.6, col=c('#FCB42C','#535F7C'))#col="grey30") #labels
+
+
+			# predictions
+				points(y=pp$pred/60,x=c(1.5,4.2), pch=20, cex=0.9,col="red")
+			# 95%CI
+				arrows(x0=c(1.5,4.2), y0=pp$lwr/60,x1=c(1.5,4.2), y1=pp$upr/60,
+				code = 0, col="red", angle = 90, length = .025, lwd=1, lty=1)
+
+		dev.off()
+	    }
 # Figure 5B
 	# run first
 		f = dd[!is.na(dd$next_bout) & !is.na(dd$call_int_c3) & dd$left_type %in% c('3 during exchange')]
@@ -821,8 +895,62 @@
 					}
 
 		 if(PNG == TRUE) {dev.off()}
-	
-	# not used legend outside
+	# plot EPS - transparency adjusted in illustrator
+	  if(EPS == TRUE) {
+		setEPS()
+        postscript(paste0(outdir,"Figure_5B.eps"), width=1.85+0.3,height=1.5)	
+
+		par(mar=c(0.8,0.1,0.2,2.5),oma = c(1, 2, 0, 0),ps=12, mgp=c(1.2,0.35,0), las=1, cex=1, col.axis="black",font.main = 1, col.lab="black", col.main="black", fg="black", cex.lab=0.6,cex.main=0.7, cex.axis=0.5, tcl=-0.1,bty="n",xpd=TRUE) #
+
+		plot(next_bout ~ call_int_c3 , data = f,
+								#ylab =NULL,
+								xaxt='n',
+								yaxt='n',
+								#xaxs = 'i',
+								#yaxs = 'i',
+								ylim=c(0,20),
+								xlim=c(-.3,3),
+								type='n'
+								) # col=z_g$cols, border=z_g$cols
+
+		# predictions
+			# call int of returned female
+					polygon(c(pf_$call_int_c3, rev(pf_$call_int_c3)), c(pf_$lwr,
+						rev(pf_$upr)), border=NA, col=col_f) #0,0,0 black 0.5 is transparents RED
+					lines(pf_$call_int_c3, pf_$pred, col=col_f,lwd=1)
+
+			# call int of returned male
+					polygon(c(pm_$call_int_c3, rev(pm_$call_int_c3)), c(pm_$lwr,
+						rev(pm_$upr)), border=NA, col=col_m) #0,0,0 black 0.5 is transparents RED
+					lines(pm_$call_int_c3, pm_$pred, col=col_m,lwd=1)
+
+				#text(x=-2,y=0.725, labels='Before', col='#FCB42C', cex=0.5)
+					#text(x=2,y=0.725, labels='After', col='#535F7C', cex=0.5)
+
+		symbols(jitter(x$mo, amount=0.2), jitter(x$mc), circles=sqrt(x$n/pi),inches=0.14/1.75,bg=x$col_, fg=col_p,add=TRUE) #
+
+		axis(1, at=c(0,1,2,3), label=c(0,1,2,3), mgp=c(0,-0.20,0), lwd = 0.35)
+		axis(2, at=seq(0,20, by=5), label = TRUE,lwd = 0.35)
+		mtext("Calling intensity score of returned parent\nafter incubation start",side=1,line=0.9, cex=0.55, las=1, col='black') #line=0.85
+		mtext("Next incubation bout [h]",side=2,line=1, cex=0.55, las=3, col='black') #line=0.8
+		#mtext(expression(bold('b')),side=3,line=-0.4, cex=0.6,  col='black')
+		text(3,19.5, expression(bold('B')),cex=0.6,  col='black')
+
+		# legend inside
+			text(x = 1.3, y = 2.5, labels = expression(italic('N')*' observations:'),las=1,col='black', xpd=TRUE, cex = 0.5) # for printing into device use padj=-7.5
+			#mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='black', xpd=TRUE) # for printing into device use padj=-7.5
+					if(PNG == TRUE){
+					
+					symbols(x = c(2.5,2.5,2.5), y = c(16,14,11)-0.75-8,circles=sqrt(c(1,4,8)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+					text(x = c(2.5,2.5,2.5)+0.4, y = c(16,14,11)-0.75-8,labels=c(1,4,8), xpd=TRUE, cex=0.5) #
+					}else{
+					symbols(x = c(2.5,2.5,2.5), y = c(16,14,11)-0.5-8,circles=sqrt(c(1,4,8)/pi),inches=0.14/1.75,bg=col_pb, fg=col_p,add=TRUE, xpd=TRUE) #bg=alpha(col_p,0.1)
+					text(x = c(2.5,2.5,2.5)+0.4, y = c(16,14,11)-0.5-8,labels=c(1,4,8), xpd=TRUE, cex=0.5) #,col='grey30'
+					
+					}
+
+	  dev.off()} 
+	# not used - outside legend
 			mtext('Observations:',side = 4,line=-0, padj=-6,cex=0.5,las=1,col='black', xpd=TRUE) # for printing into device use padj=-7.5
 			#mtext(expression(italic('N')*' observations:'),side = 4,line=-0.3, padj=-7,cex=0.5,las=1,col='black', xpd=TRUE) # for printing into device use padj=-7.5
 					if(PNG == TRUE){
